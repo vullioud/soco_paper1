@@ -1,5 +1,5 @@
 // FILE: soco_src/core/socoabe_agent.js
-// Paper 1 version: Removed DecisionTrace, Test_Runner, NetworkModule, debug logs.
+// Paper 1: Added behavioral_type, adherence, trait lookup by behavioral_type.
 
 class socoabe_agent {
     constructor(agent_id, owner, stand_ids) {
@@ -8,8 +8,13 @@ class socoabe_agent {
         this.managed_stand_ids = stand_ids;
         this.managed_stands_data = {};
 
-        // Load tables (Deep copies)
-        this.trait_table = helpers.deepCopy(this.owner.trait_table);
+        // Assign behavioral type FIRST (determines which trait table to use)
+        this.behavioral_type = this._assign_behavioral_type();
+
+        // Load trait table by behavioral_type (not owner_type)
+        this.trait_table = helpers.deepCopy(this.owner.all_trait_tables[this.behavioral_type]);
+
+        // Other tables still keyed by owner_type (will be updated in Block 3/5)
         this.activity_table = helpers.deepCopy(this.owner.activity_table);
         this.species_config_table = helpers.deepCopy(this.owner.species_config_table);
         this.age_class_table = helpers.deepCopy(this.owner.age_class_table);
@@ -21,6 +26,7 @@ class socoabe_agent {
         this.preferences = {};
         this.resources = 0;
         this.risk_tolerance = 0;
+        this.adherence = 0;
 
         this.planning_offset = Math.floor(Math.random() * 10) + 5;
         this.is_initialized = false;
@@ -35,6 +41,20 @@ class socoabe_agent {
         this.init();
     }
 
+    _assign_behavioral_type() {
+        if (this.owner.type === 'state') return 'MF';
+        if (this.owner.type === 'big') return 'OP';
+        // small: draw from split
+        const split = SoCoABE_CONFIG.SMALL_PRIVATE_SPLIT;
+        const r = Math.random();
+        let cumulative = 0;
+        for (const type in split) {
+            cumulative += split[type];
+            if (r < cumulative) return type;
+        }
+        return 'TR';  // fallback
+    }
+
     init() {
         this.sample_my_traits();
         this.initialize_managed_stands();
@@ -42,11 +62,12 @@ class socoabe_agent {
 
     sample_my_traits() {
         const trait_configs = this.trait_table;
-        if (!trait_configs) throw new Error(`Agent '${this.id}' has no trait_table.`);
+        if (!trait_configs) throw new Error(`Agent '${this.id}' has no trait_table for behavioral_type '${this.behavioral_type}'.`);
 
         if (trait_configs.preferences) this.preferences = Distributions.sample(trait_configs.preferences);
         if (trait_configs.resources) this.resources = Distributions.sample(trait_configs.resources);
         if (trait_configs.riskTolerance) this.risk_tolerance = Distributions.sample(trait_configs.riskTolerance);
+        if (trait_configs.adherence) this.adherence = Distributions.sample(trait_configs.adherence);
     }
 
    initialize_managed_stands() {
@@ -142,7 +163,7 @@ class socoabe_agent {
             this.assign_species_profiles();
         }
 
-        // Log baseline data at the start of recording (after warming period ends)
+        // Log baseline data at the start of recording
         var recording_start_year = SoCoLog.getRecordingStartYear();
         if (current_year === recording_start_year) {
             for (const stand_id in this.managed_stands_data) {
@@ -150,7 +171,6 @@ class socoabe_agent {
             }
         }
 
-        // Check if NO_INTERVENTION mode is enabled
         var no_intervention = (typeof SoCoABE_CONFIG !== 'undefined' &&
                                SoCoABE_CONFIG.NO_INTERVENTION === true);
 

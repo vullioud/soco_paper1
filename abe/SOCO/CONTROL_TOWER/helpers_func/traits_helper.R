@@ -9,11 +9,11 @@ library(kableExtra)
 export_trait_json <- function(data, path) {
   dir_path <- dirname(path)
   if (!dir.exists(dir_path)) dir.create(dir_path, recursive = TRUE)
-  
+
   json_tree <- data %>%
-    group_by(owner) %>%
+    group_by(type) %>%
     nest() %>%
-    mutate(owner_list = map(data, function(d) {
+    mutate(type_list = map(data, function(d) {
       list(
         preferences = list(
           distribution_function = "dirichlet",
@@ -29,12 +29,16 @@ export_trait_json <- function(data, path) {
         riskTolerance = list(
           distribution_function = "beta",
           distribution_params = list(alpha = d$risk_alpha, beta = d$risk_beta)
+        ),
+        adherence = list(
+          distribution_function = "beta",
+          distribution_params = list(alpha = d$adhere_alpha, beta = d$adhere_beta)
         )
       )
     })) %>%
-    select(owner, owner_list) %>%
+    select(type, type_list) %>%
     deframe()
-  
+
   write_json(json_tree, path, auto_unbox = TRUE, pretty = TRUE)
   message(sprintf("✓ Exported Agent Traits JSON to %s", path))
 }
@@ -50,31 +54,29 @@ sim_dirichlet_traits <- function(alpha_vec, n = 2000) {
     set_names(c("Production", "Biodiversity", "CO2"))
 }
 
-plot_owner_preferences <- function(data) {
-  
+plot_type_preferences <- function(data) {
+
   sim_df <- data %>%
     rowwise() %>%
     mutate(
       alpha_vec = list(c(pref_prod, pref_bio, pref_co2)),
       sims = list(sim_dirichlet_traits(alpha_vec, n = 2000))
     ) %>%
-    select(owner, sims) %>%
+    select(type, sims) %>%
     unnest(sims) %>%
-    pivot_longer(cols = c("Production", "Biodiversity", "CO2"), 
-                 names_to = "Objective", values_to = "Weight") %>%
-    mutate(owner = str_to_title(owner))
-  
-  # CHANGED: Facet by Owner, Fill by Objective
+    pivot_longer(cols = c("Production", "Biodiversity", "CO2"),
+                 names_to = "Objective", values_to = "Weight")
+
   ggplot(sim_df, aes(x = Weight, fill = Objective, color = Objective)) +
     geom_density(alpha = 0.4, size = 0.8) +
-    
-    facet_wrap(~owner, nrow = 1) + 
-    
+
+    facet_wrap(~type, nrow = 1) +
+
     scale_x_continuous(labels = scales::percent, limits = c(0, 1), expand = c(0, 0)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
     scale_fill_brewer(palette = "Set1") +
     scale_color_brewer(palette = "Set1") +
-    
+
     theme_minimal(base_size = 14) +
     theme(
       legend.position = "top",
@@ -84,7 +86,7 @@ plot_owner_preferences <- function(data) {
       strip.text = element_text(face = "bold", size = 12)
     ) +
     labs(title = "Agent Preference Profiles",
-         subtitle = "Density of objective weights per Owner Type",
+         subtitle = "Density of objective weights per Behavioral Type",
          x = "Weight assigned to Objective",
          y = "Density")
 }
@@ -94,21 +96,18 @@ plot_owner_preferences <- function(data) {
 # ==============================================================================
 generate_trait_table <- function(data) {
   data %>%
-    mutate(owner = str_to_title(owner)) %>%
-    # Calculate Precision
     rowwise() %>%
     mutate(Precision = pref_prod + pref_bio + pref_co2) %>%
     ungroup() %>%
     select(
-      `Owner Type` = owner,
-      Production = pref_prod, 
-      Biodiversity = pref_bio, 
+      `Behavioral Type` = type,
+      Production = pref_prod,
+      Biodiversity = pref_bio,
       CO2 = pref_co2,
       Precision
     ) %>%
-    kbl(caption = "Table 9: Agent Preference Alphas (Dirichlet)") %>%
+    kbl(caption = "Table: Agent Preference Alphas (Dirichlet) by Behavioral Type") %>%
     kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed")) %>%
     column_spec(1, bold = TRUE) %>%
-    # Highlight Precision column
     column_spec(5, bold = TRUE, border_left = TRUE, background = "#f9f9f9")
 }

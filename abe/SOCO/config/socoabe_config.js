@@ -33,6 +33,10 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
             LOG_ENABLED: true
         },
 
+        // Behavioral types (Paper 1 - Sotirov)
+        BEHAVIORAL_TYPES: ["MF", "OP", "TR", "PA", "EN"],
+        SMALL_PRIVATE_SPLIT: { TR: 0.40, PA: 0.30, EN: 0.30 },
+
         // Run without agent interventions
         NO_INTERVENTION: false,
 

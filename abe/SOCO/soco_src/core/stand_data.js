@@ -4,9 +4,10 @@ class stand_data {
     constructor(stand_id, agent) { // Changed signature to accept the agent object
         // --- I. IDENTIFIERS & FIXED TRAITS ---
         this.stand_id = stand_id;
-        this.agent_id = agent.id; 
-      //  this.agent = agent;     
-        this.preference_focus = "none"; 
+        this.agent_id = agent.id;
+        this.owner_type = agent.owner ? agent.owner.type : 'unknown';
+        this.behavioral_type = agent.behavioral_type || 'unknown';
+        this.preference_focus = "none";
         this.species_profile = "none";
 
         // --- II. PERCEPTION DATA ---

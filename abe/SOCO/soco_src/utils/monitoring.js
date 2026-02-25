@@ -271,6 +271,8 @@ var Monitoring = {
                 year: year,
                 stand_id: stand_id,
                 agent_id: stand_data_obj.agent_id,
+                owner_type: stand_data_obj.owner_type || 'unknown',
+                behavioral_type: stand_data_obj.behavioral_type || 'unknown',
                 activity_name: activity_name,
 
                 // Sequence tracking (for multi-step activities like thinning sequences)
@@ -326,6 +328,7 @@ var Monitoring = {
                 year: Globals.year,
                 agent_id: agent.id,
                 owner_type: (agent.owner) ? agent.owner.type : "unknown",
+                behavioral_type: agent.behavioral_type || "unknown",
                 stand_id: stand_data.stand_id,
                 activity_name: stand_data.activity.chosen_Activity,
                 volume_removed: volume_removed,
@@ -390,6 +393,7 @@ var Monitoring = {
                 year: Globals.year,
                 agent_id: agent.id,
                 owner_type: (agent.owner) ? agent.owner.type : "unknown",
+                behavioral_type: agent.behavioral_type || "unknown",
                 stand_id: stand_data.stand_id,
                 preference: stand_data.preference_focus,
                 strategy: stand_data.species_profile || "none",
@@ -566,7 +570,7 @@ var Monitoring = {
             // Still save the header so the file exists
         }
 
-        var header = "year,stand_id,agent_id,activity_name," +
+        var header = "year,stand_id,agent_id,owner_type,behavioral_type,activity_name," +
             "is_sequence,sequence_step," +
             "previous_activity,previous_activity_year," +
             "age_t0,volume_t0,basal_area_t0,height_dominant_t0,stems_t0," +
@@ -577,7 +581,7 @@ var Monitoring = {
 
         for (var i = 0; i < this.ml_activity_log.length; i++) {
             var r = this.ml_activity_log[i];
-            var line = `${r.year},${r.stand_id},${r.agent_id},${r.activity_name},` +
+            var line = `${r.year},${r.stand_id},${r.agent_id},${r.owner_type || 'unknown'},${r.behavioral_type || 'unknown'},${r.activity_name},` +
                 `${r.is_sequence},${r.sequence_step},` +
                 `${r.previous_activity},${r.previous_activity_year},` +
                 `${this._safeFixed(r.age_t0, 1)},` +
@@ -717,7 +721,7 @@ var Monitoring = {
                 header = "activity_type,stand_id,agent_id,year";
             } else {
                 // Detailed Header - includes harvest_year for matching with iLand
-                header = "year,harvest_year,agent_id,owner_type,stand_id,preference,strategy," +
+                header = "year,harvest_year,agent_id,owner_type,behavioral_type,stand_id,preference,strategy," +
                          "age,absolute_age,soco_age,volume,basal_area,height," +
                          "volume_removed,trees_removed,rotation_total_harvest," +
                          "disturbance_year,disturbance_severity,disturbance_volume,salvage_type,salvage_fraction," +
@@ -765,7 +769,7 @@ var Monitoring = {
                                 // SOCO logs harvest in year it happens, so we provide harvest_year for matching
                                 var harvest_year = (r.volume_removed > 0) ? (r.year - 1) : r.year;
 
-                                line = `${r.year},${harvest_year},${r.agent_id},${r.owner_type},${r.stand_id},${r.preference},${r.strategy},` +
+                                line = `${r.year},${harvest_year},${r.agent_id},${r.owner_type},${r.behavioral_type || 'unknown'},${r.stand_id},${r.preference},${r.strategy},` +
                                        `${this._safeFixed(r.age, 1)},` +
                                        `${this._safeFixed(r.absolute_age, 1)},` +
                                        `${this._safeFixed(r.soco_age, 1)},` +
