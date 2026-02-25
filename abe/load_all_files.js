@@ -34,7 +34,7 @@ try {
     // Load Cognition Module
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decision_windows.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/think.js'));
-    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_group.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_groups.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/condition_classifier.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_strategies.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_parameters.js'));
@@ -55,7 +55,7 @@ try {
     Globals.include(Globals.path('./abe/SOCO/soco_src/action/prepare_flags/tending_flags.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/action/prepare_flags/harvestshelterwood_flags.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/action/prepare_flags/planting_flags.js'));
-    Globals.include(Globals.path('./abe/SOCO/soco_src/action/prepare_flags/femelProgram_flags.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/action/prepare_flags/femel_flags.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/action/prepare_flags/salvage_flags.js'));
 
     // --- 4. Load Core Agent Classes ---
