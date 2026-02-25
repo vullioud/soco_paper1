@@ -61,7 +61,7 @@ class socoabe_agent {
 
     apply_guideline_blend() {
         var adherence = this.adherence;
-        var guideline = this.owner.institution.guideline_distributions;
+        var guideline = this.owner.institution.guideline;
         if (!guideline || !this.activity_table) return;
 
         for (var phase in this.activity_table) {

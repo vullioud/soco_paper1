@@ -3,7 +3,12 @@ class institution {
         this.owners = {};
         this.all_agents = [];
         this.configs = all_configs;
-        this.guideline_distributions = SoCoABE_CONFIG.GUIDELINE || {};
+
+        // Policy state — accessed by agents via owner.institution
+        this.guideline = SoCoABE_CONFIG.GUIDELINE || {};
+        this.es_demand = SoCoABE_CONFIG.ES_DEMAND || {};
+        this.guideline_period = (SoCoABE_CONFIG.GUIDELINE && SoCoABE_CONFIG.GUIDELINE.period) || 0;
+
         this.discover_and_create();
     }
 
