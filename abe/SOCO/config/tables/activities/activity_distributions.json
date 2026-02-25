@@ -1,4 +1,5 @@
 {
+  "_comment": "Activity choice distributions (Dirichlet alpha vectors) by behavioral type and phase. Structure: type -> phase -> {options:[], alpha:[]}. own_ideal values — blended with GUIDELINE at agent init using adherence score.",
   "MF": {
     "Harvesting": {
       "options": ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],

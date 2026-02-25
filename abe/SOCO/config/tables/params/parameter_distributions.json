@@ -1,82 +1,293 @@
 {
+  "_comment": "Fixed silvicultural parameters by activity and behavioral type. Structure: activity -> type -> {param: value}. Values from abe-lib defaults. Consumed by select_parameters.js.",
   "shelterwood": {
-    "MF": { "nTrees": 40, "nCompetitors": 1000, "interval": 5, "times": 2 },
-    "OP": { "nTrees": 40, "nCompetitors": 1000, "interval": 5, "times": 2 },
-    "TR": { "nTrees": 40, "nCompetitors": 1000, "interval": 5, "times": 2 },
-    "PA": { "nTrees": 40, "nCompetitors": 1000, "interval": 5, "times": 2 },
-    "EN": { "nTrees": 40, "nCompetitors": 1000, "interval": 5, "times": 2 }
+    "MF": {
+      "nTrees": 40,
+      "nCompetitors": 1000,
+      "interval": 8,
+      "times": 3
+    },
+    "OP": {
+      "nTrees": 40,
+      "nCompetitors": 1000,
+      "interval": 8,
+      "times": 3
+    },
+    "TR": {
+      "nTrees": 40,
+      "nCompetitors": 1000,
+      "interval": 8,
+      "times": 3
+    },
+    "PA": {
+      "nTrees": 40,
+      "nCompetitors": 1000,
+      "interval": 8,
+      "times": 3
+    },
+    "EN": {
+      "nTrees": 40,
+      "nCompetitors": 1000,
+      "interval": 8,
+      "times": 3
+    }
   },
   "femel": {
-    "MF": { "initial_size": 3, "growth_width": 2, "interval": 10, "times": 2 },
-    "OP": { "initial_size": 3, "growth_width": 2, "interval": 10, "times": 2 },
-    "TR": { "initial_size": 3, "growth_width": 2, "interval": 10, "times": 2 },
-    "PA": { "initial_size": 3, "growth_width": 2, "interval": 10, "times": 2 },
-    "EN": { "initial_size": 3, "growth_width": 2, "interval": 10, "times": 2 }
+    "MF": {
+      "initial_size": 3,
+      "growth_width": 2,
+      "interval": 10,
+      "times": 3
+    },
+    "OP": {
+      "initial_size": 3,
+      "growth_width": 2,
+      "interval": 10,
+      "times": 3
+    },
+    "TR": {
+      "initial_size": 3,
+      "growth_width": 2,
+      "interval": 10,
+      "times": 3
+    },
+    "PA": {
+      "initial_size": 3,
+      "growth_width": 2,
+      "interval": 10,
+      "times": 3
+    },
+    "EN": {
+      "initial_size": 3,
+      "growth_width": 2,
+      "interval": 10,
+      "times": 3
+    }
   },
   "targetDBH": {
     "MF": {
-      "interval": 5, "times": 5,
-      "dbhListProfile": { "fasy": 65, "frex": 60, "piab": 45, "quro": 75, "pisy": 45, "lade": 65, "qupe": 75, "psme": 65, "abal": 45, "acps": 60, "pini": 45 }
+      "interval": 5,
+      "times": 5,
+      "dbhListProfile": {
+        "fasy": 65,
+        "frex": 60,
+        "piab": 45,
+        "quro": 75,
+        "pisy": 45,
+        "lade": 65,
+        "qupe": 75,
+        "psme": 65,
+        "abal": 45,
+        "acps": 60,
+        "pini": 45
+      }
     },
     "OP": {
-      "interval": 5, "times": 5,
-      "dbhListProfile": { "piab": 40, "psme": 55, "fasy": 55, "qupe": 65, "abal": 40, "lade": 55, "pisy": 40, "rest": 45 }
+      "interval": 5,
+      "times": 5,
+      "dbhListProfile": {
+        "piab": 40,
+        "psme": 55,
+        "fasy": 55,
+        "qupe": 65,
+        "abal": 40,
+        "lade": 55,
+        "pisy": 40,
+        "rest": 45
+      }
     },
     "TR": {
-      "interval": 5, "times": 5,
-      "dbhListProfile": { "fasy": 60, "piab": 45, "qupe": 70, "abal": 45, "rest": 50 }
+      "interval": 5,
+      "times": 5,
+      "dbhListProfile": {
+        "fasy": 60,
+        "piab": 45,
+        "qupe": 70,
+        "abal": 45,
+        "rest": 50
+      }
     },
     "PA": {
-      "interval": 5, "times": 5,
-      "dbhListProfile": { "rest": 50 }
+      "interval": 5,
+      "times": 5,
+      "dbhListProfile": {
+        "rest": 50
+      }
     },
     "EN": {
-      "interval": 5, "times": 5,
-      "dbhListProfile": { "fasy": 70, "qupe": 80, "abal": 50, "piab": 40, "rest": 55 }
+      "interval": 5,
+      "times": 5,
+      "dbhListProfile": {
+        "fasy": 70,
+        "qupe": 80,
+        "abal": 50,
+        "piab": 40,
+        "rest": 55
+      }
     }
   },
   "plenter_harvest": {
     "MF": {
-      "interval": 5, "times": 1000,
-      "plenterCurve": { "10": 350, "15": 220, "20": 150, "25": 105, "30": 80, "35": 50, "40": 40, "45": 25, "50": 20 }
+      "interval": 5,
+      "times": 1000,
+      "plenterCurve": {
+        "10": 350,
+        "15": 220,
+        "20": 150,
+        "25": 105,
+        "30": 80,
+        "35": 50,
+        "40": 40,
+        "45": 25,
+        "50": 20
+      }
     },
     "OP": {
-      "interval": 5, "times": 1000,
-      "plenterCurve": { "10": 300, "15": 200, "20": 140, "25": 100, "30": 70, "35": 45, "40": 35, "45": 20, "50": 15 }
+      "interval": 5,
+      "times": 1000,
+      "plenterCurve": {
+        "10": 300,
+        "15": 200,
+        "20": 140,
+        "25": 100,
+        "30": 70,
+        "35": 45,
+        "40": 35,
+        "45": 20,
+        "50": 15
+      }
     },
     "TR": {
-      "interval": 5, "times": 1000,
-      "plenterCurve": { "10": 350, "15": 220, "20": 150, "25": 105, "30": 80, "35": 50, "40": 40, "45": 25, "50": 20 }
+      "interval": 5,
+      "times": 1000,
+      "plenterCurve": {
+        "10": 350,
+        "15": 220,
+        "20": 150,
+        "25": 105,
+        "30": 80,
+        "35": 50,
+        "40": 40,
+        "45": 25,
+        "50": 20
+      }
     },
     "PA": {
-      "interval": 5, "times": 1000,
-      "plenterCurve": { "10": 350, "15": 220, "20": 150, "25": 105, "30": 80, "35": 50, "40": 40, "45": 25, "50": 20 }
+      "interval": 5,
+      "times": 1000,
+      "plenterCurve": {
+        "10": 350,
+        "15": 220,
+        "20": 150,
+        "25": 105,
+        "30": 80,
+        "35": 50,
+        "40": 40,
+        "45": 25,
+        "50": 20
+      }
     },
     "EN": {
-      "interval": 5, "times": 1000,
-      "plenterCurve": { "10": 400, "15": 250, "20": 170, "25": 120, "30": 90, "35": 60, "40": 50, "45": 30, "50": 25 }
+      "interval": 5,
+      "times": 1000,
+      "plenterCurve": {
+        "10": 400,
+        "15": 250,
+        "20": 170,
+        "25": 120,
+        "30": 90,
+        "35": 60,
+        "40": 50,
+        "45": 30,
+        "50": 25
+      }
     }
   },
   "fromBelow": {
-    "MF": { "thinningShare": 0.15, "interval": 5, "times": 5 },
-    "OP": { "thinningShare": 0.25, "interval": 5, "times": 5 },
-    "TR": { "thinningShare": 0.10, "interval": 5, "times": 5 },
-    "PA": { "thinningShare": 0.10, "interval": 5, "times": 5 },
-    "EN": { "thinningShare": 0.10, "interval": 5, "times": 5 }
+    "MF": {
+      "thinningShare": 0.15,
+      "interval": 5,
+      "times": 5
+    },
+    "OP": {
+      "thinningShare": 0.25,
+      "interval": 5,
+      "times": 5
+    },
+    "TR": {
+      "thinningShare": 0.10,
+      "interval": 5,
+      "times": 5
+    },
+    "PA": {
+      "thinningShare": 0.10,
+      "interval": 5,
+      "times": 5
+    },
+    "EN": {
+      "thinningShare": 0.10,
+      "interval": 5,
+      "times": 5
+    }
   },
   "selectiveThinning": {
-    "MF": { "nTrees": 80, "nCompetitors": 4, "interval": 5, "times": 5 },
-    "OP": { "nTrees": 80, "nCompetitors": 4, "interval": 5, "times": 5 },
-    "TR": { "nTrees": 80, "nCompetitors": 4, "interval": 5, "times": 5 },
-    "PA": { "nTrees": 80, "nCompetitors": 4, "interval": 5, "times": 5 },
-    "EN": { "nTrees": 80, "nCompetitors": 4, "interval": 5, "times": 5 }
+    "MF": {
+      "nTrees": 80,
+      "nCompetitors": 4,
+      "interval": 5,
+      "times": 5
+    },
+    "OP": {
+      "nTrees": 80,
+      "nCompetitors": 4,
+      "interval": 5,
+      "times": 5
+    },
+    "TR": {
+      "nTrees": 80,
+      "nCompetitors": 4,
+      "interval": 5,
+      "times": 5
+    },
+    "PA": {
+      "nTrees": 80,
+      "nCompetitors": 4,
+      "interval": 5,
+      "times": 5
+    },
+    "EN": {
+      "nTrees": 80,
+      "nCompetitors": 4,
+      "interval": 5,
+      "times": 5
+    }
   },
   "tending": {
-    "MF": { "intensity": 10, "interval": 2, "times": 3 },
-    "OP": { "intensity": 10, "interval": 2, "times": 3 },
-    "TR": { "intensity": 10, "interval": 2, "times": 3 },
-    "PA": { "intensity": 10, "interval": 2, "times": 3 },
-    "EN": { "intensity": 10, "interval": 2, "times": 3 }
+    "MF": {
+      "intensity": 10,
+      "interval": 2,
+      "times": 3
+    },
+    "OP": {
+      "intensity": 10,
+      "interval": 2,
+      "times": 3
+    },
+    "TR": {
+      "intensity": 10,
+      "interval": 2,
+      "times": 3
+    },
+    "PA": {
+      "intensity": 10,
+      "interval": 2,
+      "times": 3
+    },
+    "EN": {
+      "intensity": 10,
+      "interval": 2,
+      "times": 3
+    }
   },
   "planting": {
     "MF": {},

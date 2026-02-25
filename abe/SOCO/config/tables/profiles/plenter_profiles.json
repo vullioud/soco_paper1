@@ -1,4 +1,5 @@
 {
+  "_comment": "Plenter equilibrium curves: target stem count by DBH class (cm) and management profile. Used by plenter harvest/thinning activities. Structure: all -> profile_name -> {dbh_class: stem_count}.",
   "all": {
     "plenter_bio": {
       "10": 300,

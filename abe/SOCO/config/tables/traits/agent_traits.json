@@ -1,4 +1,5 @@
 {
+  "_comment": "Trait distributions by behavioral type (Sotirov). Each type has: preferences (4-dim Dirichlet: Production, Biodiversity, CO2, NoManagement), resources (Beta), riskTolerance (Beta), adherence (Beta). Sampled once per agent at init.",
   "MF": {
     "preferences": {
       "distribution_function": "dirichlet",

@@ -1,0 +1,38 @@
+{
+    "_comment": "Species strategies: thinning selectivity weights and planting species mix by behavioral type. THINNING_WEIGHTS values MUST be [0,1] — iLand C++ clamps speciesSelectivity. Species > 0.5 get tending protection. Paper 1 simplification: same weights for tending, thinning, and shelterwood. Paper 2 will split into TENDING_WEIGHTS, THINNING_WEIGHTS, HARVEST_WEIGHTS.",
+
+    "THINNING_WEIGHTS": {
+        "MF": {
+            "conifer_dominated":   { "piab": 0.5, "psme": 0.7, "fasy": 1.0, "qupe": 0.9, "abal": 0.8, "rest": 0.6 },
+            "broadleaf_dominated": { "fasy": 0.8, "qupe": 0.8, "abal": 1.0, "piab": 0.7, "rest": 0.5 },
+            "mixed":               { "rest": 1.0 },
+            "pioneer":             { "bepe": 0.2, "potr": 0.2, "rest": 0.5 }
+        },
+        "OP": {
+            "conifer_dominated":   { "piab": 1.0, "psme": 0.9, "lade": 0.7, "fasy": 0.2, "rest": 0.3 },
+            "broadleaf_dominated": { "fasy": 0.8, "qupe": 0.9, "rest": 0.3 },
+            "mixed":               { "piab": 0.9, "psme": 1.0, "fasy": 0.7, "rest": 0.5 },
+            "pioneer":             { "rest": 0.3 }
+        },
+        "TR": {
+            "conifer_dominated":   { "fasy": 0.7, "abal": 0.7, "rest": 0.6 },
+            "broadleaf_dominated": { "fasy": 0.7, "abal": 0.7, "rest": 0.6 },
+            "mixed":               { "rest": 0.7 },
+            "pioneer":             { "rest": 0.6 }
+        },
+        "EN": {
+            "conifer_dominated":   { "piab": 0.3, "psme": 0.4, "fasy": 1.0, "qupe": 1.0, "abal": 0.9, "rest": 0.6 },
+            "broadleaf_dominated": { "rest": 0.7 },
+            "mixed":               { "rest": 0.7 },
+            "pioneer":             { "rest": 0.7 }
+        }
+    },
+
+    "PLANTING_CONFIG": {
+        "MF": { "n_species": 3, "weights": { "piab": 0.15, "psme": 0.15, "fasy": 0.30, "qupe": 0.15, "abal": 0.25 } },
+        "OP": { "n_species": 1, "weights": { "piab": 0.45, "psme": 0.35, "fasy": 0.05, "qupe": 0.05, "abal": 0.10 } },
+        "TR": { "n_species": 2, "weights": { "piab": 0.10, "fasy": 0.40, "qupe": 0.15, "abal": 0.35 } },
+        "PA": null,
+        "EN": { "n_species": 3, "weights": { "fasy": 0.35, "qupe": 0.40, "abal": 0.25 } }
+    }
+}

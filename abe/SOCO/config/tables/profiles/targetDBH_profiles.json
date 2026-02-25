@@ -1,4 +1,5 @@
 {
+  "_comment": "Target DBH thresholds (cm) by species and management profile. Used by targetDBH harvest activity. Structure: all -> profile_name -> {species: dbh_threshold}.",
   "all": {
     "biodiversity_mix": {
       "fasy": 80,

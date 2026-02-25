@@ -21,13 +21,19 @@ class socoabe_main {
     }
 
     load_all_configs() {
-         const configs = {
-            traits:             JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/traits/agent_traits.json'))),
-            activities:         JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/activities/activity_distributions.json'))),
-            parameters:         JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/params/parameter_distributions.json'))),
-            plenter_profiles:   JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/profiles/plenter_profiles.json'))),
-            targetDBH_profiles: JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/profiles/targetDBH_profiles.json'))),
+         var base = './abe/SOCO/config/';
+         var configs = {
+            traits:             JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/traits/agent_traits.json'))),
+            activities:         JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/activities/activity_distributions.json'))),
+            parameters:         JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/params/parameter_distributions.json'))),
+            plenter_profiles:   JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/profiles/plenter_profiles.json'))),
+            targetDBH_profiles: JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/profiles/targetDBH_profiles.json'))),
         };
+
+        // Load species strategies from JSON into runtime config
+        var species_strategies = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/species/species_strategies.json')));
+        SoCoABE_CONFIG.THINNING_WEIGHTS = species_strategies.THINNING_WEIGHTS;
+        SoCoABE_CONFIG.PLANTING_CONFIG = species_strategies.PLANTING_CONFIG;
 
          return configs;
     }
