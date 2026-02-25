@@ -33,12 +33,16 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
             LOG_ENABLED: true
         },
 
+        // Static ecosystem service demand (post-processing only in Paper 1)
+        ES_DEMAND: { Production: 0.4, Biodiversity: 0.3, CO2: 0.3 },
+
         // Behavioral types (Paper 1 - Sotirov)
         BEHAVIORAL_TYPES: ["MF", "OP", "TR", "PA", "EN"],
         SMALL_PRIVATE_SPLIT: { TR: 0.40, PA: 0.30, EN: 0.30 },
 
         // Institutional guideline (Paper 1: identical to MF own_ideal)
         GUIDELINE: {
+            period: { start: 0, end: 999 },
             Harvesting: {
                 options: ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
                 alpha: [4, 3, 0, 3, 5, 0]
