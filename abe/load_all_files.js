@@ -32,13 +32,13 @@ try {
     Globals.include(Globals.path('./abe/SOCO/soco_src/perception/compute_derived_data.js'));
 
     // Load Cognition Module
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decision_windows.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/think.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_group.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_strategies.js'));
-    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/create_new_plan.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_activity.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_parameters.js'));
-    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/compute_schedule.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/plan_decade.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decide_on_going.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/validate_activity.js'));
 
@@ -69,7 +69,6 @@ try {
     // --- 5. Load Main Controller ---
     Globals.include(Globals.path('./abe/SOCO/soco_src/integration/SOCO_main.js'));
 
-    console.log("--- All required SoCoABE scripts loaded successfully. ---");
 
 } catch (e) {
     console.error("CRITICAL ERROR during script loading in load_all_files.js: " + e.message);

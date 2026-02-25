@@ -112,77 +112,89 @@ class socoabe_agent {
         }
     }
 
-    act(scheduled_stands) {
-        for (var i = 0; i < scheduled_stands.length; i++) {
-            var stand_data_obj = scheduled_stands[i];
-            if (stand_data_obj.activity.target_year === Globals.year) {
-                Action.trigger_activity(stand_data_obj);
-            }
-        }
-    }
-
     observe() {
-        for (const stand_id of this.managed_stand_ids) {
-            this.managed_stands_data[stand_id] = Perception.observe_stand(this.managed_stands_data[stand_id], this);
+        for (var i = 0; i < this.managed_stand_ids.length; i++) {
+            var sid = this.managed_stand_ids[i];
+            this.managed_stands_data[sid] = Perception.observe_stand(this.managed_stands_data[sid], this);
         }
     }
 
-    perceive_unit() {
-        this.unit_data = [];
-        for (const stand_id in this.managed_stands_data) {
-            const s = this.managed_stands_data[stand_id];
-
-            this.unit_data.push({
-                stand_id: s.stand_id,
-                is_active: s.activity.is_Sequence,
-                needs_reassessment: s.iLand_stand_data.needs_reassessment,
-                preference: s.preference_focus,
-                age: s.iLand_stand_data.stand_age,
-                soco_age: s.iLand_stand_data.absolute_age_soco,
-                volume: s.iLand_stand_data.volume,
-                basal_area: s.iLand_stand_data.basal_area,
-                structure_class: s.classified.structure_class,
-                age_class: s.classified.age_class
-            });
-        }
-    }
-
-    cognitize(current_year) {
-        const actionable_stands = [];
-        for (const stand_id in this.managed_stands_data) {
-            let stand_data_obj = this.managed_stands_data[stand_id];
-            stand_data_obj = Cognition.think(stand_data_obj, this);
-
-            this.managed_stands_data[stand_id] = stand_data_obj;
-
-            if (stand_data_obj.activity.is_actionable && stand_data_obj.activity.target_year === current_year) {
-                actionable_stands.push(stand_data_obj);
+    handle_reactive_planting(current_year) {
+        for (var stand_id in this.managed_stands_data) {
+            var s = this.managed_stands_data[stand_id];
+            if (s.iLand_stand_data.needs_planting) {
+                var activity = Cognition.draw_activity(this, "Planting");
+                if (activity !== "noManagement") {
+                    s.activity.chosen_Activity = activity;
+                    s.activity.target_year = current_year;
+                    s.activity.is_actionable = true;
+                    Cognition.select_parameters(s, this);
+                }
+                s.activity.decided_window = "Planting";
+                s.iLand_stand_data.needs_planting = false;
             }
         }
-        return actionable_stands;
+    }
+
+    handle_salvage_and_ongoing(current_year) {
+        this.salvage_count_this_year = 0;
+        for (var stand_id in this.managed_stands_data) {
+            var s = this.managed_stands_data[stand_id];
+            s = Cognition.think(s, this);
+            this.managed_stands_data[stand_id] = s;
+
+            if (s.activity.chosen_Activity === 'salvage' && s.activity.is_actionable) {
+                this.salvage_count_this_year++;
+            }
+        }
+    }
+
+    execute_yearly(current_year) {
+        var scheduled = [];
+        for (var sid in this.managed_stands_data) {
+            var s = this.managed_stands_data[sid];
+            if (s.activity.target_year === current_year && s.activity.is_actionable) {
+                scheduled.push(s);
+            }
+        }
+
+        var capacity = Math.max(1, Math.ceil(
+            this.resources * this.managed_stand_ids.length / 10
+        ));
+        capacity -= (this.salvage_count_this_year || 0) * 2;
+        if (capacity < 0) capacity = 0;
+
+        for (var i = 0; i < scheduled.length; i++) {
+            var sd = scheduled[i];
+            if (capacity > 0) {
+                Action.trigger_activity(sd);
+                capacity--;
+            } else {
+                sd.activity.target_year += 1;
+                sd.activity.defer_count = (sd.activity.defer_count || 0) + 1;
+                if (sd.activity.defer_count > 3) {
+                    sd.activity.chosen_Activity = "noManagement";
+                    sd.activity.is_actionable = false;
+                    sd.activity.defer_count = 0;
+                }
+            }
+        }
     }
 
     run_yearly_cycle(current_year) {
+        // 1. Observe all stands
         this.observe();
-        this.perceive_unit();
 
-        // Initialization logic
-        var needs_init = (current_year === 1);
-        if (!needs_init) {
-             var first_id = this.managed_stand_ids[0];
-             if (first_id && this.managed_stands_data[first_id].species_profile === "none") {
-                 needs_init = true;
-             }
-        }
-
-        if (needs_init) {
+        // 2. Initialization (first year)
+        if (current_year === 1 || (!this.is_initialized && this.managed_stand_ids.length > 0)) {
             this.assign_species_profiles();
+            this.is_initialized = true;
         }
 
-        // Log baseline data at the start of recording
+        // 3. Log baseline
         var recording_start_year = SoCoLog.getRecordingStartYear();
         if (current_year === recording_start_year) {
-            for (const stand_id in this.managed_stands_data) {
+            for (var stand_id in this.managed_stands_data) {
                 Monitoring.log_ml_baseline(this.managed_stands_data[stand_id]);
             }
         }
@@ -191,20 +203,28 @@ class socoabe_agent {
                                SoCoABE_CONFIG.NO_INTERVENTION === true);
 
         if (!no_intervention) {
-            let actionable_stands = this.cognitize(current_year);
+            // 4. Handle reactive events (salvage, ongoing sequences)
+            this.handle_salvage_and_ongoing(current_year);
 
-            if (actionable_stands.length > 1) {
-                actionable_stands.sort((a, b) => b.activity.utility_score - a.activity.utility_score);
+            // 5. Handle reactive planting (post-harvest)
+            this.handle_reactive_planting(current_year);
+
+            // 6. Is this a planning year? (every 10 years)
+            var is_planning_year = (current_year >= this.planning_offset &&
+                (current_year - this.planning_offset) % 10 === 0);
+
+            if (is_planning_year) {
+                Cognition.plan_decade(this, current_year);
             }
 
-            if (actionable_stands.length > 0) {
-                this.act(actionable_stands);
-            }
+            // 7. Execute this year's scheduled activities
+            this.execute_yearly(current_year);
         }
 
-        for (const stand_id in this.managed_stands_data) {
-            Monitoring.snapshot(this, this.managed_stands_data[stand_id]);
-            Monitoring.log_yearly_structure(this.managed_stands_data[stand_id]);
+        // 8. Monitor/log
+        for (var sid in this.managed_stands_data) {
+            Monitoring.snapshot(this, this.managed_stands_data[sid]);
+            Monitoring.log_yearly_structure(this.managed_stands_data[sid]);
         }
 
         if (current_year % 10 === 0) {

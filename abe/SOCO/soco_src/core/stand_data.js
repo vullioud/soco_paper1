@@ -42,7 +42,8 @@ class stand_data {
 
             // Dead wood tracking (snags + downed dead wood)
             deadwood_volume_snags: 0,    // Standing dead trees (m³)
-            deadwood_volume_dwd: 0       // Downed dead wood (m³)
+            deadwood_volume_dwd: 0,      // Downed dead wood (m³)
+            needs_planting: false        // Set by final harvest actions
         };
         this.classified = {
             age_class: 'unknown',
@@ -70,7 +71,10 @@ class stand_data {
             timeline: [],
             sequence_total_steps: 0,
             sequence_current_step: 0,
-            sequence_sub_activity: 'none' 
+            sequence_sub_activity: 'none',
+            decided_window: 'none',
+            planned_phase: 'none',
+            defer_count: 0
         };
 
         // --- IV. MONITORING SNAPSHOT ---
