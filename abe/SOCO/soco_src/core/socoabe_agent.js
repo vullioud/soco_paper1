@@ -18,7 +18,7 @@ class socoabe_agent {
         this.activity_table = helpers.deepCopy(this.owner.all_activity_tables[this.behavioral_type]);
         this.species_config_table = helpers.deepCopy(this.owner.species_config_table);
         this.age_class_table = helpers.deepCopy(this.owner.age_class_table);
-        this.parameter_table = helpers.deepCopy(this.owner.parameter_table);
+        this.parameter_table = helpers.deepCopy(this.owner.all_parameter_tables);
         this.plenter_profiles_table = helpers.deepCopy(this.owner.plenter_profiles_table);
         this.targetDBH_profiles_table = helpers.deepCopy(this.owner.targetDBH_profiles_table);
 
