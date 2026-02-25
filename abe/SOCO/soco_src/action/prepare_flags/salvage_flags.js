@@ -1,101 +1,61 @@
-// =================================================================================
 // FILE: soco_src/action/prepare_flags/salvage_flags.js
-// =================================================================================
-// DESCRIPTION:
-// Prepares parameters for salvage operations after disturbance.
-// Sets flags based on agent preference to determine salvage response type.
-// =================================================================================
+// Paper 1: Salvage response by behavioral_type instead of preference_focus.
 
-/**
- * Prepare salvage activity parameters based on agent preferences
- * @param {Object} params - Parameters from select_parameters
- * @param {Object} stand_data_obj - Stand data object with disturbance info
- */
 Action.prepare.salvage = function(params, stand_data_obj) {
-    var preference = stand_data_obj.preference_focus || 'Production';
     var severity = stand_data_obj.iLand_stand_data.disturbance_severity || 0;
-    var severity_m3ha = stand.flag('abe_disturbance_severity_m3ha') || 0;
 
-    // Determine salvage response based on preference and severity
-    var salvage_type = 'salvage_harvest';  // Default
-    var salvage_fraction = 1.0;
-    var min_dbh = 10;
-    var trigger_replant = false;
+    // Find agent to get behavioral_type
+    var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
+    var btype = agent ? agent.behavioral_type : 'TR';
 
-    // Severity thresholds
-    var SEVERE_THRESHOLD = 0.6;    // >60% loss = severe
-    var MODERATE_THRESHOLD = 0.3;  // >30% loss = moderate
+    var response = { type: 'salvage_leave', fraction: 0, replant: false };
 
-    switch (preference) {
-        case 'Production':
-            // Production: Maximize salvage value, clearcut if severe
-            if (severity >= SEVERE_THRESHOLD) {
-                salvage_type = 'salvage_clearcut';
-                trigger_replant = true;
-            } else {
-                salvage_type = 'salvage_harvest';
-                salvage_fraction = 1.0;  // Salvage everything merchantable
-                min_dbh = 7;  // Lower threshold for more recovery
-            }
+    switch (btype) {
+        case 'MF':
+            if (severity >= 0.6)      response = { type: 'salvage_clearcut', fraction: 1.0, replant: true };
+            else if (severity >= 0.3) response = { type: 'salvage_harvest', fraction: 0.9, replant: false };
+            else                      response = { type: 'salvage_harvest', fraction: 0.7, replant: false };
             break;
-
-        case 'CO2':
-            // CO2: Balance salvage with carbon storage in deadwood
-            if (severity >= SEVERE_THRESHOLD) {
-                salvage_type = 'salvage_clearcut';
-                trigger_replant = true;
-            } else if (severity >= MODERATE_THRESHOLD) {
-                salvage_type = 'salvage_harvest';
-                salvage_fraction = 0.7;  // Leave 30% as deadwood/carbon store
-                min_dbh = 15;
-            } else {
-                // Minor disturbance - leave for natural carbon cycling
-                salvage_type = 'salvage_leave';
-            }
+        case 'OP':
+            if (severity >= 0.3)      response = { type: 'salvage_clearcut', fraction: 1.0, replant: true };
+            else                      response = { type: 'salvage_harvest', fraction: 1.0, replant: false };
             break;
-
-        case 'Biodiversity':
-            // Biodiversity: Prioritize habitat, minimize intervention
-            if (severity >= SEVERE_THRESHOLD + 0.2) {  // Higher threshold (80%)
-                salvage_type = 'salvage_harvest';
-                salvage_fraction = 0.5;  // Leave half as habitat
-                min_dbh = 20;  // Only large merchantable trees
-            } else {
-                // Leave for natural processes - deadwood is valuable habitat
-                salvage_type = 'salvage_leave';
-            }
+        case 'TR':
+            if (severity >= 0.6)      response = { type: 'salvage_harvest', fraction: 0.6, replant: false };
+            else                      response = { type: 'salvage_leave', fraction: 0, replant: false };
             break;
-
-        default:
-            // Unknown preference - default to moderate salvage
-            salvage_type = 'salvage_harvest';
-            salvage_fraction = 0.8;
-            min_dbh = 10;
+        case 'PA':
+            response = { type: 'salvage_leave', fraction: 0, replant: false };
+            break;
+        case 'EN':
+            if (severity >= 0.8)      response = { type: 'salvage_harvest', fraction: 0.3, replant: false };
+            else                      response = { type: 'salvage_leave', fraction: 0, replant: false };
+            break;
     }
 
-    // Set flags for the salvage execution activity
+    var salvage_type = response.type;
+    var salvage_fraction = response.fraction || 1.0;
+    var min_dbh = (salvage_type === 'salvage_clearcut') ? 0 : 10;
+
     stand.setFlag('abe_param_salvage_type', salvage_type);
     stand.setFlag('abe_param_salvage_fraction', salvage_fraction);
     stand.setFlag('abe_param_salvage_min_dbh', min_dbh);
-    stand.setFlag('abe_param_salvage_trigger_replant', trigger_replant);
+    stand.setFlag('abe_param_salvage_trigger_replant', response.replant);
 
-    // Store the decision in stand_data for tracking
     stand_data_obj.iLand_stand_data.salvage_response = salvage_type;
+
+    // Trigger reactive planting if replant is true
+    if (response.replant) {
+        stand_data_obj.iLand_stand_data.needs_planting = true;
+    }
 
     return salvage_type;
 };
 
-/**
- * Clear salvage-related flags after operation completes
- */
 Action.prepare.clear_salvage_flags = function() {
     stand.setFlag('abe_need_salvage', false);
     stand.setFlag('abe_param_salvage_type', null);
     stand.setFlag('abe_param_salvage_fraction', null);
     stand.setFlag('abe_param_salvage_min_dbh', null);
     stand.setFlag('abe_param_salvage_trigger_replant', null);
-
-    // Note: We keep disturbance history flags for learning/tracking
-    // abe_disturbance_year, abe_disturbance_volume, abe_disturbance_severity
-    // These are valuable historical data
 };

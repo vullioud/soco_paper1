@@ -57,6 +57,43 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
             }
         },
 
+        // Species strategies: condition-dependent thinning weights
+        THINNING_WEIGHTS: {
+            MF: {
+                conifer_dominated:   { piab: 0.8, psme: 1.0, fasy: 1.5, qupe: 1.3, abal: 1.2, rest: 0.9 },
+                broadleaf_dominated: { fasy: 1.2, qupe: 1.2, abal: 1.5, piab: 1.0, rest: 0.8 },
+                mixed:               { rest: 1.0 },
+                pioneer:             { bepe: 0.3, potr: 0.3, rest: 0.8 }
+            },
+            OP: {
+                conifer_dominated:   { piab: 1.5, psme: 1.3, lade: 1.1, fasy: 0.3, rest: 0.5 },
+                broadleaf_dominated: { fasy: 1.2, qupe: 1.3, rest: 0.5 },
+                mixed:               { piab: 1.2, psme: 1.3, fasy: 1.0, rest: 0.8 },
+                pioneer:             { rest: 0.5 }
+            },
+            TR: {
+                conifer_dominated:   { fasy: 1.1, abal: 1.1, rest: 1.0 },
+                broadleaf_dominated: { fasy: 1.1, abal: 1.1, rest: 1.0 },
+                mixed:               { rest: 1.0 },
+                pioneer:             { rest: 1.0 }
+            },
+            EN: {
+                conifer_dominated:   { piab: 0.5, psme: 0.6, fasy: 2.0, qupe: 2.0, abal: 1.5, rest: 1.0 },
+                broadleaf_dominated: { rest: 1.0 },
+                mixed:               { rest: 1.0 },
+                pioneer:             { rest: 1.0 }
+            }
+        },
+
+        // Species strategies: planting config
+        PLANTING_CONFIG: {
+            MF: { n_species: 3, weights: { piab: 0.15, psme: 0.15, fasy: 0.30, qupe: 0.15, abal: 0.25 } },
+            OP: { n_species: 1, weights: { piab: 0.45, psme: 0.35, fasy: 0.05, qupe: 0.05, abal: 0.10 } },
+            TR: { n_species: 2, weights: { piab: 0.10, fasy: 0.40, qupe: 0.15, abal: 0.35 } },
+            PA: null,
+            EN: { n_species: 3, weights: { fasy: 0.35, qupe: 0.40, abal: 0.25 } }
+        },
+
         // Run without agent interventions
         NO_INTERVENTION: false,
 
