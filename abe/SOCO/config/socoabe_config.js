@@ -62,30 +62,33 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         },
 
         // Species strategies: condition-dependent thinning weights
+        // All values MUST be [0,1]. iLand C++ clamps speciesSelectivity to [0,1].
+        // Species > 0.5 get tending protection. Paper 1 simplification: same weights
+        // for tending, thinning, and shelterwood. Paper 2 will split into separate tables.
         THINNING_WEIGHTS: {
-            MF: {
-                conifer_dominated:   { piab: 0.8, psme: 1.0, fasy: 1.5, qupe: 1.3, abal: 1.2, rest: 0.9 },
-                broadleaf_dominated: { fasy: 1.2, qupe: 1.2, abal: 1.5, piab: 1.0, rest: 0.8 },
+            MF: {  // Multifunctional: diverse, broadleaf-leaning
+                conifer_dominated:   { piab: 0.5, psme: 0.7, fasy: 1.0, qupe: 0.9, abal: 0.8, rest: 0.6 },
+                broadleaf_dominated: { fasy: 0.8, qupe: 0.8, abal: 1.0, piab: 0.7, rest: 0.5 },
                 mixed:               { rest: 1.0 },
-                pioneer:             { bepe: 0.3, potr: 0.3, rest: 0.8 }
+                pioneer:             { bepe: 0.2, potr: 0.2, rest: 0.5 }
             },
-            OP: {
-                conifer_dominated:   { piab: 1.5, psme: 1.3, lade: 1.1, fasy: 0.3, rest: 0.5 },
-                broadleaf_dominated: { fasy: 1.2, qupe: 1.3, rest: 0.5 },
-                mixed:               { piab: 1.2, psme: 1.3, fasy: 1.0, rest: 0.8 },
-                pioneer:             { rest: 0.5 }
+            OP: {  // Optimiser/Production: conifer-focused
+                conifer_dominated:   { piab: 1.0, psme: 0.9, lade: 0.7, fasy: 0.2, rest: 0.3 },
+                broadleaf_dominated: { fasy: 0.8, qupe: 0.9, rest: 0.3 },
+                mixed:               { piab: 0.9, psme: 1.0, fasy: 0.7, rest: 0.5 },
+                pioneer:             { rest: 0.3 }
             },
-            TR: {
-                conifer_dominated:   { fasy: 1.1, abal: 1.1, rest: 1.0 },
-                broadleaf_dominated: { fasy: 1.1, abal: 1.1, rest: 1.0 },
-                mixed:               { rest: 1.0 },
-                pioneer:             { rest: 1.0 }
+            TR: {  // Traditionalist: balanced, slight broadleaf
+                conifer_dominated:   { fasy: 0.7, abal: 0.7, rest: 0.6 },
+                broadleaf_dominated: { fasy: 0.7, abal: 0.7, rest: 0.6 },
+                mixed:               { rest: 0.7 },
+                pioneer:             { rest: 0.6 }
             },
-            EN: {
-                conifer_dominated:   { piab: 0.5, psme: 0.6, fasy: 2.0, qupe: 2.0, abal: 1.5, rest: 1.0 },
-                broadleaf_dominated: { rest: 1.0 },
-                mixed:               { rest: 1.0 },
-                pioneer:             { rest: 1.0 }
+            EN: {  // Environmentalist: strongly broadleaf, anti-monoculture conifer
+                conifer_dominated:   { piab: 0.3, psme: 0.4, fasy: 1.0, qupe: 1.0, abal: 0.9, rest: 0.6 },
+                broadleaf_dominated: { rest: 0.7 },
+                mixed:               { rest: 0.7 },
+                pioneer:             { rest: 0.7 }
             }
         },
 
