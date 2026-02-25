@@ -47,7 +47,6 @@ Action.prepare.selectiveThinning = function(params, stand_data_obj) {
     
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
     
-    console.log(`[Action] Prepared SelectiveThinning (${strategyName}). Selectivity: ${JSON.stringify(speciesSelectivity)}`);
 };
 
 Action.prepare.clear_selectiveThinning_flags = function() {

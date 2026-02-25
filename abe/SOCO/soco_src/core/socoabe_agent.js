@@ -14,8 +14,8 @@ class socoabe_agent {
         // Load trait table by behavioral_type (not owner_type)
         this.trait_table = helpers.deepCopy(this.owner.all_trait_tables[this.behavioral_type]);
 
-        // Other tables still keyed by owner_type (will be updated in Block 3/5)
-        this.activity_table = helpers.deepCopy(this.owner.activity_table);
+        // Activity table keyed by behavioral_type (flat: type → phase → {options, alpha})
+        this.activity_table = helpers.deepCopy(this.owner.all_activity_tables[this.behavioral_type]);
         this.species_config_table = helpers.deepCopy(this.owner.species_config_table);
         this.age_class_table = helpers.deepCopy(this.owner.age_class_table);
         this.parameter_table = helpers.deepCopy(this.owner.parameter_table);
@@ -79,10 +79,7 @@ class socoabe_agent {
     }
 
     assign_species_profiles() {
-        if (!this.species_config_table) {
-            console.warn(`[Agent ${this.id}] No species_config_table found.`);
-            return;
-        }
+        if (!this.species_config_table) return;
 
         for (const stand_id in this.managed_stands_data) {
             const stand_data_obj = this.managed_stands_data[stand_id];

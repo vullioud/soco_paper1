@@ -18,8 +18,8 @@ export_trait_json <- function(data, path) {
         preferences = list(
           distribution_function = "dirichlet",
           distribution_params = list(
-            options = c("Production", "Biodiversity", "CO2"),
-            alpha = c(d$pref_prod, d$pref_bio, d$pref_co2)
+            options = c("Production", "Biodiversity", "CO2", "NoManagement"),
+            alpha = c(d$pref_prod, d$pref_bio, d$pref_co2, d$pref_nomgmt)
           )
         ),
         resources = list(
@@ -51,7 +51,7 @@ sim_dirichlet_traits <- function(alpha_vec, n = 2000) {
   draws <- matrix(rgamma(n * k, shape = alpha_vec, scale = 1), nrow = n, byrow = TRUE)
   draws <- draws / rowSums(draws)
   as_tibble(draws, .name_repair = "minimal") %>%
-    set_names(c("Production", "Biodiversity", "CO2"))
+    set_names(c("Production", "Biodiversity", "CO2", "NoManagement"))
 }
 
 plot_type_preferences <- function(data) {
@@ -59,12 +59,12 @@ plot_type_preferences <- function(data) {
   sim_df <- data %>%
     rowwise() %>%
     mutate(
-      alpha_vec = list(c(pref_prod, pref_bio, pref_co2)),
+      alpha_vec = list(c(pref_prod, pref_bio, pref_co2, pref_nomgmt)),
       sims = list(sim_dirichlet_traits(alpha_vec, n = 2000))
     ) %>%
     select(type, sims) %>%
     unnest(sims) %>%
-    pivot_longer(cols = c("Production", "Biodiversity", "CO2"),
+    pivot_longer(cols = c("Production", "Biodiversity", "CO2", "NoManagement"),
                  names_to = "Objective", values_to = "Weight")
 
   ggplot(sim_df, aes(x = Weight, fill = Objective, color = Objective)) +
@@ -97,17 +97,18 @@ plot_type_preferences <- function(data) {
 generate_trait_table <- function(data) {
   data %>%
     rowwise() %>%
-    mutate(Precision = pref_prod + pref_bio + pref_co2) %>%
+    mutate(Precision = pref_prod + pref_bio + pref_co2 + pref_nomgmt) %>%
     ungroup() %>%
     select(
       `Behavioral Type` = type,
       Production = pref_prod,
       Biodiversity = pref_bio,
       CO2 = pref_co2,
+      NoManagement = pref_nomgmt,
       Precision
     ) %>%
     kbl(caption = "Table: Agent Preference Alphas (Dirichlet) by Behavioral Type") %>%
     kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed")) %>%
     column_spec(1, bold = TRUE) %>%
-    column_spec(5, bold = TRUE, border_left = TRUE, background = "#f9f9f9")
+    column_spec(6, bold = TRUE, border_left = TRUE, background = "#f9f9f9")
 }

@@ -501,17 +501,15 @@ var Monitoring = {
     // --- 3. EXPORT FUNCTIONS ---
 
     save_detailed_csv: function(all_agents, filename) {
-        console.log(`--- Monitoring: Saving Detailed Log ---`);
+
         this._write_csv(all_agents, filename, "detailed_history");
     },
 
     save_activity_csv: function(all_agents, filename) {
-        console.log(`--- Monitoring: Saving Activity Log (Simplified) ---`);
         this._write_csv(all_agents, filename, "activity_history");
     },
 
     save_aggregated_csv: function(filename) {
-        console.log(`--- Monitoring: Saving Aggregated Log ---`);
         var header = "year,owner_type,total_ba,species_composition";
         var lines = [header];
         for (var i = 0; i < this.aggregated_history.length; i++) {
@@ -523,7 +521,6 @@ var Monitoring = {
     },
 
     save_harvest_csv: function(filename) {
-        console.log(`--- Monitoring: Saving Harvest-Only Log ---`);
         var header = "year,agent_id,owner_type,stand_id,activity_name," +
             "volume_removed,trees_removed,rotation_total_harvest," +
             "volume_before,volume_after,stand_age,basal_area";
@@ -548,7 +545,6 @@ var Monitoring = {
 
     // NEW: Save continuous activity log (logged immediately when flags are read)
     save_continuous_activity_csv: function(filename) {
-        console.log(`--- Monitoring: Saving Continuous Activity Log ---`);
         var header = "year,stand_id,agent_id,activity";
         var lines = [header];
 
@@ -559,14 +555,11 @@ var Monitoring = {
         }
 
         Globals.saveTextFile(filename, lines.join("\n"));
-        console.log(`      -> Saved ${this.continuous_activity_log.length} records to ${filename}.`);
     },
 
     // Save ML training dataset (rich activity records with pre-activity state)
     save_ml_activity_csv: function(filename) {
-        console.log(`--- Monitoring: Saving ML Activity Dataset ---`);
         if (!this.ml_activity_log || this.ml_activity_log.length === 0) {
-            console.warn(`    No ML activity records to save.`);
             // Still save the header so the file exists
         }
 
@@ -597,7 +590,6 @@ var Monitoring = {
 
         try {
             Globals.saveTextFile(filename, lines.join("\n"));
-            console.log(`      -> Saved ${this.ml_activity_log.length} ML records to ${filename}.`);
         } catch (e) {
             console.error(`    [ERROR] Globals.saveTextFile failed: ${e.message}`);
         }
@@ -685,10 +677,8 @@ var Monitoring = {
      * @param {string} filename - Output file path
      */
     save_yearly_structure_csv: function(filename) {
-        console.log(`--- Monitoring: Saving Yearly Structure Log ---`);
 
         if (!this.yearly_structure_log || this.yearly_structure_log.length === 0) {
-            console.warn(`    No yearly structure records to save.`);
         }
 
         // Header includes iland_year for easy joining with iLand output
@@ -703,7 +693,6 @@ var Monitoring = {
 
         try {
             Globals.saveTextFile(filename, lines.join("\n"));
-            console.log(`      -> Saved ${this.yearly_structure_log.length} yearly structure records to ${filename}.`);
         } catch (e) {
             console.error(`    [ERROR] Globals.saveTextFile failed: ${e.message}`);
         }
@@ -798,7 +787,6 @@ var Monitoring = {
                 }
             }
             Globals.saveTextFile(filename, lines.join("\n"));
-            console.log(`      -> Saved ${total_records} records to ${filename}.`);
         } catch (e) {
             console.error(`[Monitoring] Error saving CSV ${filename}: ${e.message}`);
         }

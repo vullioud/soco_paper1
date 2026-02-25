@@ -2,9 +2,7 @@ Action.prepare.targetDBH = function(params) {
     if (params && params.dbhListProfile) {
         // 'params.dbhListProfile' now correctly holds the full dbhList object.
         stand.setFlag('abe_param_dbhList', params.dbhListProfile);
-        console.log(`      -> Setting 'abe_param_dbhList' flag from provided profile object.`);
     } else {
-        console.warn(`      -> WARN: No 'dbhListProfile' object found in parameters for targetDBH. Setting empty flag.`);
         stand.setFlag('abe_param_dbhList', {});
     }
 
@@ -22,5 +20,4 @@ Action.prepare.targetDBH = function(params) {
     stand.setFlag('abe_param_maxRemovalShare', maxRemoval);
     stand.setFlag('abe_param_volumeFallbackShare', fallbackShare);
 
-    console.log(`      -> Safeguards: maxRemoval=${(maxRemoval*100).toFixed(0)}%, fallback=${(fallbackShare*100).toFixed(0)}%`);
 };

@@ -50,7 +50,6 @@ Action.prepare.shelterwood = function(params, stand_data_obj) {
     
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
     
-    console.log(`[Action] Prepared Shelterwood (${strategyName}). Step ${current_step}/${total_steps}. Remove Frac: ${fraction.toFixed(2)}. Selectivity: ${JSON.stringify(speciesSelectivity)}`);
 };
 
 Action.prepare.clear_shelterwood_flags = function() {

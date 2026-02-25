@@ -3,7 +3,6 @@ class institution {
         this.owners = {};
         this.all_agents = [];
         this.configs = all_configs;
-        console.log("Institution created. Discovering landscape...");
         this.discover_and_create();
     }
 
@@ -32,17 +31,12 @@ class institution {
             }
         });
 
-        console.log("--- Creating SoCoABE Agents per Owner ---");
         for (const owner_type in owner_agent_stand_map) {
             const agent_stand_map = owner_agent_stand_map[owner_type];
-            
             const new_owner = new owner(this, owner_type, agent_stand_map, this.configs);
-            
             this.owners[owner_type] = new_owner;
             this.all_agents.push(...new_owner.agent_list);
-            console.log(`  -> Owner '${owner_type}': created ${new_owner.agent_list.length} agents.`);
         }
-        console.log(`Institution discovered ${Object.keys(this.owners).length} owner types, created ${this.all_agents.length} total agents.`);
     }
 }
 this.institution = institution;

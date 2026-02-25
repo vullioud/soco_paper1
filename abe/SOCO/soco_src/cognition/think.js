@@ -24,6 +24,13 @@ Cognition.think = function(stand_data_obj, agent) {
         return stand_data_obj;
     }
 
+    // --- STEP 0.6: NoManagement preference ---
+    if (stand_data_obj.preference_focus === 'NoManagement') {
+        stand_data_obj.activity.chosen_Activity = 'noManagement';
+        stand_data_obj.activity.is_actionable = false;
+        return stand_data_obj;
+    }
+
     // --- STEP 1: UPDATE ONGOING SEQUENCE (if any) ---
     stand_data_obj = Cognition.update_ongoing_sequence(stand_data_obj);
 

@@ -25,7 +25,6 @@ Action.prepare.femel = function(params, stand_data_obj) {
     if (growth_width < 1) growth_width = 1;
     stand.setFlag('abe_param_femel_growth_width', growth_width);
 
-    console.log(`[Action] Prepared Femel for stand ${stand.id}. InitSize=${initial_size}, Growth=${growth_width}`);
 };
 
 Action.prepare.clear_femel_flags = function() {

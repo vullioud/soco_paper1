@@ -9,17 +9,15 @@ class socoabe_main {
     }
 
     initialize() {
-        console.log("--- SoCoABE Main: Initializing Cognitive Layer... ---");
-        const configs = this.load_all_configs();
+        var configs = this.load_all_configs();
         this.institution = new institution(configs);
 
-        const sample_size = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.MONITORING)
+        var sample_size = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.MONITORING)
                             ? SoCoABE_CONFIG.MONITORING.sample_size
                             : 10;
 
         this.select_monitoring_stands(sample_size);
         this.initialized = true;
-        console.log(`--- SoCoABE Main: Initialization Complete. Monitoring ${sample_size} stands. ---`);
     }
 
     load_all_configs() {
@@ -64,11 +62,7 @@ class socoabe_main {
     }
 
     finalize() {
-        if (!this.initialized) {
-            console.log("--- SoCoABE Main: finalize() called but not initialized, skipping ---");
-            return;
-        }
-        console.log("--- SoCoABE Main: Finalizing and Saving Logs ---");
+        if (!this.initialized) return;
 
         var prefix = "";
         try {
@@ -77,9 +71,8 @@ class socoabe_main {
             prefix = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.OUTPUT_PREFIX)
                      ? SoCoABE_CONFIG.OUTPUT_PREFIX : "";
         }
-        if (prefix) {
-            console.log(`    Using output prefix: ${prefix}`);
-        }
+
+
 
         var fileNames = SoCoABE_CONFIG.MONITORING.OUTPUT_FILES || {};
         var fn_ml = fileNames.ML_ACTIVITY || "soco_ml_activities";
@@ -129,7 +122,6 @@ class socoabe_main {
             Monitoring.save_yearly_structure_csv(path_structure);
         }
 
-        console.log("--- SoCoABE Main: Finalize Complete ---");
     }
 }
 this.socoabe_main = socoabe_main;

@@ -27,5 +27,4 @@ Action.prepare.planting = function(params, stand_data_obj) {
     stand.setFlag('abe_param_planting_species', planting_species_list);
     stand.setFlag('abe_param_planting_fraction', planting_fractions_list);
     
-    console.log(`[Action] Prepared Planting. Strategy: '${strategyName}'. Species: [${planting_species_list.join(', ')}], Fractions: [${planting_fractions_list.join(', ')}]`);
 };

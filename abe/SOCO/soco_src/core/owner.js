@@ -1,6 +1,5 @@
 // FILE: soco_src/core/owner.js
-// Paper 1: Tables keyed by behavioral_type instead of owner_type for traits.
-// Activity, species_config still keyed by owner_type (until Block 3).
+// Paper 1: Tables keyed by behavioral_type for traits and activities.
 
 class owner {
     constructor(institution, owner_type, agent_stand_map, all_configs) {
@@ -10,7 +9,7 @@ class owner {
 
         // Store all configs so agents can pick by behavioral_type
         this.all_trait_tables = all_configs.traits;
-        this.activity_table = all_configs.activities[this.type];
+        this.all_activity_tables = all_configs.activities;
         this.species_config_table = all_configs.species_config[this.type];
 
         // Universal tables

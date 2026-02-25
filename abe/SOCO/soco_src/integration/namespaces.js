@@ -20,4 +20,3 @@ var Action = {
 };
 this.Action = Action;
 
-console.log("--- SoCoABE Global Namespaces Initialized ---");

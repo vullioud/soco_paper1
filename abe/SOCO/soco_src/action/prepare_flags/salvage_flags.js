@@ -16,8 +16,6 @@ Action.prepare.salvage = function(params, stand_data_obj) {
     var severity = stand_data_obj.iLand_stand_data.disturbance_severity || 0;
     var severity_m3ha = stand.flag('abe_disturbance_severity_m3ha') || 0;
 
-    console.log(`[Action] Preparing Salvage for stand ${stand.id}. Preference: ${preference}, Severity: ${(severity * 100).toFixed(1)}%`);
-
     // Determine salvage response based on preference and severity
     var salvage_type = 'salvage_harvest';  // Default
     var salvage_fraction = 1.0;
@@ -83,8 +81,6 @@ Action.prepare.salvage = function(params, stand_data_obj) {
 
     // Store the decision in stand_data for tracking
     stand_data_obj.iLand_stand_data.salvage_response = salvage_type;
-
-    console.log(`  -> Salvage type: ${salvage_type}, Fraction: ${salvage_fraction}, Min DBH: ${min_dbh}`);
 
     return salvage_type;
 };
