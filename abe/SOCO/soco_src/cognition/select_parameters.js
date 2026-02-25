@@ -17,9 +17,6 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
         params[key] = params_for_type[key];
     }
 
-    // Attach species profile from stand data
-    params.species_profile = stand_data_obj.species_profile;
-
     stand_data_obj.activity.parameters = params;
     return stand_data_obj;
 };

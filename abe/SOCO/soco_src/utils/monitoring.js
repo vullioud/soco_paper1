@@ -190,7 +190,7 @@ var Monitoring = {
                 structure_class_t0: stand_data_obj.classified.structure_class || 'unknown',
                 age_class_t0: stand_data_obj.classified.age_class || 'unknown',
                 activity_class_t0: stand_data_obj.classified.activity_class || 'unknown',
-                species_profile: stand_data_obj.species_profile || 'none',
+                species_profile: 'none',
                 target_species: JSON.stringify([]),
                 species_composition_t0: JSON.stringify(species_comp),
                 structure_detail_t0: JSON.stringify(structure_data),
@@ -244,8 +244,8 @@ var Monitoring = {
                 structure_data = {};
             }
 
-            // Get species strategy info
-            var species_profile = stand_data_obj.species_profile || 'none';
+            // Species strategy info (legacy field, kept for CSV schema compat)
+            var species_profile = 'none';
             var target_species = [];
             try {
                 if (stand_data_obj.history && stand_data_obj.history.target_species) {
@@ -396,7 +396,7 @@ var Monitoring = {
                 behavioral_type: agent.behavioral_type || "unknown",
                 stand_id: stand_data.stand_id,
                 preference: stand_data.preference_focus,
-                strategy: stand_data.species_profile || "none",
+                strategy: "none",
 
                 age: stand.age,
                 absolute_age: stand.absoluteAge,

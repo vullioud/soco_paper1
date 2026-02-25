@@ -43,10 +43,7 @@ Action.prepare.shelterwood = function(params, stand_data_obj) {
 
     // 3. Species Selectivity via Strategy
     var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
-    var strategyName = stand_data_obj.species_profile;
-
-    // We pass 'shelterwood' as context, though strategies treat it like thinning (weights)
-    var speciesSelectivity = SpeciesStrategies.execute(strategyName, stand_data_obj, agent, 'shelterwood');
+    var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'shelterwood');
     
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
     

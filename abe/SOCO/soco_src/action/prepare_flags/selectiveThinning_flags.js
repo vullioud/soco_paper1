@@ -35,15 +35,9 @@ Action.prepare.selectiveThinning = function(params, stand_data_obj) {
         stand.setFlag('abe_param_fraction_to_remove', 1.0);
     }
 
-    // 3. Species Selectivity via Strategy (NEW LOGIC)
+    // 3. Species Selectivity via Strategy
     var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
-    
-    // Get strategy name (e.g. "economic", "climate")
-    var strategyName = stand_data_obj.species_profile; 
-    
-    // Execute Strategy for 'thinning'
-    // This returns a dictionary like { "piab": 0.1, "rest": 1.0 }
-    var speciesSelectivity = SpeciesStrategies.execute(strategyName, stand_data_obj, agent, 'thinning');
+    var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'thinning');
     
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
     

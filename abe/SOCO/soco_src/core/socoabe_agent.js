@@ -16,8 +16,6 @@ class socoabe_agent {
 
         // Activity table keyed by behavioral_type (flat: type → phase → {options, alpha})
         this.activity_table = helpers.deepCopy(this.owner.all_activity_tables[this.behavioral_type]);
-        this.species_config_table = helpers.deepCopy(this.owner.species_config_table);
-        this.age_class_table = helpers.deepCopy(this.owner.age_class_table);
         this.parameter_table = helpers.deepCopy(this.owner.all_parameter_tables);
         this.plenter_profiles_table = helpers.deepCopy(this.owner.plenter_profiles_table);
         this.targetDBH_profiles_table = helpers.deepCopy(this.owner.targetDBH_profiles_table);
@@ -97,21 +95,6 @@ class socoabe_agent {
         });
     }
 
-    assign_species_profiles() {
-        if (!this.species_config_table) return;
-
-        for (const stand_id in this.managed_stands_data) {
-            const stand_data_obj = this.managed_stands_data[stand_id];
-
-            if (stand_data_obj.species_profile === "none") {
-                const strategy_weights = Distributions.sample(this.species_config_table);
-                const chosen_strategy = Distributions.weighted_random_choice(strategy_weights);
-
-                stand_data_obj.species_profile = chosen_strategy;
-            }
-        }
-    }
-
     observe() {
         for (var i = 0; i < this.managed_stand_ids.length; i++) {
             var sid = this.managed_stand_ids[i];
@@ -158,6 +141,11 @@ class socoabe_agent {
             }
         }
 
+        // Sort by utility_score descending so high-value stands execute first
+        scheduled.sort(function(a, b) {
+            return (b.activity.utility_score || 0) - (a.activity.utility_score || 0);
+        });
+
         var capacity = Math.max(1, Math.ceil(
             this.resources * this.managed_stand_ids.length / 10
         ));
@@ -187,7 +175,6 @@ class socoabe_agent {
 
         // 2. Initialization (first year)
         if (current_year === 1 || (!this.is_initialized && this.managed_stand_ids.length > 0)) {
-            this.assign_species_profiles();
             this.is_initialized = true;
         }
 

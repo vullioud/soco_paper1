@@ -25,7 +25,6 @@ Action.prepare.clear_flags = function() {
     stand.setFlag('abe_param_times', null);
     stand.setFlag('abe_param_interval', null);
     stand.setFlag('abe_param_intensity', null);
-    stand.setFlag('abe_param_species_profile', null);
     stand.setFlag('abe_param_plenterCurve', null);
     stand.setFlag('abe_param_dbhList', null);
     stand.setFlag('abe_param_nCompetitors', null);

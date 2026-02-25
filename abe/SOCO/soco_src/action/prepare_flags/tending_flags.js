@@ -14,16 +14,9 @@
 
 Action.prepare.tending = function(params, stand_data_obj) {
 
-    // 1. Get Agent & Strategy
+    // 1. Get Agent & Execute Strategy for 'tending'
     var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
-    var strategyName = stand_data_obj.species_profile;
-
-    // Fallback
-    if (!strategyName || strategyName === "none") strategyName = "indiscriminate";
-
-    // 2. Execute Strategy for 'tending'
-    // Returns weights: { "quro": 1.0, "rest": 0.5 }
-    var speciesSelectivity = SpeciesStrategies.execute(strategyName, stand_data_obj, agent, 'tending');
+    var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'tending');
 
     // DIAGNOSTIC: Validate selectivity
     if (!speciesSelectivity || typeof speciesSelectivity !== 'object') {

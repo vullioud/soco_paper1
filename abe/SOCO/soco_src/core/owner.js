@@ -10,10 +10,8 @@ class owner {
         // Store all configs so agents can pick by behavioral_type
         this.all_trait_tables = all_configs.traits;
         this.all_activity_tables = all_configs.activities;
-        this.species_config_table = all_configs.species_config[this.type];
 
         // Universal tables (parameters now keyed by activity → behavioral_type)
-        this.age_class_table = all_configs.age_class['all'];
         this.all_parameter_tables = all_configs.parameters;
         this.plenter_profiles_table = all_configs.plenter_profiles['all'];
         this.targetDBH_profiles_table = all_configs.targetDBH_profiles['all'];

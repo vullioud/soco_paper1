@@ -3,7 +3,7 @@
 
 var SpeciesStrategies = {
 
-    execute: function(strategyName, stand_data, agent, activityType) {
+    execute: function(stand_data, agent, activityType) {
         if (activityType === 'planting') {
             return this.get_planting_mix(agent.behavioral_type);
         } else {

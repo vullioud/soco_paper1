@@ -8,7 +8,6 @@ class stand_data {
         this.owner_type = agent.owner ? agent.owner.type : 'unknown';
         this.behavioral_type = agent.behavioral_type || 'unknown';
         this.preference_focus = "none";
-        this.species_profile = "none";
 
         // --- II. PERCEPTION DATA ---
         this.iLand_stand_data = {

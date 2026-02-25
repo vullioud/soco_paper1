@@ -29,15 +29,9 @@ Action.prepare.thinningFromBelow = function(params, stand_data_obj) {
 
     stand.setFlag('abe_param_thinningShare', share);
 
-    // 2. Species Selectivity via Strategy (NEW LOGIC)
+    // 2. Species Selectivity via Strategy
     var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
-
-    // Get strategy name (e.g., "economic")
-    var strategyName = stand_data_obj.species_profile;
-
-    // Execute Strategy for 'thinning'
-    // Returns { "piab": 0.1, "rest": 1.0 } etc.
-    var speciesSelectivity = SpeciesStrategies.execute(strategyName, stand_data_obj, agent, 'thinning');
+    var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'thinning');
 
     // DIAGNOSTIC: Validate selectivity
     if (!speciesSelectivity || typeof speciesSelectivity !== 'object') {

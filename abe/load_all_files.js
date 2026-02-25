@@ -37,7 +37,6 @@ try {
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_group.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/condition_classifier.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_strategies.js'));
-    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_activity.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_parameters.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/plan_decade.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decide_on_going.js'));
