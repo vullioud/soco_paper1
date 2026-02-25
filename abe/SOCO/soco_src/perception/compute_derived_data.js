@@ -36,30 +36,18 @@ Perception.compute_derived_data = function(stand_data_obj, agent) {
     stand.trees.loadAll(); 
 
     // =========================================================
-    // --- 1. PIPELINE A: AGE CLASS (Weighted Draw) ---
+    // --- 1. PIPELINE A: AGE CLASS (Deterministic) ---
     // =========================================================
-    
-    var age_class_result = "Planting"; // Default
 
-    if (agent && Array.isArray(agent.age_class_table) && agent.age_class_table.length > 0) {
-        var soco_age = Math.round(data.absolute_age_soco);
-        var last_entry = agent.age_class_table[agent.age_class_table.length - 1];
-        
-        if (soco_age > last_entry.age) {
-            age_class_result = "Harvesting";
-        } else if (soco_age > 0) {
-            var entry = agent.age_class_table.find(function(e) { return e.age === soco_age; });
-            if (entry) {
-                var weights = {
-                    "Planting": entry.Planting || 0,
-                    "Tending": entry.Tending || 0,
-                    "Thinning": entry.Thinning || 0,
-                    "Harvesting": entry.Harvesting || 0
-                };
-                age_class_result = Distributions.weighted_random_choice(weights);
-            }
-        }
-    }
+    var soco_age = data.absolute_age_soco;
+    var age_class_result;
+    if      (soco_age <= 5)  age_class_result = "Planting";
+    else if (soco_age <= 9)  age_class_result = "Establishment";
+    else if (soco_age <= 20) age_class_result = "Tending";
+    else if (soco_age <= 29) age_class_result = "Pole";
+    else if (soco_age <= 70) age_class_result = "Thinning";
+    else if (soco_age <= 79) age_class_result = "Mature";
+    else                     age_class_result = "Harvesting";
     classified.age_class = age_class_result;
 
 

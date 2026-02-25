@@ -84,15 +84,11 @@ class stand_data {
         // These were missing and are required by Monitoring.snapshot
         this.detailed_history = [];
 
-        // Activity history log for social learning
-        // Stores sequence of past activities with context
+        // Activity history log for monitoring
         this.activity_history = {
-            log: [],  // Array of activity records
-            max_length: 20,  // Keep last 20 activities
+            log: [],
+            max_length: 20,
 
-            /**
-             * Add activity to history log
-             */
             add_entry: function(year, activity, params, context) {
                 this.log.push({
                     year: year,
@@ -100,29 +96,9 @@ class stand_data {
                     parameters: params,
                     context: context
                 });
-
-                // Keep only recent history
                 if (this.log.length > this.max_length) {
-                    this.log.shift();  // Remove oldest
+                    this.log.shift();
                 }
-            },
-
-            /**
-             * Get activities from recent years
-             */
-            get_recent: function(years_back) {
-                const cutoff_year = Globals.year - years_back;
-                return this.log.filter(entry => entry.year >= cutoff_year);
-            },
-
-            /**
-             * Get activities matching specific context
-             */
-            get_by_context: function(age_class, structure_class) {
-                return this.log.filter(entry =>
-                    entry.context.age_class === age_class &&
-                    entry.context.structure_class === structure_class
-                );
             }
         };
     }
