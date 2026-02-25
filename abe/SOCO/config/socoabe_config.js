@@ -37,6 +37,26 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         BEHAVIORAL_TYPES: ["MF", "OP", "TR", "PA", "EN"],
         SMALL_PRIVATE_SPLIT: { TR: 0.40, PA: 0.30, EN: 0.30 },
 
+        // Institutional guideline (Paper 1: identical to MF own_ideal)
+        GUIDELINE: {
+            Harvesting: {
+                options: ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
+                alpha: [4, 3, 0, 3, 5, 0]
+            },
+            Thinning: {
+                options: ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
+                alpha: [5, 3, 2, 0]
+            },
+            Tending: {
+                options: ["tending", "noManagement"],
+                alpha: [8, 2]
+            },
+            Planting: {
+                options: ["planting", "noManagement"],
+                alpha: [9, 1]
+            }
+        },
+
         // Run without agent interventions
         NO_INTERVENTION: false,
 

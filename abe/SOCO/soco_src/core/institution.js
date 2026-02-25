@@ -3,6 +3,7 @@ class institution {
         this.owners = {};
         this.all_agents = [];
         this.configs = all_configs;
+        this.guideline_distributions = SoCoABE_CONFIG.GUIDELINE || {};
         this.discover_and_create();
     }
 

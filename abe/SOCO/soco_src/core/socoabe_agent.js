@@ -57,7 +57,26 @@ class socoabe_agent {
 
     init() {
         this.sample_my_traits();
+        this.apply_guideline_blend();
         this.initialize_managed_stands();
+    }
+
+    apply_guideline_blend() {
+        var adherence = this.adherence;
+        var guideline = this.owner.institution.guideline_distributions;
+        if (!guideline || !this.activity_table) return;
+
+        for (var phase in this.activity_table) {
+            var own = this.activity_table[phase].alpha;
+            var guide = guideline[phase];
+            if (!guide || !guide.alpha) continue;
+
+            var blended = [];
+            for (var i = 0; i < own.length; i++) {
+                blended.push((1 - adherence) * own[i] + adherence * (guide.alpha[i] || 0));
+            }
+            this.activity_table[phase].alpha = blended;
+        }
     }
 
     sample_my_traits() {
