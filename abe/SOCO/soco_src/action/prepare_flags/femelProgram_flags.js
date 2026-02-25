@@ -28,8 +28,6 @@ Action.prepare.femel = function(params, stand_data_obj) {
 };
 
 Action.prepare.clear_femel_flags = function() {
-    // console.log(`[COGNITION] Stand ${stand.id}: Cleaning up Femel flags and patches.`);
-    
     stand.setFlag('abe_femel_initialized', null);
     stand.setFlag('abe_femel_current_ring', null);
     

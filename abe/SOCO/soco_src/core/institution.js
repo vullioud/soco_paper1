@@ -23,7 +23,7 @@ class institution {
                 const owner_type = stand.flag('owner_type');
 
                 if (!owner_type) {
-                    console.warn(`Stand ${id} is managed by agent '${agent_name}' but is missing the 'owner_type' flag. It will be ignored by the cognitive layer.`);
+                    SoCoLog.warn(`Stand ${id} is managed by agent '${agent_name}' but is missing the 'owner_type' flag. It will be ignored by the cognitive layer.`);
                     return;
                 }
 

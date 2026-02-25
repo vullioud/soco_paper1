@@ -6,11 +6,10 @@ Perception.observe_stand = function(stand_data_obj, agent) { // Changed to accep
         stand_data_obj = Perception.compute_derived_data(stand_data_obj, agent); // compute data
 
     } catch (e) {
-        console.error(`    [OBSERVE-ERROR] A critical error occurred for stand ${stand_data_obj.stand_id}: ${e.message}`);
-        console.error(`    Stack Trace: ${e.stack}`);
+        SoCoLog.error(`[Observe] Critical error for stand ${stand_data_obj.stand_id}: ${e.message}`);
+        SoCoLog.error(`[Observe] Stack: ${e.stack}`);
     }
-    
-   // console.log(`  [OBSERVE] Pipeline finished for stand ${stand_data_obj.stand_id}.`);
+
     return stand_data_obj;
 };
 

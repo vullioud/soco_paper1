@@ -67,7 +67,6 @@ Cognition.validate_activity = function(stand_data_obj) {
             activity.is_actionable = false;
             activity.scheduling_priority = 'none';
             activity.utility_score = 0;
-            // console.log(`[Cognition] Preserving sequence '${activity.chosen_Activity}' for Stand ${stand_data_obj.stand_id}. Target ${target_year} is outside horizon.`);
         } else {
             // Invalid plan (in the past, or non-sequence too far ahead) -> Reset
             activity.chosen_Activity = 'noManagement';

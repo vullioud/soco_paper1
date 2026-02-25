@@ -20,7 +20,7 @@ Action.prepare.tending = function(params, stand_data_obj) {
 
     // DIAGNOSTIC: Validate selectivity
     if (!speciesSelectivity || typeof speciesSelectivity !== 'object') {
-        console.warn(`[Action] WARNING: Invalid speciesSelectivity for tending on stand ${stand_data_obj.stand_id}, using empty object`);
+        SoCoLog.warn(`[Action] Invalid speciesSelectivity for tending on stand ${stand_data_obj.stand_id}, using empty object`);
         speciesSelectivity = {};
     }
 

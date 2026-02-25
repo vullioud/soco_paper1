@@ -4,7 +4,7 @@ Perception.get_iLand_data = function(stand_data_obj) {
     fmengine.standId = stand_data_obj.stand_id;
     
     if (!stand || stand.id <= 0) {
-        console.warn(`      [WARN] Could not find valid iLand stand object for ID ${stand_data_obj.stand_id}`);
+        SoCoLog.warn(`[Perception] Could not find valid iLand stand object for ID ${stand_data_obj.stand_id}`);
         return stand_data_obj;
     }
 

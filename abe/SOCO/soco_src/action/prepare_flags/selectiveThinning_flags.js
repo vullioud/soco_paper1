@@ -48,14 +48,11 @@ Action.prepare.clear_selectiveThinning_flags = function() {
     var stand_id = -1;
     if (stand && stand.id > 0) stand_id = stand.id;
     
-    // console.log(`[COGNITION] Stand ${stand_id}: Cleaning up selective thinning flags.`);
-    
     stand.setFlag('abe_selective_thinning_initialized', null);
     stand.setFlag('abe_param_totalCompetitors', null);
     
     if (stand && stand.id > 0) {
         stand.trees.loadAll(); 
         stand.trees.resetMarks(); 
-        // console.log(`[COGNITION] -> Cleared all crop/competitor marks.`);
     }
 };

@@ -19,7 +19,7 @@ Action.prepare.thinningFromBelow = function(params, stand_data_obj) {
 
     // DIAGNOSTIC: Validate share type
     if (typeof share !== 'number' || isNaN(share)) {
-        console.warn(`[Action] WARNING: Invalid thinningShare type for stand ${stand_data_obj.stand_id}: ${typeof share}, value=${share}. Using default 0.2`);
+        SoCoLog.warn(`[Action] Invalid thinningShare type for stand ${stand_data_obj.stand_id}: ${typeof share}, value=${share}. Using default 0.2`);
         share = 0.2;
     }
 
@@ -35,7 +35,7 @@ Action.prepare.thinningFromBelow = function(params, stand_data_obj) {
 
     // DIAGNOSTIC: Validate selectivity
     if (!speciesSelectivity || typeof speciesSelectivity !== 'object') {
-        console.warn(`[Action] WARNING: Invalid speciesSelectivity for stand ${stand_data_obj.stand_id}, using empty object (no selectivity)`);
+        SoCoLog.warn(`[Action] Invalid speciesSelectivity for stand ${stand_data_obj.stand_id}, using empty object`);
         speciesSelectivity = {};
     }
 

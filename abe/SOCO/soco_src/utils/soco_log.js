@@ -38,29 +38,26 @@ var SoCoLog = {
 
     /**
      * Check if logging is enabled for a given category
-     * @param {string} category - 'activities', 'agent_cycles', 'network', 'decisions'
+     * @param {string} category - 'activities', 'agent_cycles', 'perception', 'decisions'
      * @returns {boolean}
      */
     isEnabled: function(category) {
         if (typeof SoCoABE_CONFIG === 'undefined') return true;
-        if (!SoCoABE_CONFIG.SOCO_LOG) return true;  // Default to logging if not configured
+        if (!SoCoABE_CONFIG.SOCO_LOG) return true;
 
-        // Master switch
         if (!SoCoABE_CONFIG.SOCO_LOG.ENABLED) return false;
 
-        // During warming, check warming-specific setting
         if (this.isWarmingPeriod() && !SoCoABE_CONFIG.SOCO_LOG.ENABLED_DURING_WARMING) {
             return false;
         }
 
-        // Category-specific switches
         switch(category) {
             case 'activities':
                 return SoCoABE_CONFIG.SOCO_LOG.LOG_ACTIVITIES !== false;
             case 'agent_cycles':
                 return SoCoABE_CONFIG.SOCO_LOG.LOG_AGENT_CYCLES !== false;
-            case 'network':
-                return SoCoABE_CONFIG.SOCO_LOG.LOG_NETWORK !== false;
+            case 'perception':
+                return SoCoABE_CONFIG.SOCO_LOG.LOG_PERCEPTION !== false;
             case 'decisions':
                 return SoCoABE_CONFIG.SOCO_LOG.LOG_DECISIONS !== false;
             default:
@@ -96,11 +93,11 @@ var SoCoLog = {
     },
 
     /**
-     * Log network operations
+     * Log perception/observation data
      * @param {string} message
      */
-    network: function(message) {
-        this.log('network', message);
+    perception: function(message) {
+        this.log('perception', message);
     },
 
     /**

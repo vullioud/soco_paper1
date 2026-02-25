@@ -12,7 +12,7 @@ Action.trigger_activity = function(stand_data_obj) {
     // 1. Set context to the correct stand
     fmengine.standId = stand_data_obj.stand_id;
     if (!stand || stand.id <= 0) {
-        console.error(`[Action] ERROR: Could not get valid stand object for ID ${stand_data_obj.stand_id}`);
+        SoCoLog.error(`[Action] Could not get valid stand object for ID ${stand_data_obj.stand_id}`);
         return;
     }
 
@@ -57,7 +57,7 @@ Action.trigger_activity = function(stand_data_obj) {
     if (typeof prepare_function === 'function') {
         prepare_function(stand_data_obj.activity.parameters, stand_data_obj);
     } else {
-        console.warn(`[Action] Warning: No prepare function found for '${execution_activity_name}' (Mapped from '${cognitive_activity_name}')`);
+        SoCoLog.warn(`[Action] No prepare function found for '${execution_activity_name}' (from '${cognitive_activity_name}')`);
     }
 
     // --- 5. SIGNAL DETERMINATION ---
@@ -114,6 +114,6 @@ Action.trigger_activity = function(stand_data_obj) {
     if (signal_name) {
         stand.stp.signal(signal_name);
     } else {
-        console.error(`[Action] ERROR: No signal name determined for activity '${execution_activity_name}' on stand ${stand.id}!`);
+        SoCoLog.error(`[Action] No signal name determined for activity '${execution_activity_name}' on stand ${stand.id}`);
     }
 };

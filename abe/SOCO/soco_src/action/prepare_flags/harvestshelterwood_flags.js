@@ -53,7 +53,6 @@ Action.prepare.clear_shelterwood_flags = function() {
     var stand_id = -1;
     if (stand && stand.id > 0) stand_id = stand.id;
 
-    // console.log(`[COGNITION] Stand ${stand_id}: Cleaning up shelterwood flags.`);
     stand.setFlag('abe_shelterwood_initialized', null);
     stand.setFlag('abe_param_totalCompetitors', null);
     
