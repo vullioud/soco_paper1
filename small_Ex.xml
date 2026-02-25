@@ -1,0 +1,603 @@
+<?xml version='1.0' encoding='utf-8'?>
+<project>
+    <system>
+        <path>
+            <home></home>
+            <database>database</database>
+            <lip>lip</lip>
+            <temp>temp</temp>
+            <script>scripts</script>
+            <init>init</init>
+            <output>output</output>
+        </path>
+        <database>
+            <!-- changed some stuff here for GFÖ -->
+            <in>all_species_database_v3.sqlite</in>
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <out>iLandTV.sqlite</out>
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <climate>climate_db_ICHEC-EC-EARTH_historical_v4.sqlite</climate>
+        </database>
+        <logging>
+            <logTarget>console</logTarget>
+            <!-- console | file -->
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <!-- <logFile>C:/Users/cv1055/Documents/temp/iLand_logs/iLandTV.txt</logFile> -->
+            <flush>false</flush>
+            <!-- setting to true forces debug output to be written immediately (can help for debugging) -->
+        </logging>
+        <settings>
+            <!-- multithreading: either "true" or "false" default: true -->
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <threadCount>10</threadCount>
+            <multithreading>true</multithreading>
+            <debugOutput>0</debugOutput>
+            <!-- 1=Tree NPP, 2=Tree partition, 4=tree growth, 8=Standlevel NPP, 16=Water Cycle, 32=Daily responses, 64=Establishment, 128=Carbon Cycle, Performance=256 -->
+            <debugOutputAutoSave>true</debugOutputAutoSave>
+            <randomSeed>0</randomSeed>
+            <expressionLinearizationEnabled>true</expressionLinearizationEnabled>
+            <logLevel>error</logLevel>
+            <responsive>false</responsive>
+        </settings>
+        <javascript>
+            <fileName></fileName>
+            <!-- for instance, extra.js -->
+        </javascript>
+    </system>
+    <model>
+        <settings>
+            <regenerationEnabled>true</regenerationEnabled>
+            <mortalityEnabled>true</mortalityEnabled>
+            <growthEnabled>true</growthEnabled>
+            <!-- svd dataset: for now disabled, but consider for round 2 -->
+            <carbonCycleEnabled>false</carbonCycleEnabled>
+            <epsilon>2.7</epsilon>
+            <!-- used to be 2.7, ask why -->
+            <lightExtinctionCoefficient>0.6</lightExtinctionCoefficient>
+            <lightExtinctionCoefficientOpacity>0.6</lightExtinctionCoefficientOpacity>
+            <temperatureTau>6</temperatureTau>
+            <airDensity>1.225</airDensity>
+            <!-- changed value -->
+            <laiThresholdForClosedStands>3</laiThresholdForClosedStands>
+            <boundaryLayerConductance>0.2</boundaryLayerConductance>
+            <interceptionStorageNeedle>4</interceptionStorageNeedle>
+            <!-- default:4 -->
+            <interceptionStorageBroadleaf>2</interceptionStorageBroadleaf>
+            <!--default: 2 -->
+            <snowMeltTemperature>0</snowMeltTemperature>
+            <!-- temperature for snow melt / snowing-->
+            <waterUseSoilSaturation>false</waterUseSoilSaturation>
+            <usePARFractionBelowGroundAllocation>true</usePARFractionBelowGroundAllocation>
+            <!-- using not only N to determine beloground allocation -->
+            <seedDispersal>
+                <seedBelt>
+                    <!-- An example seed belt definition; not particularly useful for this example application -->
+                    <enabled>false</enabled>
+                    <width>5</width>
+                    <sizeX>5</sizeX>
+                    <sizeY>2</sizeY>
+                    <species_0_1>abal 0.1 piab 0.1 lade 0.1 pisy 0.07 fasy 0.8 quro 0.15 acps 0.15 frex 0.15 cabe 0.03 bepe 0.003 alin 0.003 qupe 0.15 algl 0.003 casa 0.1 pini 0.07 acca 0.003 acpl 0.003 qupu 0.03 pice 0.003 soau 0.003 soar 0.05 coav 0.03 alvi 0.003 potr 0.003 poni 0.001 tico 0.03 tipl 0.03 ulgl 0.1 saca 0.003</species_0_1>
+                    <!--beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_1_1>abal 0.3 piab 0.3 lade 0.1 pisy 0.05 fasy 0.4 quro 0.01 acps 0.15 frex 0.12 cabe 0.01 bepe 0.003 alin 0.01 qupe 0.01 algl 0.003 casa 0.003 pini 0.05 acca 0.003 acpl 0.003 qupu 0.003 pice 0.003 soau 0.003 soar 0.01 coav 0.003 alvi 0.003 potr 0.003 poni 0.001 tico 0.003 tipl 0.003 ulgl 0.12 saca 0.003</species_1_1>
+                    <!--spruce-fir-beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_2_1>abal 0.3 piab 0.3 lade 0.1 pisy 0.05 fasy 0.4 quro 0.01 acps 0.15 frex 0.12 cabe 0.01 bepe 0.003 alin 0.01 qupe 0.01 algl 0.003 casa 0.003 pini 0.05 acca 0.003 acpl 0.003 qupu 0.003 pice 0.003 soau 0.003 soar 0.01 coav 0.003 alvi 0.003 potr 0.003 poni 0.001 tico 0.003 tipl 0.003 ulgl 0.12 saca 0.003</species_2_1>
+                    <!--spruce-fir-beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_3_1>abal 0.1 piab 0.1 lade 0.1 pisy 0.07 fasy 0.8 quro 0.15 acps 0.15 frex 0.15 cabe 0.03 bepe 0.003 alin 0.003 qupe 0.15 algl 0.003 casa 0.1 pini 0.07 acca 0.003 acpl 0.003 qupu 0.03 pice 0.003 soau 0.003 soar 0.05 coav 0.03 alvi 0.003 potr 0.003 poni 0.001 tico 0.03 tipl 0.03 ulgl 0.1 saca 0.003</species_3_1>
+                    <!--beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_4_1>abal 0.1 piab 0.1 lade 0.1 pisy 0.07 fasy 0.8 quro 0.15 acps 0.15 frex 0.15 cabe 0.03 bepe 0.003 alin 0.003 qupe 0.15 algl 0.003 casa 0.1 pini 0.07 acca 0.003 acpl 0.003 qupu 0.03 pice 0.003 soau 0.003 soar 0.05 coav 0.03 alvi 0.003 potr 0.003 poni 0.001 tico 0.03 tipl 0.03 ulgl 0.1 saca 0.003</species_4_1>
+                    <!--beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_0_0>abal 0.1 piab 0.1 lade 0.1 pisy 0.07 fasy 0.8 quro 0.15 acps 0.15 frex 0.15 cabe 0.03 bepe 0.003 alin 0.003 qupe 0.15 algl 0.003 casa 0.1 pini 0.07 acca 0.003 acpl 0.003 qupu 0.03 pice 0.003 soau 0.003 soar 0.05 coav 0.03 alvi 0.003 potr 0.003 poni 0.001 tico 0.03 tipl 0.03 ulgl 0.1 saca 0.003</species_0_0>
+                    <!--beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_1_0>abal 0.1 piab 0.1 lade 0.1 pisy 0.07 fasy 0.8 quro 0.15 acps 0.15 frex 0.15 cabe 0.03 bepe 0.003 alin 0.003 qupe 0.15 algl 0.003 casa 0.1 pini 0.07 acca 0.003 acpl 0.003 qupu 0.03 pice 0.003 soau 0.003 soar 0.05 coav 0.03 alvi 0.003 potr 0.003 poni 0.001 tico 0.03 tipl 0.03 ulgl 0.1 saca 0.003</species_1_0>
+                    <!--beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_2_0>abal 0.3 piab 0.3 lade 0.1 pisy 0.05 fasy 0.4 quro 0.01 acps 0.15 frex 0.12 cabe 0.01 bepe 0.003 alin 0.01 qupe 0.01 algl 0.003 casa 0.003 pini 0.05 acca 0.003 acpl 0.003 qupu 0.003 pice 0.003 soau 0.003 soar 0.01 coav 0.003 alvi 0.003 potr 0.003 poni 0.001 tico 0.003 tipl 0.003 ulgl 0.12 saca 0.003</species_2_0>
+                    <!--spruce-fir-beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_3_0>abal 0.3 piab 0.3 lade 0.1 pisy 0.05 fasy 0.4 quro 0.01 acps 0.15 frex 0.12 cabe 0.01 bepe 0.003 alin 0.01 qupe 0.01 algl 0.003 casa 0.003 pini 0.05 acca 0.003 acpl 0.003 qupu 0.003 pice 0.003 soau 0.003 soar 0.01 coav 0.003 alvi 0.003 potr 0.003 poni 0.001 tico 0.003 tipl 0.003 ulgl 0.12 saca 0.003</species_3_0>
+                    <!--spruce-fir-beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                    <species_4_0>abal 0.1 piab 0.1 lade 0.1 pisy 0.07 fasy 0.8 quro 0.15 acps 0.15 frex 0.15 cabe 0.03 bepe 0.003 alin 0.003 qupe 0.15 algl 0.003 casa 0.1 pini 0.07 acca 0.003 acpl 0.003 qupu 0.03 pice 0.003 soau 0.003 soar 0.05 coav 0.03 alvi 0.003 potr 0.003 poni 0.001 tico 0.03 tipl 0.03 ulgl 0.1 saca 0.003</species_4_0>
+                    <!--beech forest definition estimated from Starlinger (slightly adapted from the former version) -->
+                </seedBelt>
+                <dumpSeedMapsEnabled>false</dumpSeedMapsEnabled>
+                <!-- if "true", seed-kernels and seedmaps are dumped as images to the filesystem -->
+                <dumpSeedMapsPath></dumpSeedMapsPath>
+                <!-- target directory for seed maps / seed kernel dumps.-->
+                <externalSeedEnabled>true</externalSeedEnabled>
+                <externalSeedSource></externalSeedSource>
+                <!-- direction of external seeds. specifiy as list of n,e,s,w (north, east, south, west). if empty or missing, seeds enter from all directions. -->
+                <externalSeedSpecies></externalSeedSpecies>
+                <!-- anpassen! an die Simulation -->
+                <externalSeedBuffer></externalSeedBuffer>
+                <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+                <!-- This specifies a species-specific special "buffer", i.e. it defines the distance between the external seed input and the edge of the simulation area. Unit is "seed pixels", i.e. currently 20m. Specify as a comma-separated list of alternately species name and buffer-width (e.g. "Psme, 2, Abmi, 1" -> 40m for Psme, 20m for Abmi). No special buffer is used for species not in the list. Note: the remaining seed source must be >1px due to an implementation detail of the dispersal routine. -->
+                <externalSeedBackgroundInput>abal, 0.001, acca, 0.001, acpl, 0.001, acps, 0.001, algl, 0.001, alin, 
+		0.001, alvi, 0.001, bepe, 0.001, cabe, 0.001, casa, 0.001, coav, 0.001, fasy, 0.001, frex, 0.001, lade, 
+		0.001, piab, 0.001, pice, 0.001, pimu, 0.001, pisy, 0.001, poni, 0.001, potr, 0.001, qupe, 
+		0.001, qupu, 0.001, quro, 0.001, saca, 0.001, soar, 0.001, soau, 
+		0.001, tico, 0.001, tipl, 0.001, ulgl, 0.001 </externalSeedBackgroundInput>
+                <!-- DT: hier alle relevanten Arten einfügen. Die 0.01 definiert die Wahrscheinlichkeit für die Saatverfügbarkeit (würde ich immer gleich setzen, falls zu wenig passiert vielleicht bis auf 0.1 hochsetzen) -->
+                <recruitmentDimensionVariation>0.1</recruitmentDimensionVariation>
+                <!-- defines the range of variation (r) for recruited trees. tree_dbh = cohort_dbh * rnd(1-r, 1+r), tree_h = cohort_h * rnd(1-r, 1+r) (e.g: r=0.2 -> random number from 0.8 to 1.2)-->
+                <longDistanceDispersal>
+                    <rings></rings>
+                    <thresholdArea>0.0001</thresholdArea>
+                    <thresholdLDD>0.0000001</thresholdLDD>
+                    <LDDSeedlings>0.5</LDDSeedlings>
+                </longDistanceDispersal>
+            </seedDispersal>
+            <soil>
+                <qb>5</qb>
+                <!-- CN ratio of soil microbes -->
+                <qh>14.5</qh>
+                <!-- CN ratio of SOM -->
+                <leaching>0.47</leaching>
+                <!-- how many percent of the mineralized nitrogen in O is not available for plants  but is leached -->
+                <el>0.152</el>
+                <!-- microbal efficiency in the labile pool, auxiliary parameter -->
+                <er>0.319</er>
+                <!-- microbal efficiency in the refractory pool, auxiliary parameter -->
+                <swdDBHClass12>20</swdDBHClass12>
+                <!-- class break between classes 1 and 2 for standing snags (dbh, cm) -->
+                <swdDBHClass23>100</swdDBHClass23>
+                <!-- class break between classes 2 and 3 for standing snags (dbh, cm) -->
+                <useDynamicAvailableNitrogen>false</useDynamicAvailableNitrogen>
+                <!-- if true, iLand utilizes the soil-model N for species responses. -->
+                <nitrogenDeposition>16.1</nitrogenDeposition>
+                <!--derived from deposition in Hoeilaart according to ForSite DB -->
+            </soil>
+            <grass>
+                <enabled>false</enabled>
+                <type>pixel</type>
+                <!-- 'pixel' or 'continuous' -->
+                <!-- pixel mode -->
+                <grassDuration>polygon(x, 0,0, 6,0, 6,1, 30,1, 30,0)</grassDuration>
+                <!--<grassDuration>polygon(x, 0,0, 6,0, 6,1, 30,1, 30,0)</grassDuration> -->
+                <LIFThreshold>0.2</LIFThreshold>
+                <!--<grassDuration>polygon(x, 0,0, 6,0, 6,1, 30,1, 30,0)</grassDuration> -->
+                <!-- continuous mode -->
+                <grassPotential>polygon(0.9999*x^0.15)</grassPotential>
+                <!-- function defining max. grass cover [0..1] as function of the LIF pixel value -->
+                <maxTimeLag>3</maxTimeLag>
+                <!-- maximum duration (years) from 0 to full cover -->
+                <grassEffect>polygon(0.9999*x^0.15)</grassEffect>
+                <!-- equation giving probability of prohibiting regeneration as a function of grass level [0..1] -->
+            </grass>
+            <browsing>
+                <enabled>false</enabled>
+                <browsingPressure>1</browsingPressure>
+                <!-- Scaling factor modifying the base probability (1=100% of the species specific parameter)-->
+            </browsing>
+            <svdStates>
+                <enabled>true</enabled>
+                <structure>2m</structure>
+                <functioning>3</functioning>
+            </svdStates>
+            <groundVegetationLAI></groundVegetationLAI>
+            <groundVegetationPsiMin></groundVegetationPsiMin>
+            <permafrost>
+                <enabled>false</enabled>
+                <groundBaseDepth></groundBaseDepth>
+                <initialDepthFrozen></initialDepthFrozen>
+                <initialGroundTemperature></initialGroundTemperature>
+                <lambdaOrganicLayer></lambdaOrganicLayer>
+                <lambdaSnow></lambdaSnow>
+                <maxFreezeThawPerDay></maxFreezeThawPerDay>
+                <moss>
+                    <CNRatio></CNRatio>
+                    <biomass></biomass>
+                    <bulk_density></bulk_density>
+                    <light_comp></light_comp>
+                    <light_k></light_k>
+                    <light_sat></light_sat>
+                    <r_deciduous_inhibition></r_deciduous_inhibition>
+                    <r_decomp></r_decomp>
+                    <respiration_b></respiration_b>
+                    <respiration_q></respiration_q>
+                </moss>
+                <organicLayerDefaultDepth></organicLayerDefaultDepth>
+                <organicLayerDensity></organicLayerDensity>
+            </permafrost>
+            <snowDensity></snowDensity>
+            <snowInitialDepth></snowInitialDepth>
+        </settings>
+        <species>
+            <source>species</source>
+            <reader>readerstamp.bin</reader>
+            <nitrogenResponseClasses>
+                <!-- 3= highly nitrogen-demanding, 1= efficient with low available nitrogen-->
+                <class_1_a>-0.045</class_1_a>
+                <class_1_b>10</class_1_b>
+                <class_2_a>-0.055</class_2_a>
+                <class_2_b>25</class_2_b>
+                <class_3_a>-0.065</class_3_a>
+                <class_3_b>40</class_3_b>
+            </nitrogenResponseClasses>
+            <CO2Response>
+                <p0>1</p0>
+                <baseConcentration>380</baseConcentration>
+                <compensationPoint>80</compensationPoint>
+                <!-- changed this according to werner -->
+                <beta0>0.15</beta0>
+                <!-- Check Norby et al (2005) -->
+            </CO2Response>
+            <lightResponse>
+                <shadeTolerant>min(10*lri,max(0.1613*lri+0.7871,lri))</shadeTolerant>
+                <shadeIntolerant>1-exp(-5.5*(lri-0.05))</shadeIntolerant>
+                <LRImodifier>exp(ln(lri)/0.5*(1-0.5*relH))</LRImodifier>
+            </lightResponse>
+            <phenology>
+                <type id="1">
+                    <!-- deciduous broadleaved -->
+                    <vpdMin>0.9</vpdMin>
+                    <vpdMax>4.1</vpdMax>
+                    <dayLengthMin>10</dayLengthMin>
+                    <dayLengthMax>11</dayLengthMax>
+                    <tempMin>-2</tempMin>
+                    <tempMax>5</tempMax>
+                </type>
+                <type id="2">
+                    <!-- deciduous coniferous -->
+                    <vpdMin>1</vpdMin>
+                    <vpdMax>4.1</vpdMax>
+                    <dayLengthMin>10</dayLengthMin>
+                    <dayLengthMax>11</dayLengthMax>
+                    <tempMin>-4</tempMin>
+                    <tempMax>3</tempMax>
+                </type>
+            </phenology>
+        </species>
+        <world>
+            <cellSize>2</cellSize>
+            <!-- was 185 -->
+            <width>4000</width>
+            <!-- UPDATED for regular grid: 40x40 cells = 4000m -->
+            <!-- manually set this to size of landscape -->
+            <!-- adjusted -->
+            <height>4000</height>
+            <!-- UPDATED for regular grid: 40x40 cells = 4000m -->
+            <!-- adjusted  -->
+            <buffer>200</buffer>
+            <!-- set this to the latitude of bavaria -->
+            <latitude>48.777500</latitude>
+            <resourceUnitsAsGrid>true</resourceUnitsAsGrid>
+            <environmentEnabled>true</environmentEnabled>
+            <environmentMode>grid</environmentMode>
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <!-- UPDATED: Using regular grid (400 stands, 20x20) -->
+            <environmentGrid>init/stand_map_regular.asc</environmentGrid>
+
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <!-- UPDATED: Using regular grid environment file -->
+            <environmentFile>init/env_file_regular.csv</environmentFile>
+            <areaMask>
+                <enabled>false</enabled>
+                <imageFile></imageFile>
+            </areaMask>
+            <timeEventsEnabled>false</timeEventsEnabled>
+            <timeEventsFile>wind_Events/Scaled_cl10_repl1.txt</timeEventsFile>
+            <!-- time triggered "events", e.g. storms, but also a rise in co2 concentration -->
+            <location>
+                <!-- the following keys specify the location of the 0/0 point of the iLand modeling.
+		   this information is used to transform GIS grids to local coordinates. -->
+                <x>0</x>
+                <!-- adjusted -->
+                <y>0</y>
+                <!-- adjusted -->
+                <z>0</z>
+                <rotation>0</rotation>
+            </location>
+            <standGrid>
+                <enabled>true</enabled>
+                <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+                <!-- UPDATED: Using regular grid (400 stands, 20x20) -->
+                <fileName>init/stand_map_regular.asc</fileName>
+                <!-- adjusted -->
+            </standGrid>
+            <DEM></DEM>
+        </world>
+        <site>
+            <availableNitrogen>84</availableNitrogen>
+            <!-- kg/ha/yr -->
+            <soilDepth>38</soilDepth>
+            <!-- in cm -->
+            <pctSand>9</pctSand>
+            <pctSilt>53</pctSilt>
+            <pctClay>38</pctClay>
+            <youngLabileC>12375</youngLabileC>
+            <youngLabileN>652.1</youngLabileN>
+            <youngLabileDecompRate>0.227</youngLabileDecompRate>
+            <youngRefractoryC>33832</youngRefractoryC>
+            <youngRefractoryN>121.2</youngRefractoryN>
+            <youngRefractoryDecompRate>0.071</youngRefractoryDecompRate>
+            <youngLabileAbovegroundFraction>0.7</youngLabileAbovegroundFraction>
+            <youngRefractoryAbovegroundFraction>0.7</youngRefractoryAbovegroundFraction>
+            <somC>128666</somC>
+            <somN>83.68</somN>
+            <somDecompRate>0.011656</somDecompRate>
+            <soilHumificationRate>0.2992</soilHumificationRate>
+        </site>
+        <climate>
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <co2concentration>350</co2concentration>
+            <!-- this is overwritten from the env_file -->
+            <tableName>climate1</tableName>
+            <batchYears>25</batchYears>
+            <temperatureShift>0</temperatureShift>
+            <precipitationShift>1</precipitationShift>
+            <randomSamplingEnabled>true</randomSamplingEnabled>
+            <!--2000 year span, from 0-24 (1981 - 2005) for historical climate-->
+            <randomSamplingList>12, 19, 5, 9, 13, 11, 20, 7, 24, 15, 23, 8, 18, 10, 16, 2, 6, 4, 14, 3, 1, 17, 21, 0, 22, 2, 17, 4, 7, 13, 15, 14, 22, 24, 16, 8, 18, 1, 6, 5, 3, 11, 9, 19, 12, 20, 21, 10, 0, 23, 12, 24, 2, 4, 8, 18, 22, 5, 16, 6, 14, 23, 1, 17, 11, 19, 15, 7, 13, 10, 9, 21, 3, 20, 0, 1, 5, 22, 19, 11, 8, 20, 18, 10, 12, 2, 23, 7, 6, 4, 21, 15, 3, 0, 17, 13, 14, 9, 16, 24, 14, 23, 10, 3, 18, 4, 2, 11, 8, 21, 17, 5, 16, 9, 0, 6, 19, 22, 15, 24, 20, 1, 7, 12, 13, 9, 12, 4, 21, 14, 16, 20, 23, 2, 11, 13, 24, 17, 6, 0, 10, 22, 19, 3, 15, 1, 7, 18, 5, 8, 18, 7, 2, 11, 9, 21, 16, 17, 5, 13, 15, 6, 12, 24, 3, 14, 4, 8, 19, 0, 20, 22, 10, 23, 1, 24, 16, 19, 7, 17, 8, 11, 20, 15, 13, 5, 21, 22, 1, 3, 2, 10, 23, 14, 0, 18, 12, 6, 4, 9, 22, 14, 23, 2, 19, 12, 10, 8, 1, 7, 11, 17, 13, 20, 18, 24, 16, 0, 21, 3, 5, 9, 15, 6, 4, 15, 17, 4, 5, 3, 16, 23, 22, 10, 0, 21, 18, 6, 1, 2, 11, 14, 7, 20, 8, 12, 24, 19, 9, 13, 6, 22, 10, 14, 23, 18, 24, 19, 16, 1, 13, 11, 21, 5, 2, 17, 9, 3, 8, 20, 7, 4, 15, 0, 12, 18, 17, 0, 5, 3, 12, 2, 9, 24, 1, 7, 16, 4, 20, 23, 22, 13, 21, 8, 10, 15, 19, 11, 14, 6, 11, 7, 8, 13, 14, 3, 21, 9, 22, 5, 12, 0, 20, 6, 15, 17, 23, 16, 4, 2, 10, 24, 18, 1, 19, 17, 8, 24, 6, 22, 9, 4, 15, 14, 0, 2, 12, 1, 7, 19, 23, 3, 11, 16, 21, 5, 18, 20, 10, 13, 10, 17, 15, 14, 4, 6, 19, 21, 16, 9, 13, 0, 1, 2, 11, 3, 20, 24, 18, 23, 8, 22, 12, 5, 7, 10, 15, 18, 20, 21, 24, 14, 1, 13, 22, 16, 19, 7, 6, 3, 12, 9, 23, 0, 4, 17, 11, 8, 5, 2, 22, 9, 17, 4, 12, 20, 19, 6, 15, 14, 16, 7, 13, 0, 24, 8, 3, 1, 18, 11, 21, 2, 5, 10, 23, 6, 4, 10, 0, 17, 24, 19, 2, 1, 20, 15, 5, 14, 22, 18, 23, 21, 9, 3, 11, 12, 8, 7, 16, 13, 8, 21, 3, 16, 15, 24, 20, 1, 0, 19, 7, 18, 14, 4, 17, 12, 9, 23, 2, 11, 5, 10, 22, 13, 6, 22, 2, 21, 6, 14, 24, 16, 7, 10, 5, 8, 19, 23, 13, 20, 11, 15, 9, 17, 4, 18, 3, 12, 1, 0, 5, 16, 22, 9, 4, 10, 11, 21, 14, 3, 0, 6, 7, 1, 8, 12, 18, 20, 23, 13, 24, 17, 15, 19, 2, 0, 24, 19, 7, 20, 12, 6, 11, 14, 22, 5, 23, 8, 13, 4, 2, 17, 15, 10, 18, 1, 9, 21, 16, 3, 22, 0, 15, 4, 17, 8, 10, 20, 2, 24, 12, 5, 9, 18, 21, 16, 3, 7, 6, 1, 23, 19, 13, 11, 14, 15, 14, 16, 12, 13, 9, 11, 19, 21, 10, 7, 8, 18, 24, 22, 1, 20, 4, 3, 2, 23, 0, 6, 5, 17, 11, 19, 2, 13, 5, 10, 24, 18, 22, 20, 14, 12, 1, 23, 9, 16, 0, 17, 21, 15, 3, 8, 4, 7, 6, 6, 16, 4, 10, 14, 12, 19, 24, 8, 21, 18, 5, 17, 13, 22, 20, 1, 7, 15, 3, 9, 11, 2, 23, 0, 4, 6, 22, 11, 10, 8, 23, 19, 0, 2, 15, 3, 13, 9, 17, 16, 14, 5, 24, 7, 18, 12, 21, 1, 20, 10, 21, 0, 18, 15, 23, 22, 11, 19, 9, 5, 24, 8, 7, 2, 3, 17, 16, 6, 20, 1, 14, 13, 4, 12, 23, 20, 5, 10, 3, 0, 7, 9, 18, 12, 16, 8, 22, 15, 1, 14, 6, 19, 2, 13, 4, 21, 24, 11, 17, 19, 5, 0, 13, 15, 10, 17, 8, 20, 11, 21, 24, 2, 9, 6, 12, 16, 22, 18, 14, 1, 4, 3, 23, 7, 23, 21, 2, 9, 7, 11, 1, 0, 17, 18, 12, 10, 15, 4, 20, 5, 14, 3, 13, 6, 22, 24, 16, 19, 8, 3, 8, 13, 23, 15, 6, 12, 17, 7, 21, 16, 11, 22, 20, 5, 18, 19, 0, 2, 10, 4, 1, 14, 9, 24, 13, 3, 19, 21, 2, 24, 10, 22, 14, 23, 6, 4, 9, 11, 8, 5, 1, 7, 17, 20, 0, 18, 15, 12, 16, 23, 20, 4, 16, 3, 24, 0, 15, 5, 11, 12, 10, 8, 19, 22, 7, 9, 6, 2, 18, 1, 21, 14, 13, 17, 1, 16, 10, 12, 23, 3, 2, 8, 22, 6, 13, 4, 9, 11, 7, 20, 19, 21, 24, 17, 18, 14, 5, 0, 15, 21, 20, 5, 24, 3, 7, 9, 18, 23, 12, 2, 19, 0, 10, 15, 13, 8, 17, 22, 4, 6, 11, 14, 16, 1, 24, 13, 16, 7, 6, 14, 23, 1, 22, 11, 12, 21, 3, 0, 10, 5, 8, 4, 2, 19, 15, 9, 17, 18, 20, 14, 7, 20, 16, 2, 21, 18, 6, 24, 23, 11, 13, 8, 5, 15, 12, 22, 9, 4, 10, 0, 19, 17, 1, 3, 9, 14, 19, 10, 13, 22, 3, 16, 20, 5, 24, 11, 12, 15, 7, 1, 0, 6, 23, 4, 17, 8, 2, 21, 18, 4, 5, 8, 23, 11, 16, 10, 19, 18, 6, 2, 22, 9, 14, 3, 17, 12, 21, 7, 1, 24, 15, 0, 13, 20, 4, 6, 21, 7, 20, 22, 18, 15, 1, 11, 3, 14, 5, 23, 10, 9, 16, 24, 8, 12, 13, 0, 17, 2, 19, 1, 6, 14, 19, 23, 3, 20, 7, 2, 22, 17, 15, 11, 13, 8, 12, 5, 0, 24, 18, 9, 16, 21, 10, 4, 4, 21, 23, 8, 22, 24, 9, 18, 15, 7, 0, 10, 12, 2, 11, 3, 19, 20, 1, 14, 13, 6, 16, 17, 5, 10, 21, 4, 6, 3, 24, 13, 1, 20, 2, 12, 23, 16, 22, 7, 14, 0, 11, 17, 19, 5, 9, 18, 8, 15, 17, 15, 4, 18, 20, 14, 6, 11, 5, 12, 23, 24, 2, 22, 3, 9, 10, 0, 13, 19, 1, 8, 16, 7, 21, 24, 18, 4, 23, 0, 1, 14, 6, 7, 2, 20, 3, 15, 9, 16, 5, 21, 10, 13, 17, 22, 11, 8, 12, 19, 7, 0, 22, 10, 5, 8, 12, 6, 13, 17, 1, 16, 19, 18, 23, 20, 14, 24, 11, 4, 3, 2, 21, 9, 15, 15, 12, 7, 20, 14, 21, 11, 16, 13, 1, 23, 2, 19, 17, 18, 3, 22, 0, 6, 8, 24, 4, 9, 5, 10, 7, 2, 3, 5, 20, 9, 11, 4, 24, 21, 23, 1, 17, 14, 22, 15, 19, 6, 13, 18, 12, 16, 10, 8, 0, 3, 2, 9, 13, 4, 5, 7, 10, 19, 20, 17, 16, 24, 1, 21, 6, 18, 12, 14, 22, 23, 0, 11, 8, 15, 22, 6, 0, 13, 14, 19, 11, 12, 10, 7, 15, 16, 24, 18, 3, 9, 20, 1, 17, 5, 21, 2, 23, 8, 4, 3, 4, 20, 18, 16, 5, 21, 9, 23, 11, 13, 12, 7, 19, 8, 22, 1, 17, 15, 24, 10, 6, 0, 2, 14, 1, 21, 6, 2, 11, 18, 23, 9, 0, 3, 20, 19, 14, 15, 5, 12, 8, 4, 10, 13, 16, 22, 17, 24, 7, 22, 18, 13, 12, 2, 20, 23, 11, 0, 21, 24, 15, 6, 9, 7, 8, 4, 3, 17, 5, 1, 10, 14, 19, 16, 17, 10, 11, 20, 5, 0, 1, 4, 15, 13, 16, 2, 14, 21, 8, 24, 18, 6, 22, 23, 19, 9, 12, 7, 3, 10, 14, 3, 8, 19, 9, 15, 16, 1, 21, 4, 5, 13, 6, 17, 12, 20, 18, 24, 11, 22, 7, 2, 23, 0, 17, 15, 4, 24, 10, 22, 3, 9, 0, 23, 21, 20, 14, 12, 2, 19, 16, 6, 11, 18, 7, 13, 5, 1, 8, 22, 13, 9, 3, 11, 0, 1, 4, 21, 18, 15, 17, 20, 19, 12, 14, 16, 8, 6, 23, 10, 2, 7, 5, 24, 4, 15, 3, 0, 11, 2, 14, 22, 6, 12, 23, 7, 8, 19, 1, 24, 16, 20, 5, 21, 10, 17, 9, 13, 18, 20, 7, 24, 15, 16, 18, 17, 12, 2, 19, 10, 3, 9, 23, 5, 13, 22, 1, 0, 21, 14, 6, 8, 4, 11, 3, 7, 21, 8, 13, 19, 2, 23, 20, 0, 22, 16, 9, 18, 14, 5, 10, 12, 17, 4, 6, 1, 11, 15, 24, 7, 19, 16, 23, 6, 10, 13, 8, 11, 14, 24, 22, 5, 20, 21, 1, 15, 4, 9, 18, 17, 0, 12, 3, 2, 9, 13, 10, 19, 18, 4, 6, 23, 7, 12, 0, 16, 24, 8, 1, 2, 20, 14, 21, 3, 11, 5, 15, 22, 17, 5, 22, 10, 14, 11, 17, 2, 18, 12, 16, 9, 19, 7, 1, 13, 15, 20, 4, 21, 23, 24, 6, 3, 8, 0, 6, 9, 1, 14, 21, 8, 23, 20, 10, 5, 15, 2, 16, 12, 17, 24, 22, 0, 7, 13, 4, 3, 19, 11, 18, 2, 5, 6, 13, 4, 24, 8, 16, 17, 11, 22, 15, 10, 12, 0, 19, 9, 18, 14, 20, 21, 1, 3, 7, 23, 19, 15, 5, 4, 23, 17, 0, 3, 10, 2, 14, 18, 8, 6, 11, 21, 12, 24, 13, 7, 1, 9, 20, 22, 16, 7, 20, 2, 5, 1, 9, 12, 14, 23, 6, 10, 13, 17, 19, 4, 0, 18, 16, 8, 22, 24, 21, 3, 11, 15, 2, 13, 19, 17, 0, 7, 15, 1, 18, 8, 20, 4, 12, 3, 11, 23, 9, 24, 6, 21, 14, 22, 16, 10, 5, 3, 14, 13, 4, 0, 16, 15, 23, 24, 9, 1, 19, 5, 11, 7, 8, 18, 20, 22, 2, 10, 12, 6, 21, 17, 22, 23, 15, 17, 0, 6, 4, 7, 20, 9, 16, 5, 11, 18, 8, 12, 2, 21, 14, 3, 13, 10, 19, 24, 1, 8, 18, 22, 16, 10, 15, 0, 24, 9, 4, 23, 1, 3, 2, 11, 12, 6, 7, 17, 5, 14, 21, 19, 13, 20, 13, 15, 17, 18, 21, 12, 4, 24, 23, 7, 20, 22, 2, 8, 1, 9, 11, 19, 16, 10, 3, 5, 6, 14, 0, 5, 16, 1, 20, 21, 11, 7, 0, 12, 10, 13, 18, 9, 15, 4, 3, 14, 23, 22, 2, 6, 17, 8, 19, 24, 4, 24, 21, 14, 10, 3, 11, 18, 16, 19, 7, 2, 13, 20, 15, 8, 23, 12, 0, 22, 6, 1, 9, 5, 17, 15, 1, 11, 9, 2, 8, 4, 16, 21, 12, 6, 19, 22, 24, 17, 0, 7, 10, 5, 14, 13, 23, 18, 3, 20, 7, 15, 18, 17, 10, 11, 6, 12, 1, 24, 2, 5, 20, 0, 3, 9, 19, 13, 21, 4, 8, 22, 16, 14, 23, 7, 3, 4, 14, 1, 15, 22, 6, 12, 23, 8, 5, 2, 9, 21, 17, 13, 24, 11, 0, 19, 20, 16, 10, 18, 13, 17, 15, 19, 24, 4, 3, 1, 18, 10, 0, 5, 11, 12, 6, 9, 14, 8, 2, 20, 7, 23, 22, 21, 16, 7, 17, 21, 23, 12, 13, 16, 22, 2, 0, 10, 19, 3, 18, 5, 1, 14, 11, 9, 20, 8, 6, 15, 24, 4, 
+      </randomSamplingList>
+            <filter></filter>
+            <co2pathway>No</co2pathway>
+            <co2startYear></co2startYear>
+            <microclimate>
+                <barkbeetle>false</barkbeetle>
+                <decomposition>false</decomposition>
+                <enabled>false</enabled>
+                <establishment>false</establishment>
+            </microclimate>
+        </climate>
+        <initialization>
+            <mode>standgrid</mode>
+            <!-- see http://iland-neu.boku.ac.at/tikiprod/initialize+trees  -->
+            <!-- Using 'distribution' type (matches working example) -->
+            <type>distribution</type>
+            <randomFunction>max(1-x^2,0)</randomFunction>
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <!-- UPDATED: Using regular grid tree file (1200 records, 400 stands) -->
+            <file>tree_veryyoung.csv</file>
+            <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+            <!-- UPDATED: Using regular grid sapling file (800 records, 400 stands) -->
+            <saplingFile>sapling_regular.csv</saplingFile>
+            <!-- sap_init.txt or empty_saplings.csv -->
+            <snags>
+                <!-- SWD C, SWD count, SWD CN, Ast/Wurzel C, Ast/Wurzel CN, ksw, hl -->
+                <swdC>12000</swdC>
+                <swdCN>417.9</swdCN>
+                <swdCount>50</swdCount>
+                <otherC>4000</otherC>
+                <otherCN>22.95</otherCN>
+                <!-- cnFoliage and cnFineroot? -->
+                <swdDecompRate>0.036</swdDecompRate>
+                <woodDecompRate>0.071</woodDecompRate>
+                <swdHalfLife>13.926</swdHalfLife>
+                <otherAbovegroundFraction></otherAbovegroundFraction>
+            </snags>
+            <heightGrid>
+                <enabled>false</enabled>
+                <!-- boolean value, true if height grid is considered-->
+                <fileName>bg_lidar_ras.asc</fileName>
+                <!-- CF: Welches file ist hier richtig? -->
+                <maxTries>10</maxTries>
+                <fitFormula>polygon(x, 0,0, 0.8,1, 1.12, 1, 1.5,0)</fitFormula>
+            </heightGrid>
+            <mapFileName></mapFileName>
+        </initialization>
+        <management>
+            <!-- turned off for v2 -->
+            <enabled>false</enabled>
+            <file></file>
+            <abeEnabled>true</abeEnabled>
+            <abe>
+                <file>abe/ABE_tiny_ex.js</file>
+                <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
+                <agentDataFile>abe/stand_files/agent_table_High_shuffled-false.csv</agentDataFile>
+            </abe>
+        </management>
+        <parameter>
+            <torus>false</torus>
+            <debug_tree>0</debug_tree>
+            <!-- filter for debugging -> marking trees according to filter conditions, 0=off, 1=all mod(id,100)=0 -->
+            <debug_clear>false</debug_clear>
+            <!-- on/off is the debugging resetted every year? -->
+            <gpp_per_year>0</gpp_per_year>
+            <!-- value >0 : force X kg GPP m^-2 (m^2= SA*pPAR), sans aging -->
+            <debugDumpStamps>false</debugDumpStamps>
+            <!-- dump the numerical values of the LIPs to the log file -->
+        </parameter>
+    </model>
+      
+<output>
+    <!-- 1. AGENT DECISIONS (The "Brain") -->
+    <!-- CUSTOM SCRIPT OUTPUT -->
+    <!-- The tag name 'socoDecisions' tells iLand this is a user-defined output -->
+    <socoDecisions>
+        <enabled>false</enabled>
+        <type>script</type> <!-- This forces the C++ engine to look for the JS function -->
+        <javascript>getSoCoData</javascript>
+        <columns>year, stand_id, agent_id, owner_type, activity, activity_type, strategy, reason, param_info</columns>
+    </socoDecisions>
+
+    <!-- 2. PHYSICAL STAND STATE (The "Body") -->
+    <!-- Volume, Age, Height, Basal Area per stand -->
+    <abeStand>
+        <enabled>true</enabled>
+        <condition></condition> 
+    </abeStand>
+
+    <!-- 3. SPECIES COMPOSITION (The "Details") -->
+    <!-- Replaces your JSON species list. One row per species per stand -->
+    <abeStandDetail>
+        <enabled>true</enabled>
+        <!-- Optimization: If file size gets too big, output every 5 years: -->
+        <!-- <condition>mod(year, 5)=0</condition> -->
+    </abeStandDetail>
+
+    <!-- 4. HARVESTS (The "Action") -->
+    <!-- Exact physical volume removed by thinning/final cut/salvage -->
+    <abeStandRemoval>
+        <enabled>true</enabled>
+    </abeStandRemoval>
+
+    <!-- Disable the rest to save performance -->
+    <tree><enabled>false</enabled></tree>
+    <treeremoved><enabled>false</enabled></treeremoved>
+    <stand><enabled>false</enabled></stand>
+    <standdead><enabled>false</enabled></standdead>
+    <production_month><enabled>false</enabled></production_month>
+    <management><enabled>false</enabled></management>
+    <sapling><enabled>false</enabled></sapling>
+    <saplingdetail><enabled>false</enabled></saplingdetail>
+    <carbon><enabled>false</enabled></carbon>
+    <carbonflow><enabled>false</enabled></carbonflow>
+    <water><enabled>false</enabled></water>
+    <landscape><enabled>false</enabled></landscape>
+    <dynamicstand><enabled>false</enabled></dynamicstand>
+    
+    <!-- Keep Disturbance modules if needed -->
+    <barkbeetle><enabled>true</enabled></barkbeetle>
+    <wind><enabled>true</enabled></wind>
+    <fire><enabled>false</enabled></fire>
+    
+    <!-- Disable SVD/Visualization outputs during massive runs -->
+    <svdindicator><enabled>false</enabled></svdindicator>
+    <svdgpp><enabled>false</enabled></svdgpp>
+    <svdstate><enabled>false</enabled></svdstate>
+    <svduniquestate><enabled>false</enabled></svduniquestate>
+    <abeUnit><enabled>false</enabled></abeUnit>
+    <bite><enabled>false</enabled></bite>
+    <customagg><enabled>false</enabled></customagg>
+    <devstage><enabled>false</enabled></devstage>
+    <ecoviz><enabled>false</enabled></ecoviz>
+    <soilinput><enabled>false</enabled></soilinput>
+</output>
+
+  
+    <modules>
+        <!-- section for "plugins" add a section for each plugin and enable/disable with 
+	   the "enabled" switch. 
+	   http://iland.boku.ac.at/disturbance+modules -->
+        <fire>
+            <!-- name of the module -->
+            <enabled>false</enabled>
+            <!-- the "enabled" tag is available for each module -->
+            <onlySimulation>true</onlySimulation>
+            <KBDIref>0.3</KBDIref>
+            <rFireSuppression>1</rFireSuppression>
+            <rLand>1</rLand>
+            <meanAnnualPrecipitation>5000</meanAnnualPrecipitation>
+            <averageFireSize>9650000</averageFireSize>
+            <!-- historic average fire size in m2-->
+            <fireSizeSigma>1.633</fireSizeSigma>
+            <!-- sigma parameter of the log-normal distribution for fire sizes -->
+            <fireReturnInterval>10</fireReturnInterval>
+            <!-- (historic) fire return interval in years -->
+            <fireExtinctionProbability>0.05</fireExtinctionProbability>
+            <!-- prob. of a burning cell to go out without further spread -->
+            <!-- calculate available fuel from moisture relations -->
+            <fuelKFC1>0.75</fuelKFC1>
+            <fuelKFC2>0.75</fuelKFC2>
+            <fuelKFC3>0.75</fuelKFC3>
+            <!-- parameters for the fraction of crown kill -->
+            <crownKill1>0.21111</crownKill1>
+            <crownKill2>0.00445</crownKill2>
+            <crownKillDbh>40</crownKillDbh>
+            <burnSOMFraction>0.02</burnSOMFraction>
+            <burnFoliageFraction>0.9</burnFoliageFraction>
+            <burnBranchFraction>0.51</burnBranchFraction>
+            <burnStemFraction>0.11</burnStemFraction>
+            <wind>
+                <!-- parameters for wind during a fire event. The wind speed is selected between 'min' and 'max' speed,
+			the wind direction is in degrees (North: 0, East: 90, South: 180, West: 270) and modified randomly +- 45° -->
+                <speedMin>10</speedMin>
+                <speedMax>20</speedMax>
+                <direction>270</direction>
+            </wind>
+            <allowBurnIn>false</allowBurnIn>
+            <maxFireSize></maxFireSize>
+            <minFireSize></minFireSize>
+        </fire>
+        <wind>
+            <enabled>true</enabled>
+            <speciesParameter>wind</speciesParameter>
+            <!-- table name of the species parameter table -->
+            <soilFreezeMode>auto</soilFreezeMode>
+            <!-- yes/no/auto: soil is frozen/not frozen/depends on soil temperature -->
+            <triggeredByTimeEvent>true</triggeredByTimeEvent>
+            <!-- true: explicit trigger by time event, false: drawn randomly -->
+            <durationPerIteration>10</durationPerIteration>
+            <!-- duration of a single model iteration  -->
+            <gustModifier>0.1</gustModifier>
+            <!-- variation of (above canopy) wind speed between iterations. Given as fraction, e.g. 0.05 -> speed +- (max.)5% -->
+            <topoModifier>1</topoModifier>
+            <!-- local windspeed variation (per resource unit) given as multiplier -->
+            <directionVariation>30</directionVariation>
+            <!-- variation in winddirection for fetch calculation; actual wind direction = maindireciton + rnd(-x, +x) -->
+            <direction>0</direction>
+            <!-- wind direction (°) 0: N, 90: E, 180: S, 270: W -->
+            <dayOfYear>0</dayOfYear>
+            <!-- day of the storm (0..365) -->
+            <speed>0</speed>
+            <!-- wind speed (m/s) 10m above the canopy -->
+            <duration>60</duration>
+            <!-- duration of the wind event in minutes -->
+            <topoGridFile>gis/WindModifier_cl10.asc</topoGridFile>
+            <factorEdge>3</factorEdge>
+            <!-- constant ratio between the maximum turning moments at the stand edge and conditions well inside the forest (default: 5) -->
+            <edgeDetectionThreshold>10</edgeDetectionThreshold>
+            <!-- minimum height difference of height-grid pixels to be detected as edges (default is 10m) -->
+            <topexModifierType>multiplicative</topexModifierType>
+            <!-- determines if topo-modifier is added multiplicatively or additively. "multiplicative" or "additive" -->
+            <LRITransferFunction>max(min(3.733-6.467*LRI, 3.41),3)</LRITransferFunction>
+            <!--  formula for the transfer function LRI to Hegyi competition index -->
+            <edgeProbability>polygon(x,0,0,20,0.5)</edgeProbability>
+            <!-- equation determining the probability that a detected edge is further processed(variable: age of the edge) -->
+            <edgeAgeBaseValue>20</edgeAgeBaseValue>
+            <!-- value for the age of edges that is set after the landscape is initialized -->
+            <edgeBackgroundProbability>0.1</edgeBackgroundProbability>
+            <!--  gives the probability that a cell (10x10m) acts as start point of wind damage (without being an edge cell). A thus "flagged" cell acts as a starting point during the whole wind event. -->
+            <onAfterWind></onAfterWind>
+            <onBeforeWind></onBeforeWind>
+        </wind>
+        <barkbeetle>
+            <enabled>true</enabled>
+            <minimumDbh>15</minimumDbh>
+            <backgroundInfestationProbability>0.000685</backgroundInfestationProbability>
+            <!--0.000685= 1/365*1/4, assuming a 365 year rotation period (Thom et al. 2013) and a mean size of 4 ha; NB: the size could actually be estimated theoretically from the dispersal and generations parameters, assuming that hosts are not limited: if we assume that every generation spreads on average 3 10m cells (area= 0.28ha), and if the average number of generations is 2, and the average outbreak duration 6 years, we get an average outbreak area of 3.39 ha, so the 4 ha assumed above were in the right ballbark!!-->
+            <stormInfestationProbability>0.05</stormInfestationProbability>
+            <baseWinterMortality>0.4</baseWinterMortality>
+            <!-- 0.4: Jönsson et al. (2012) -->
+            <winterMortalityFormula>1-exp(-0.1005*x)</winterMortalityFormula>
+            <!-- after Kostal et al. (2011), and cross-checked with Faccoli (2002) -->
+            <spreadKernelFormula>exp(-((x/4.5)^2)/4/40.5)</spreadKernelFormula>
+            <!-- now "average" fahse and heurich kernel [old:  min(10000*x^(-1.69)/100,1) ] based on Kautz et al. (2012) (refitted) and cross-checked with Fahse and Heurich (2011) -->
+            <spreadKernelMaxDistance>257</spreadKernelMaxDistance>
+            <!-- 95th percentile of Kautz et al. (2012), see also Seidl et al. (2015) -->
+            <cohortsPerGeneration>20</cohortsPerGeneration>
+            <!-- this is the "multiplier" per generation, i.e. the realized factor of multiplication per brood... larvae per female are between 45-50 (Schopf et al. (2004, Fahse and Heurich (2011), now if we assume 2 females per male (Fahse and Heurich 2011) and a (non-winter) larval mortality rate of 0.5 we arrive at a factor of 50), the realized offspring are however much lower (Schopf et al. 2004) -->
+            <cohortsPerSisterbrood>30</cohortsPerSisterbrood>
+            <!-- sister broods are assumed to be  50% less productive than main generation-->
+            <colonizeProbabilityFormula>0.85*x+0.15</colonizeProbabilityFormula>
+            <!-- based on Kautz et al. (2014), assuming a linear relationship between tree defense (x) and the number of beetles necessary to overcome it-->
+            <deadTreeSelectivity>1</deadTreeSelectivity>
+            <outbreakClimateSensitivityFormula>Psummer^-0.9609</outbreakClimateSensitivityFormula>
+            <!-- based on a reanalysis of the data of Seidl et al. (2015) - a 50% reduction of summer precip gives an almost 2-fold increase in the odds for BB outbreaks, while a 50% increase in summer precip gives a reduction by 33% -->
+            <outbreakDurationMin>5</outbreakDurationMin>
+            <outbreakDurationMax>6</outbreakDurationMax>
+            <outbreakDurationMortalityFormula>polygon(t, 0.5,0, 1,1)</outbreakDurationMortalityFormula>
+            <initialInfestationProbability>0.001</initialInfestationProbability>
+            <!-- p that a potential host pixel is infested at startup (as a result of pre-simulation dynamics) -->
+            <referenceClimate>
+                <tableName>ICHEC-EC-EARTH_historical_point37179</tableName>
+                <seasonalPrecipSum>196.6,252.7,206.8,146.3</seasonalPrecipSum>
+                <!-- computed from ICHEC-EC-EARTH_historical_point37179, years 1981-2005 -->
+                <seasonalTemperatureAverage>7.746,16.310,9.452,0.884</seasonalTemperatureAverage>
+                <!-- computed from ICHEC-EC-EARTH_historical_point37179, years 1981-2005 -->
+            </referenceClimate>
+            <onAfterBarkbeetle></onAfterBarkbeetle>
+            <!-- afterBB() -->
+        </barkbeetle>
+        <bite>
+            <enabled>false</enabled>
+            <file></file>
+        </bite>
+    </modules>
+    <user>
+        <!-- user defined settings (which can be accessed via Javascript) -->
+        <windspeed_factor>1</windspeed_factor>
+        <code>value</code>
+        <Scenario>iLandTV</Scenario>
+        <!-- Output prefix for batch runs (overridable via command line) -->
+        <output_prefix></output_prefix>
+    </user>
+</project>

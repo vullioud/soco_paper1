@@ -1,0 +1,71 @@
+{
+  "state": {
+    "preferences": {
+      "distribution_function": "dirichlet",
+      "distribution_params": {
+        "options": ["Production", "Biodiversity", "CO2"],
+        "alpha": [3, 8, 5]
+      }
+    },
+    "resources": {
+      "distribution_function": "beta",
+      "distribution_params": {
+        "alpha": 8,
+        "beta": 3
+      }
+    },
+    "riskTolerance": {
+      "distribution_function": "beta",
+      "distribution_params": {
+        "alpha": 2,
+        "beta": 8
+      }
+    }
+  },
+  "big": {
+    "preferences": {
+      "distribution_function": "dirichlet",
+      "distribution_params": {
+        "options": ["Production", "Biodiversity", "CO2"],
+        "alpha": [8, 2, 3]
+      }
+    },
+    "resources": {
+      "distribution_function": "beta",
+      "distribution_params": {
+        "alpha": 9,
+        "beta": 2
+      }
+    },
+    "riskTolerance": {
+      "distribution_function": "beta",
+      "distribution_params": {
+        "alpha": 6,
+        "beta": 4
+      }
+    }
+  },
+  "small": {
+    "preferences": {
+      "distribution_function": "dirichlet",
+      "distribution_params": {
+        "options": ["Production", "Biodiversity", "CO2"],
+        "alpha": [4, 4, 2]
+      }
+    },
+    "resources": {
+      "distribution_function": "beta",
+      "distribution_params": {
+        "alpha": 3,
+        "beta": 6
+      }
+    },
+    "riskTolerance": {
+      "distribution_function": "beta",
+      "distribution_params": {
+        "alpha": 1,
+        "beta": 9
+      }
+    }
+  }
+}

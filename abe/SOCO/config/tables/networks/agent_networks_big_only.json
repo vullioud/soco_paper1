@@ -1,0 +1,118 @@
+{
+  "big_agent_1": {
+    "geo_network": ["big_agent_2", "big_agent_3"],
+    "similarity_network": []
+  },
+  "big_agent_2": {
+    "geo_network": ["big_agent_4", "big_agent_3", "big_agent_1"],
+    "similarity_network": []
+  },
+  "big_agent_3": {
+    "geo_network": ["big_agent_4", "big_agent_2", "big_agent_5", "big_agent_1"],
+    "similarity_network": []
+  },
+  "big_agent_4": {
+    "geo_network": ["big_agent_5", "big_agent_6", "big_agent_2", "big_agent_3"],
+    "similarity_network": []
+  },
+  "big_agent_5": {
+    "geo_network": ["big_agent_7", "big_agent_6", "big_agent_4", "big_agent_3"],
+    "similarity_network": []
+  },
+  "big_agent_6": {
+    "geo_network": ["big_agent_7", "big_agent_5", "big_agent_8", "big_agent_4"],
+    "similarity_network": []
+  },
+  "big_agent_7": {
+    "geo_network": ["big_agent_8", "big_agent_9", "big_agent_5", "big_agent_6"],
+    "similarity_network": []
+  },
+  "big_agent_8": {
+    "geo_network": ["big_agent_10", "big_agent_9", "big_agent_7", "big_agent_6"],
+    "similarity_network": []
+  },
+  "big_agent_9": {
+    "geo_network": ["big_agent_10", "big_agent_8", "big_agent_11", "big_agent_7"],
+    "similarity_network": []
+  },
+  "big_agent_10": {
+    "geo_network": ["big_agent_11", "big_agent_12", "big_agent_8", "big_agent_9"],
+    "similarity_network": []
+  },
+  "big_agent_11": {
+    "geo_network": ["big_agent_12", "big_agent_13", "big_agent_10", "big_agent_9"],
+    "similarity_network": []
+  },
+  "big_agent_12": {
+    "geo_network": ["big_agent_14", "big_agent_13", "big_agent_11", "big_agent_10"],
+    "similarity_network": []
+  },
+  "big_agent_13": {
+    "geo_network": ["big_agent_14", "big_agent_12", "big_agent_15", "big_agent_11"],
+    "similarity_network": []
+  },
+  "big_agent_14": {
+    "geo_network": ["big_agent_16", "big_agent_15", "big_agent_12", "big_agent_13"],
+    "similarity_network": []
+  },
+  "big_agent_15": {
+    "geo_network": ["big_agent_16", "big_agent_14", "big_agent_17", "big_agent_13"],
+    "similarity_network": []
+  },
+  "big_agent_16": {
+    "geo_network": ["big_agent_17", "big_agent_18", "big_agent_14", "big_agent_15"],
+    "similarity_network": []
+  },
+  "big_agent_17": {
+    "geo_network": ["big_agent_18", "big_agent_19", "big_agent_16", "big_agent_15"],
+    "similarity_network": []
+  },
+  "big_agent_18": {
+    "geo_network": ["big_agent_19", "big_agent_20", "big_agent_17", "big_agent_16"],
+    "similarity_network": []
+  },
+  "big_agent_19": {
+    "geo_network": ["big_agent_21", "big_agent_20", "big_agent_18", "big_agent_17"],
+    "similarity_network": []
+  },
+  "big_agent_20": {
+    "geo_network": ["big_agent_21", "big_agent_19", "big_agent_22", "big_agent_18"],
+    "similarity_network": []
+  },
+  "big_agent_21": {
+    "geo_network": ["big_agent_22", "big_agent_23", "big_agent_19", "big_agent_20"],
+    "similarity_network": []
+  },
+  "big_agent_22": {
+    "geo_network": ["big_agent_23", "big_agent_24", "big_agent_21", "big_agent_20"],
+    "similarity_network": []
+  },
+  "big_agent_23": {
+    "geo_network": ["big_agent_25", "big_agent_24", "big_agent_22", "big_agent_21"],
+    "similarity_network": []
+  },
+  "big_agent_24": {
+    "geo_network": ["big_agent_25", "big_agent_23", "big_agent_26", "big_agent_22"],
+    "similarity_network": []
+  },
+  "big_agent_25": {
+    "geo_network": ["big_agent_26", "big_agent_27", "big_agent_23", "big_agent_24"],
+    "similarity_network": []
+  },
+  "big_agent_26": {
+    "geo_network": ["big_agent_27", "big_agent_28", "big_agent_25", "big_agent_24"],
+    "similarity_network": []
+  },
+  "big_agent_27": {
+    "geo_network": ["big_agent_28", "big_agent_26", "big_agent_29", "big_agent_25"],
+    "similarity_network": []
+  },
+  "big_agent_28": {
+    "geo_network": ["big_agent_27", "big_agent_29", "big_agent_26"],
+    "similarity_network": []
+  },
+  "big_agent_29": {
+    "geo_network": ["big_agent_28", "big_agent_27"],
+    "similarity_network": []
+  }
+}

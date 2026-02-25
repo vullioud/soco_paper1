@@ -1,0 +1,31 @@
+{
+  "all": {
+    "biodiversity_mix": {
+      "fasy": 80,
+      "quro": 90,
+      "qupe": 90,
+      "frex": 70,
+      "acps": 70,
+      "piab": 60
+    },
+    "co2_storage": {
+      "fasy": 65,
+      "frex": 60,
+      "piab": 45,
+      "quro": 75,
+      "pisy": 45,
+      "lade": 65,
+      "psme": 65,
+      "abal": 45
+    },
+    "production_standard": {
+      "piab": 40,
+      "pisy": 40,
+      "lade": 55,
+      "psme": 50,
+      "abal": 45,
+      "fasy": 55,
+      "quro": 60
+    }
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "small_agent_1": {
+    "geo_network": ["small_agent_5", "state_agent_1"],
+    "similarity_network": []
+  },
+  "state_agent_1": {
+    "geo_network": ["small_agent_7", "small_agent_6", "state_agent_2", "small_agent_2", "small_agent_5", "small_agent_1", "big_agent_1", "small_agent_4"],
+    "similarity_network": []
+  },
+  "big_agent_1": {
+    "geo_network": ["small_agent_10", "state_agent_4", "small_agent_9", "state_agent_3", "state_agent_2", "small_agent_7", "small_agent_8", "big_agent_2", "small_agent_5", "state_agent_1", "small_agent_2", "small_agent_3"],
+    "similarity_network": []
+  },
+  "small_agent_2": {
+    "geo_network": ["small_agent_5", "big_agent_1", "small_agent_6", "state_agent_1", "state_agent_2", "small_agent_3"],
+    "similarity_network": []
+  },
+  "small_agent_3": {
+    "geo_network": ["state_agent_2", "small_agent_6", "small_agent_2", "big_agent_1"],
+    "similarity_network": []
+  },
+  "small_agent_4": {
+    "geo_network": ["state_agent_2", "small_agent_6", "state_agent_1"],
+    "similarity_network": []
+  },
+  "small_agent_5": {
+    "geo_network": ["small_agent_6", "state_agent_2", "big_agent_1", "small_agent_7", "small_agent_1", "state_agent_1", "small_agent_2"],
+    "similarity_network": []
+  },
+  "small_agent_6": {
+    "geo_network": ["small_agent_8", "state_agent_3", "state_agent_2", "small_agent_9", "small_agent_7", "small_agent_5", "state_agent_1", "small_agent_2", "small_agent_3", "small_agent_4"],
+    "similarity_network": []
+  },
+  "state_agent_2": {
+    "geo_network": ["small_agent_8", "state_agent_3", "small_agent_6", "big_agent_1", "small_agent_9", "small_agent_7", "small_agent_5", "state_agent_1", "small_agent_2", "small_agent_3", "small_agent_4"],
+    "similarity_network": []
+  },
+  "small_agent_7": {
+    "geo_network": ["small_agent_9", "small_agent_6", "state_agent_2", "big_agent_1", "state_agent_3", "big_agent_2", "small_agent_8", "small_agent_5", "state_agent_1"],
+    "similarity_network": []
+  },
+  "small_agent_8": {
+    "geo_network": ["small_agent_10", "state_agent_3", "big_agent_2", "small_agent_9", "small_agent_6", "state_agent_2", "big_agent_1", "small_agent_7"],
+    "similarity_network": []
+  },
+  "state_agent_3": {
+    "geo_network": ["small_agent_12", "state_agent_4", "small_agent_10", "big_agent_2", "small_agent_8", "small_agent_9", "big_agent_1", "small_agent_11", "small_agent_6", "state_agent_2", "small_agent_7"],
+    "similarity_network": []
+  },
+  "small_agent_9": {
+    "geo_network": ["big_agent_2", "state_agent_3", "small_agent_8", "small_agent_10", "state_agent_4", "big_agent_1", "small_agent_11", "state_agent_2", "small_agent_6", "small_agent_7"],
+    "similarity_network": []
+  },
+  "big_agent_2": {
+    "geo_network": ["small_agent_19", "small_agent_17", "state_agent_6", "big_agent_3", "state_agent_5", "small_agent_20", "small_agent_21", "small_agent_13", "small_agent_14", "small_agent_15", "small_agent_16", "small_agent_12", "state_agent_4", "state_agent_3", "small_agent_10", "small_agent_8", "small_agent_9", "small_agent_11", "small_agent_7", "big_agent_1"],
+    "similarity_network": []
+  },
+  "small_agent_10": {
+    "geo_network": ["small_agent_12", "state_agent_4", "state_agent_3", "big_agent_2", "small_agent_11", "small_agent_8", "small_agent_9", "big_agent_1"],
+    "similarity_network": []
+  },
+  "state_agent_4": {
+    "geo_network": ["small_agent_13", "small_agent_14", "small_agent_12", "state_agent_5", "big_agent_2", "small_agent_15", "small_agent_16", "small_agent_10", "state_agent_3", "small_agent_11", "small_agent_9", "big_agent_1"],
+    "similarity_network": []
+  },
+  "small_agent_11": {
+    "geo_network": ["small_agent_12", "small_agent_10", "state_agent_4", "small_agent_13", "state_agent_3", "big_agent_2", "small_agent_9"],
+    "similarity_network": []
+  },
+  "small_agent_12": {
+    "geo_network": ["big_agent_2", "small_agent_13", "small_agent_14", "state_agent_4", "small_agent_15", "state_agent_5", "small_agent_16", "small_agent_10", "state_agent_3", "small_agent_11"],
+    "similarity_network": []
+  },
+  "small_agent_13": {
+    "geo_network": ["big_agent_2", "small_agent_17", "small_agent_14", "small_agent_12", "state_agent_4", "small_agent_16", "state_agent_5", "small_agent_11"],
+    "similarity_network": []
+  },
+  "small_agent_14": {
+    "geo_network": ["big_agent_2", "small_agent_17", "small_agent_13", "state_agent_5", "small_agent_15", "small_agent_12", "state_agent_4"],
+    "similarity_network": []
+  },
+  "state_agent_5": {
+    "geo_network": ["state_agent_6", "small_agent_20", "small_agent_17", "big_agent_3", "big_agent_2", "small_agent_15", "small_agent_14", "small_agent_16", "small_agent_18", "state_agent_4", "small_agent_12", "small_agent_13"],
+    "similarity_network": []
+  },
+  "small_agent_15": {
+    "geo_network": ["small_agent_17", "small_agent_14", "state_agent_5", "big_agent_2", "state_agent_6", "small_agent_16", "state_agent_4", "small_agent_12"],
+    "similarity_network": []
+  },
+  "small_agent_16": {
+    "geo_network": ["state_agent_6", "small_agent_17", "small_agent_15", "big_agent_2", "state_agent_5", "big_agent_3", "small_agent_18", "small_agent_12", "state_agent_4", "small_agent_13"],
+    "similarity_network": []
+  },
+  "small_agent_17": {
+    "geo_network": ["small_agent_19", "big_agent_2", "small_agent_20", "state_agent_6", "state_agent_5", "big_agent_3", "small_agent_21", "small_agent_13", "small_agent_14", "small_agent_15", "small_agent_16"],
+    "similarity_network": []
+  },
+  "state_agent_6": {
+    "geo_network": ["small_agent_23", "big_agent_3", "small_agent_22", "state_agent_7", "small_agent_20", "small_agent_21", "small_agent_17", "state_agent_5", "big_agent_2", "small_agent_18", "small_agent_15", "small_agent_16"],
+    "similarity_network": []
+  },
+  "big_agent_3": {
+    "geo_network": ["small_agent_24", "small_agent_23", "state_agent_7", "big_agent_4", "small_agent_25", "state_agent_8", "small_agent_22", "state_agent_6", "small_agent_20", "small_agent_21", "state_agent_5", "big_agent_2", "small_agent_17", "small_agent_18", "small_agent_16"],
+    "similarity_network": []
+  },
+  "small_agent_18": {
+    "geo_network": ["small_agent_21", "big_agent_3", "state_agent_6", "state_agent_5", "small_agent_16"],
+    "similarity_network": []
+  },
+  "small_agent_19": {
+    "geo_network": ["small_agent_21", "small_agent_22", "small_agent_20", "big_agent_2", "small_agent_17"],
+    "similarity_network": []
+  },
+  "small_agent_20": {
+    "geo_network": ["small_agent_22", "small_agent_19", "state_agent_6", "big_agent_3", "small_agent_17", "state_agent_5", "big_agent_2"],
+    "similarity_network": []
+  },
+  "small_agent_21": {
+    "geo_network": ["small_agent_23", "small_agent_22", "small_agent_19", "big_agent_3", "state_agent_6", "state_agent_7", "small_agent_17", "big_agent_2", "small_agent_18"],
+    "similarity_network": []
+  },
+  "small_agent_22": {
+    "geo_network": ["small_agent_23", "small_agent_21", "big_agent_3", "state_agent_6", "state_agent_7", "small_agent_19", "small_agent_20"],
+    "similarity_network": []
+  },
+  "state_agent_7": {
+    "geo_network": ["big_agent_4", "small_agent_25", "state_agent_8", "small_agent_24", "state_agent_9", "small_agent_23", "big_agent_3", "state_agent_6", "small_agent_22", "small_agent_21"],
+    "similarity_network": []
+  },
+  "small_agent_23": {
+    "geo_network": ["big_agent_4", "small_agent_25", "small_agent_24", "state_agent_7", "big_agent_3", "state_agent_8", "small_agent_21", "small_agent_22", "state_agent_6"],
+    "similarity_network": []
+  },
+  "big_agent_4": {
+    "geo_network": ["small_agent_29", "big_agent_5", "small_agent_26", "small_agent_30", "state_agent_9", "small_agent_28", "state_agent_10", "small_agent_25", "state_agent_8", "state_agent_7", "small_agent_23", "big_agent_3"],
+    "similarity_network": []
+  },
+  "small_agent_24": {
+    "geo_network": ["small_agent_25", "small_agent_23", "state_agent_8", "state_agent_7", "big_agent_3"],
+    "similarity_network": []
+  },
+  "small_agent_25": {
+    "geo_network": ["big_agent_4", "small_agent_26", "small_agent_27", "state_agent_9", "state_agent_8", "small_agent_23", "small_agent_24", "state_agent_7", "big_agent_3"],
+    "similarity_network": []
+  },
+  "state_agent_8": {
+    "geo_network": ["small_agent_27", "state_agent_9", "small_agent_25", "big_agent_4", "small_agent_28", "small_agent_24", "state_agent_7", "small_agent_26", "small_agent_23", "big_agent_3"],
+    "similarity_network": []
+  },
+  "state_agent_9": {
+    "geo_network": ["state_agent_10", "big_agent_5", "small_agent_31", "small_agent_30", "small_agent_26", "small_agent_27", "big_agent_4", "small_agent_28", "small_agent_29", "small_agent_25", "state_agent_8", "state_agent_7"],
+    "similarity_network": []
+  },
+  "small_agent_26": {
+    "geo_network": ["small_agent_29", "big_agent_5", "big_agent_4", "state_agent_9", "small_agent_27", "small_agent_25", "state_agent_8"],
+    "similarity_network": []
+  },
+  "small_agent_27": {
+    "geo_network": ["big_agent_5", "state_agent_9", "small_agent_26", "small_agent_30", "small_agent_25", "state_agent_8"],
+    "similarity_network": []
+  },
+  "small_agent_28": {
+    "geo_network": ["state_agent_9", "small_agent_30", "big_agent_4", "state_agent_8"],
+    "similarity_network": []
+  },
+  "small_agent_29": {
+    "geo_network": ["small_agent_31", "state_agent_10", "big_agent_5", "big_agent_4", "small_agent_26", "state_agent_9"],
+    "similarity_network": []
+  },
+  "big_agent_5": {
+    "geo_network": ["big_agent_6", "small_agent_31", "small_agent_33", "state_agent_11", "state_agent_12", "state_agent_10", "small_agent_32", "state_agent_9", "small_agent_30", "small_agent_29", "big_agent_4", "small_agent_26", "small_agent_27"],
+    "similarity_network": []
+  },
+  "small_agent_30": {
+    "geo_network": ["big_agent_5", "small_agent_31", "state_agent_9", "state_agent_10", "small_agent_27", "big_agent_4", "small_agent_28"],
+    "similarity_network": []
+  },
+  "state_agent_10": {
+    "geo_network": ["big_agent_6", "small_agent_31", "state_agent_11", "small_agent_33", "small_agent_32", "big_agent_5", "small_agent_29", "state_agent_9", "small_agent_30", "big_agent_4"],
+    "similarity_network": []
+  },
+  "small_agent_31": {
+    "geo_network": ["big_agent_6", "big_agent_5", "state_agent_10", "small_agent_32", "state_agent_11", "small_agent_29", "state_agent_9", "small_agent_30"],
+    "similarity_network": []
+  },
+  "small_agent_32": {
+    "geo_network": ["small_agent_33", "state_agent_10", "state_agent_11", "big_agent_6", "small_agent_34", "big_agent_5", "small_agent_31"],
+    "similarity_network": []
+  },
+  "state_agent_11": {
+    "geo_network": ["state_agent_12", "small_agent_34", "big_agent_6", "small_agent_33", "small_agent_35", "state_agent_10", "small_agent_32", "big_agent_5", "small_agent_31"],
+    "similarity_network": []
+  },
+  "small_agent_33": {
+    "geo_network": ["small_agent_34", "state_agent_12", "state_agent_11", "small_agent_35", "big_agent_6", "state_agent_10", "small_agent_32", "big_agent_5"],
+    "similarity_network": []
+  },
+  "big_agent_6": {
+    "geo_network": ["big_agent_7", "small_agent_35", "small_agent_36", "state_agent_12", "state_agent_13", "big_agent_5", "small_agent_33", "state_agent_11", "small_agent_34", "small_agent_31", "state_agent_10", "small_agent_32"],
+    "similarity_network": []
+  },
+  "small_agent_34": {
+    "geo_network": ["small_agent_36", "state_agent_13", "state_agent_12", "big_agent_7", "small_agent_35", "big_agent_6", "state_agent_11", "small_agent_33", "small_agent_32"],
+    "similarity_network": []
+  },
+  "state_agent_12": {
+    "geo_network": ["small_agent_35", "small_agent_36", "big_agent_6", "state_agent_13", "small_agent_34", "big_agent_7", "state_agent_11", "small_agent_33", "big_agent_5"],
+    "similarity_network": []
+  },
+  "small_agent_35": {
+    "geo_network": ["big_agent_7", "small_agent_36", "big_agent_6", "state_agent_12", "state_agent_13", "small_agent_34", "small_agent_33", "state_agent_11"],
+    "similarity_network": []
+  },
+  "state_agent_13": {
+    "geo_network": ["small_agent_36", "big_agent_7", "state_agent_12", "small_agent_34", "small_agent_35", "big_agent_6", "small_agent_37"],
+    "similarity_network": []
+  },
+  "big_agent_7": {
+    "geo_network": ["small_agent_35", "state_agent_13", "small_agent_36", "small_agent_37", "big_agent_6", "state_agent_12", "small_agent_34"],
+    "similarity_network": []
+  },
+  "small_agent_36": {
+    "geo_network": ["small_agent_35", "state_agent_13", "big_agent_7", "small_agent_37", "big_agent_6", "state_agent_12", "small_agent_34"],
+    "similarity_network": []
+  },
+  "small_agent_37": {
+    "geo_network": ["small_agent_36", "big_agent_7", "state_agent_13"],
+    "similarity_network": []
+  }
+}

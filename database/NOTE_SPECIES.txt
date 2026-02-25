@@ -1,0 +1,4 @@
+- mental note from jonas to jonas: use the new species dataset from iland 2.0 here (ask Werner)
+
+
+- JM: I added pimu to wind parameters using the same parameters as pice (v3)
