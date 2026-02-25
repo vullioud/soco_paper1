@@ -1,3 +1,6 @@
+// FILE: soco_src/core/owner.js
+// Paper 1 version: Removed agent_networks.
+
 class owner {
     constructor(institution, owner_type, agent_stand_map, all_configs) {
         this.institution = institution;
@@ -14,9 +17,6 @@ class owner {
         this.parameter_table = all_configs.parameters['all'];
         this.plenter_profiles_table = all_configs.plenter_profiles['all'];
         this.targetDBH_profiles_table = all_configs.targetDBH_profiles['all'];
-
-        // Agent networks (optional)
-        this.agent_networks = all_configs.agent_networks || {};
 
         // Create the agents, which will inherit these properties.
         for (const agent_name in agent_stand_map) {

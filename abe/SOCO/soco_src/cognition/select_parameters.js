@@ -1,4 +1,5 @@
-// ----- Start of File: soco_src/cognition/select_parameters.js -----
+// FILE: soco_src/cognition/select_parameters.js
+// Paper 1 version: Removed social learning code.
 
 Cognition.select_parameters = function(stand_data_obj, agent) {
     const activity_name = stand_data_obj.activity.chosen_Activity;
@@ -10,19 +11,17 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
         return stand_data_obj;
     }
 
-    // ===== STEP 1: Sample base parameters from agent's distribution =====
+    // Sample base parameters from agent's distribution
     const base_params = {};
     for (const param_name in params_for_preference) {
         const dist_config = params_for_preference[param_name];
         let sampled_value;
 
-        // --- THIS IS THE ROBUSTNESS FIX ---
-        // Check if distribution_params is an array and unbox it if necessary.
+        // Unbox wrapped distribution_params if necessary
         let params_to_sample = dist_config.distribution_params;
         if (Array.isArray(params_to_sample)) {
             params_to_sample = params_to_sample[0];
         }
-        // ---------------------------------
 
         if (dist_config.distribution_function === "lookup") {
             const profile_name = params_to_sample.profile_name;
@@ -35,7 +34,6 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
                 sampled_value = agent.targetDBH_profiles_table[profile_name];
             }
         } else {
-            // Create a new object to pass to the sampler
             const sampler_config = {
                 distribution_function: dist_config.distribution_function,
                 distribution_params: params_to_sample
@@ -46,48 +44,11 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
         base_params[param_name] = (sampled_value !== null && typeof sampled_value !== 'undefined') ? sampled_value : 0;
     }
 
-    // ===== STEP 2: SOCIAL LEARNING FOR PARAMETERS (CONFIG-CONTROLLED) =====
-    let final_params = base_params;
-
-    // Check if parameter-level social learning is enabled
-    const social_config = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.SOCIAL_LEARNING)
-        ? SoCoABE_CONFIG.SOCIAL_LEARNING
-        : null;
-
-    if (social_config && social_config.ENABLED &&
-        social_config.PARAMETER_LEARNING && social_config.PARAMETER_LEARNING.enabled &&
-        typeof NetworkModule !== 'undefined') {
-
-        try {
-            const network_type = social_config.NETWORK_TYPE || 'similarity';
-            const time_window = social_config.PARAMETER_LEARNING.time_window || 10;
-            const noise_factor = social_config.PARAMETER_LEARNING.noise_factor || 0.1;
-
-            // Learn parameters from neighbors who used this activity
-            final_params = NetworkModule.learn_parameters_from_neighbors(
-                agent,
-                stand_data_obj,
-                activity_name,
-                base_params,
-                network_type,
-                time_window,
-                noise_factor
-            );
-
-        } catch (e) {
-            // If social learning fails, fall back to base parameters
-            console.error(`[Parameter Learning] Failed for agent ${agent.id}, stand ${stand_data_obj.stand_id}: ${e.message}`);
-            final_params = base_params;
-        }
-    }
-
-    stand_data_obj.activity.parameters = final_params;
+    stand_data_obj.activity.parameters = base_params;
 
     if (activity_name === 'planting' && typeof stand_data_obj.activity.parameters.execution_schedule === 'undefined') {
-        // console.log(`[Cognition] Defaulting execution_schedule to 1 for planting (Stand ${stand_data_obj.stand_id})`);
         stand_data_obj.activity.parameters.execution_schedule = 2;
     }
 
     return stand_data_obj;
 };
-

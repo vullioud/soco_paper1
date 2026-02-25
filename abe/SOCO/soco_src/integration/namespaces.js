@@ -20,7 +20,4 @@ var Action = {
 };
 this.Action = Action;
 
-var Test_Scenarios = {};
-this.Test_Scenarios = Test_Scenarios;
-
 console.log("--- SoCoABE Global Namespaces Initialized ---");

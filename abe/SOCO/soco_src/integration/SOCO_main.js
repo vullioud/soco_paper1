@@ -1,32 +1,18 @@
-// ----- Start of File: soco_src/integration/SOCO_main.js -----
-var socoabe; 
+// FILE: soco_src/integration/SOCO_main.js
+// Paper 1 version: Removed NetworkModule, FixedSTP, debug logs.
+var socoabe;
 
 class socoabe_main {
     constructor() {
         this.institution = null;
         this.initialized = false;
     }
-    
+
     initialize() {
         console.log("--- SoCoABE Main: Initializing Cognitive Layer... ---");
         const configs = this.load_all_configs();
         this.institution = new institution(configs);
 
-        // --- Compute Similarity Networks (after agents have been initialized with traits) ---
-        const max_network_size = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.MAX_SIMILARITY_NETWORK_SIZE)
-                                 ? SoCoABE_CONFIG.MAX_SIMILARITY_NETWORK_SIZE
-                                 : 30;
-
-        NetworkModule.compute_similarity_networks(this.institution.all_agents, max_network_size);
-
-        // --- Initialize Fixed STP if enabled ---
-        if (typeof SoCoABE_CONFIG !== 'undefined' &&
-            SoCoABE_CONFIG.FIXED_STP && SoCoABE_CONFIG.FIXED_STP.ENABLED) {
-            console.log("--- SoCoABE Main: Loading Fixed STP Plans ---");
-            FixedSTP.initialize(SoCoABE_CONFIG.FIXED_STP.JSON_PATH);
-        }
-
-        // --- FIX: Use Configured Sample Size ---
         const sample_size = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.MONITORING)
                             ? SoCoABE_CONFIG.MONITORING.sample_size
                             : 10;
@@ -37,7 +23,6 @@ class socoabe_main {
     }
 
     load_all_configs() {
-         // ... (Same as previous) ...
          const configs = {
             traits:             JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/traits/agent_traits.json'))),
             activities:         JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/activities/activity_distributions.json'))),
@@ -47,41 +32,6 @@ class socoabe_main {
             targetDBH_profiles: JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/profiles/targetDBH_profiles.json'))),
             species_config:     JSON.parse(Globals.loadTextFile(Globals.path('./abe/SOCO/config/tables/species/species_config.json'))),
         };
-
-         // Try to load agent networks (optional - may not exist)
-         try {
-             let network_scenario = 'medium';  // Default fallback
-
-             // AUTOMATIC DETECTION: Extract scenario from CSV filename
-             if (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.csv_path) {
-                 const csv_filename = SoCoABE_CONFIG.csv_path.split('/').pop().toLowerCase();
-
-                 // Match clustering scenarios (Random, Low, Medium, High)
-                 if (csv_filename.includes('random')) network_scenario = 'random';
-                 else if (csv_filename.includes('low')) network_scenario = 'low';
-                 else if (csv_filename.includes('medium')) network_scenario = 'medium';
-                 else if (csv_filename.includes('high')) network_scenario = 'high';
-
-                 // Match owner-only scenarios
-                 else if (csv_filename.includes('small_only')) network_scenario = 'small_only';
-                 else if (csv_filename.includes('big_only')) network_scenario = 'big_only';
-                 else if (csv_filename.includes('state_only')) network_scenario = 'state_only';
-             }
-
-             // Allow manual override via config
-             if (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.NETWORK_SCENARIO) {
-                 network_scenario = SoCoABE_CONFIG.NETWORK_SCENARIO;
-                 console.log('Using manually specified network scenario:', network_scenario);
-             }
-
-             const network_path = `./abe/SOCO/config/tables/networks/agent_networks_${network_scenario}.json`;
-             configs.agent_networks = JSON.parse(Globals.loadTextFile(Globals.path(network_path)));
-             console.log(`✓ Loaded agent networks from scenario: ${network_scenario} (auto-detected from CSV grid)`);
-         } catch (e) {
-             console.warn('Agent networks not found or failed to load. Agents will have empty networks.');
-             console.warn('Error:', e.message);
-             configs.agent_networks = {};
-         }
 
          return configs;
     }
@@ -103,13 +53,13 @@ class socoabe_main {
 
    update(current_year) {
         if (!this.initialized) return;
-        
-        // 1. Run Agent Logic
+
+        // Run Agent Logic
         this.institution.all_agents.forEach(agent => {
             agent.run_yearly_cycle(current_year);
         });
-        
-        // 2. Record Landscape State (In Memory)
+
+        // Record Landscape State
         Monitoring.record_aggregate(this.institution, current_year);
     }
 
@@ -120,12 +70,10 @@ class socoabe_main {
         }
         console.log("--- SoCoABE Main: Finalizing and Saving Logs ---");
 
-        // Get output prefix from XML user settings (overridable via command line)
         var prefix = "";
         try {
             prefix = Globals.setting('user.output_prefix') || "";
         } catch (e) {
-            // Fallback to config if XML setting not available
             prefix = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.OUTPUT_PREFIX)
                      ? SoCoABE_CONFIG.OUTPUT_PREFIX : "";
         }
@@ -133,8 +81,6 @@ class socoabe_main {
             console.log(`    Using output prefix: ${prefix}`);
         }
 
-        // Save logs based on configuration switches
-        // Get custom file names from config (with defaults)
         var fileNames = SoCoABE_CONFIG.MONITORING.OUTPUT_FILES || {};
         var fn_ml = fileNames.ML_ACTIVITY || "soco_ml_activities";
         var fn_activity = fileNames.SIMPLE_ACTIVITY || "soco_log_activities";
@@ -142,47 +88,41 @@ class socoabe_main {
         var fn_detailed = fileNames.DETAILED_STANDS || "soco_log_detailed_stands";
         var fn_agg = fileNames.AGGREGATED || "soco_log_aggregated_species";
 
-        // 1. ML Training Dataset (primary output)
-        console.log(`    [DEBUG] ML Log enabled: ${Monitoring.isMLLogEnabled()}`);
-        console.log(`    [DEBUG] ML Log record count: ${Monitoring.ml_activity_log ? Monitoring.ml_activity_log.length : 'undefined'}`);
+        // 1. ML Training Dataset
         if (Monitoring.isMLLogEnabled()) {
             var path_ml = Globals.path("output/" + prefix + fn_ml + ".csv");
-            console.log(`    [DEBUG] Saving ML log to: ${path_ml}`);
             try {
                 Monitoring.save_ml_activity_csv(path_ml);
-                console.log(`    [DEBUG] ML log save completed`);
             } catch (e) {
                 console.error(`    [ERROR] ML log save failed: ${e.message}`);
             }
-        } else {
-            console.log("    [DEBUG] ML Log is DISABLED - skipping save");
         }
 
-        // 2. Simple Activity Log (optional - redundant if ML log is on)
+        // 2. Simple Activity Log
         if (Monitoring.isSimpleActivityLogEnabled()) {
             var path_activity = Globals.path("output/" + prefix + fn_activity + ".csv");
             Monitoring.save_continuous_activity_csv(path_activity);
         }
 
-        // 3. Harvest Log (optional)
+        // 3. Harvest Log
         if (Monitoring.isHarvestLogEnabled()) {
             var path_harvest = Globals.path("output/" + prefix + fn_harvest + ".csv");
             Monitoring.save_harvest_csv(path_harvest);
         }
 
-        // 4. Detailed Stand Log (debug only)
+        // 4. Detailed Stand Log
         if (Monitoring.isDetailedLogEnabled()) {
             var path_detailed = Globals.path("output/" + prefix + fn_detailed + ".csv");
             Monitoring.save_detailed_csv(this.institution.all_agents, path_detailed);
         }
 
-        // 5. Aggregated Species Log (optional)
+        // 5. Aggregated Species Log
         if (Monitoring.isAggregatedLogEnabled()) {
             var path_agg = Globals.path("output/" + prefix + fn_agg + ".csv");
             Monitoring.save_aggregated_csv(path_agg);
         }
 
-        // 6. Yearly Structure Log (optional)
+        // 6. Yearly Structure Log
         if (Monitoring.isYearlyStructureLogEnabled()) {
             var fn_structure = fileNames.YEARLY_STRUCTURE || "soco_yearly_structure";
             var path_structure = Globals.path("output/" + prefix + fn_structure + ".csv");
@@ -193,4 +133,3 @@ class socoabe_main {
     }
 }
 this.socoabe_main = socoabe_main;
-

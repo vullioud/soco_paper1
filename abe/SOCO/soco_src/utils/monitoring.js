@@ -223,10 +223,6 @@ var Monitoring = {
 
         // Only log if not already logged
         if (!this.ml_activity_set[key]) {
-            // DEBUG: Log femel parameters to verify correction was applied
-            if (activity_name === 'femel') {
-                console.log(`[ML_LOG DEBUG] Logging femel for stand ${stand_id}: params=${JSON.stringify(stand_data_obj.activity.parameters)}`);
-            }
             // Extract species composition
             var species_comp = {};
             try {
@@ -565,10 +561,8 @@ var Monitoring = {
     // Save ML training dataset (rich activity records with pre-activity state)
     save_ml_activity_csv: function(filename) {
         console.log(`--- Monitoring: Saving ML Activity Dataset ---`);
-        console.log(`    [DEBUG] ml_activity_log array length: ${this.ml_activity_log ? this.ml_activity_log.length : 'NULL/UNDEFINED'}`);
-
         if (!this.ml_activity_log || this.ml_activity_log.length === 0) {
-            console.log(`    [WARNING] No ML activity records to save!`);
+            console.warn(`    No ML activity records to save.`);
             // Still save the header so the file exists
         }
 
@@ -597,7 +591,6 @@ var Monitoring = {
             lines.push(line);
         }
 
-        console.log(`    [DEBUG] About to call Globals.saveTextFile with ${lines.length} lines`);
         try {
             Globals.saveTextFile(filename, lines.join("\n"));
             console.log(`      -> Saved ${this.ml_activity_log.length} ML records to ${filename}.`);
@@ -689,10 +682,9 @@ var Monitoring = {
      */
     save_yearly_structure_csv: function(filename) {
         console.log(`--- Monitoring: Saving Yearly Structure Log ---`);
-        console.log(`    [DEBUG] yearly_structure_log array length: ${this.yearly_structure_log ? this.yearly_structure_log.length : 'NULL/UNDEFINED'}`);
 
         if (!this.yearly_structure_log || this.yearly_structure_log.length === 0) {
-            console.log(`    [WARNING] No yearly structure records to save!`);
+            console.warn(`    No yearly structure records to save.`);
         }
 
         // Header includes iland_year for easy joining with iLand output

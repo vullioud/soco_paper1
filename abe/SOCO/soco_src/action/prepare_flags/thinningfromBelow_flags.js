@@ -47,12 +47,6 @@ Action.prepare.thinningFromBelow = function(params, stand_data_obj) {
 
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
 
-    console.log(`[Action] Prepared ThinningFromBelow for stand ${stand_data_obj.stand_id} (${strategyName}). Share=${(share * 100).toFixed(1)}%. Selectivity: ${JSON.stringify(speciesSelectivity)}`);
-
-    // DIAGNOSTIC: Verify flags were set correctly
-    var verifyShare = stand.flag('abe_param_thinningShare');
-    var verifySelectivity = stand.flag('abe_param_speciesSelectivity');
-    console.log(`[DEBUG] Flags verification - Share: ${verifyShare}, Selectivity: ${JSON.stringify(verifySelectivity)}`);
 };
 
 

@@ -34,11 +34,6 @@ Action.prepare.tending = function(params, stand_data_obj) {
     // 3. Set Flag
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
 
-    console.log(`[Action] Prepared Tending for stand ${stand_data_obj.stand_id} (${strategyName}). Selectivity: ${JSON.stringify(speciesSelectivity)}`);
-
-    // DIAGNOSTIC: Verify flag was set
-    var verifySelectivity = stand.flag('abe_param_speciesSelectivity');
-    console.log(`[DEBUG] Tending flags verification - Selectivity: ${JSON.stringify(verifySelectivity)}`);
 };
 
 // ----- End of File: soco_src/action/prepare_flags/tending_flags.js -----

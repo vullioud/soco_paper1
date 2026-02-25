@@ -70,15 +70,12 @@ function generate_timeline(activity_name, params) {
 
         case 'femel':
             // Enforce minimum steps for femel (select + step + final)
-            console.log(`[FEMEL DEBUG] Input: times=${times}, interval=${interval}, start_age=${start_age}`);
             if (times < MIN_STEPS_FEMEL) {
-                console.log(`[FEMEL FIX] Correcting times from ${times} to ${MIN_STEPS_FEMEL} for femel activity`);
                 times = MIN_STEPS_FEMEL;
-                corrected_params.times = times;  // Track correction
+                corrected_params.times = times;
             }
             if (interval < 1) {
-                console.log(`[FEMEL FIX] Setting default interval from ${interval} to 10 for femel activity`);
-                interval = 10;  // Default interval if missing
+                interval = 10;
                 corrected_params.interval = interval;
             }
             is_Sequence = true;
@@ -86,7 +83,6 @@ function generate_timeline(activity_name, params) {
             for (var i = 0; i < times; i++) {
                 timeline.push(start_age + (i * interval));
             }
-            console.log(`[FEMEL DEBUG] Output: times=${times}, interval=${interval}, timeline=[${timeline.join(',')}], corrected_params=${JSON.stringify(corrected_params)}`);
             break;
 
         case 'selectiveThinning':
@@ -215,11 +211,8 @@ Cognition.compute_schedule = function(stand_data_obj) {
     // 2.5. Write corrected parameters back to activity.parameters
     // This ensures parameter learning propagates correct values
     if (timeline_data.corrected_params && Object.keys(timeline_data.corrected_params).length > 0) {
-        console.log(`[COMPUTE_SCHEDULE] Writing corrected parameters for ${activity.chosen_Activity}:`,
-                    JSON.stringify(timeline_data.corrected_params));
         for (var corrected_key in timeline_data.corrected_params) {
             if (timeline_data.corrected_params.hasOwnProperty(corrected_key)) {
-                console.log(`[COMPUTE_SCHEDULE]   ${corrected_key}: ${activity.parameters[corrected_key]} → ${timeline_data.corrected_params[corrected_key]}`);
                 activity.parameters[corrected_key] = timeline_data.corrected_params[corrected_key];
             }
         }
@@ -271,9 +264,6 @@ Cognition.compute_schedule = function(stand_data_obj) {
             }
 
             if (steps_from_now < min_required_steps) {
-                console.log(`[COMPUTE_SCHEDULE] Stand ${stand_data_obj.stand_id}: Dropping ${activity.chosen_Activity} - ` +
-                            `only ${steps_from_now} steps from current year ${current_year}, need ${min_required_steps}. ` +
-                            `Timeline: [${activity.timeline.join(', ')}]`);
                 activity.chosen_Activity = 'noManagement';
                 activity.parameters = {};
                 activity.timeline = [];
