@@ -41,7 +41,7 @@ Cognition.validate_activity = function(stand_data_obj) {
         var act_name = activity.chosen_Activity;
         var vol = stand_data_obj.iLand_stand_data.volume;
         var ba = stand_data_obj.iLand_stand_data.basal_area;
-        var soco_age = stand_data_obj.iLand_stand_data.absolute_age_soco;
+        var soco_age = stand_data_obj.iLand_stand_data.absolute_age_iLand;
 
         if (act_name === 'clearcut' || act_name === 'shelterwood' || act_name === 'targetDBH' || act_name === 'plenter_harvest') {
             // Harvesting: Prioritize high volume

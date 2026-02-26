@@ -2,7 +2,7 @@
 // Paper 1: Simplified to salvage + NoMgmt + ongoing sequence only.
 // Planning logic moved to plan_decade.js.
 
-Cognition.think = function(stand_data_obj, agent) {
+Cognition.think_reactive = function(stand_data_obj, agent) {
 
     // --- STEP 0.5: CHECK FOR SALVAGE PRIORITY ---
     if (stand_data_obj.iLand_stand_data.needs_salvage) {
@@ -15,6 +15,11 @@ Cognition.think = function(stand_data_obj, agent) {
             disturbance_severity: stand_data_obj.iLand_stand_data.disturbance_severity,
             disturbance_volume: stand_data_obj.iLand_stand_data.disturbance_volume
         };
+
+        // FIXME(salvage-replanning): After salvage, decided_window retains the pre-disturbance
+        // phase, causing the stand to appear "locked" at the next plan_decade cycle.
+        // Fix in Block 8: reset decided_window in salvage onExecuted, or clear it here after
+        // the salvage branch so the stand re-enters the candidate pool correctly.
 
         stand_data_obj = Cognition.validate_activity(stand_data_obj);
         return stand_data_obj;

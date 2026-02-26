@@ -129,7 +129,15 @@ var SoCoLog = {
      * @param {string} message
      */
     warn: function(message) {
+        if (typeof SoCoABE_CONFIG !== 'undefined' &&
+            SoCoABE_CONFIG.LOGGING && SoCoABE_CONFIG.LOGGING.WARN === false) return;
         console.warn(message);
+    },
+
+    debug: function(msg) {
+        if (typeof SoCoABE_CONFIG !== 'undefined' &&
+            SoCoABE_CONFIG.LOGGING && SoCoABE_CONFIG.LOGGING.DEBUG)
+            console.log(msg);
     },
 
     /**

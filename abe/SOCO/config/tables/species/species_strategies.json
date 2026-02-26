@@ -1,38 +1,38 @@
 {
-    "_comment": "Species strategies: thinning selectivity weights and planting species mix by behavioral type. THINNING_WEIGHTS values MUST be [0,1] — iLand C++ clamps speciesSelectivity. Species > 0.5 get tending protection. Paper 1 simplification: same weights for tending, thinning, and shelterwood. Paper 2 will split into TENDING_WEIGHTS, THINNING_WEIGHTS, HARVEST_WEIGHTS.",
+    "_comment": "Species strategies: thinning selectivity weights and planting species mix by behavioral type. THINNING_WEIGHTS values MUST be [0,1] — iLand C++ clamps speciesSelectivity. Species > 0.5 get tending protection. Paper 1 simplification: same weights for tending, thinning, and shelterwood. Paper 2 will split into TENDING_WEIGHTS, THINNING_WEIGHTS, HARVEST_WEIGHTS. Added pisy, frex, acps, quro to cover 90%+ of BWI stems.",
 
     "THINNING_WEIGHTS": {
         "MF": {
-            "conifer_dominated":   { "piab": 0.5, "psme": 0.7, "fasy": 1.0, "qupe": 0.9, "abal": 0.8, "rest": 0.6 },
-            "broadleaf_dominated": { "fasy": 0.8, "qupe": 0.8, "abal": 1.0, "piab": 0.7, "rest": 0.5 },
-            "mixed":               { "rest": 1.0 },
-            "pioneer":             { "bepe": 0.2, "potr": 0.2, "rest": 0.5 }
+            "conifer_dominated":   { "piab": 0.5, "psme": 0.7, "fasy": 1.0, "qupe": 0.9, "abal": 0.8, "pisy": 0.6, "frex": 1.0, "acps": 0.9, "quro": 0.9, "rest": 0.6 },
+            "broadleaf_dominated": { "fasy": 0.8, "qupe": 0.8, "abal": 1.0, "piab": 0.7, "pisy": 0.4, "frex": 0.8, "acps": 0.7, "quro": 0.8, "rest": 0.5 },
+            "mixed":               { "pisy": 0.5, "frex": 1.0, "acps": 0.9, "rest": 1.0 },
+            "pioneer":             { "bepe": 0.2, "potr": 0.2, "pisy": 0.5, "frex": 0.6, "acps": 0.5, "quro": 0.5, "rest": 0.5 }
         },
         "OP": {
-            "conifer_dominated":   { "piab": 1.0, "psme": 0.9, "lade": 0.7, "fasy": 0.2, "rest": 0.3 },
-            "broadleaf_dominated": { "fasy": 0.8, "qupe": 0.9, "rest": 0.3 },
-            "mixed":               { "piab": 0.9, "psme": 1.0, "fasy": 0.7, "rest": 0.5 },
-            "pioneer":             { "rest": 0.3 }
+            "conifer_dominated":   { "piab": 1.0, "psme": 0.9, "lade": 0.7, "fasy": 0.2, "pisy": 0.9, "frex": 0.2, "acps": 0.2, "rest": 0.3 },
+            "broadleaf_dominated": { "fasy": 0.8, "qupe": 0.9, "pisy": 0.6, "frex": 0.8, "acps": 0.7, "quro": 0.9, "rest": 0.3 },
+            "mixed":               { "piab": 0.9, "psme": 1.0, "fasy": 0.7, "pisy": 0.8, "frex": 0.5, "acps": 0.4, "rest": 0.5 },
+            "pioneer":             { "pisy": 0.5, "frex": 0.3, "acps": 0.3, "rest": 0.3 }
         },
         "TR": {
-            "conifer_dominated":   { "fasy": 0.7, "abal": 0.7, "rest": 0.6 },
-            "broadleaf_dominated": { "fasy": 0.7, "abal": 0.7, "rest": 0.6 },
-            "mixed":               { "rest": 0.7 },
-            "pioneer":             { "rest": 0.6 }
+            "conifer_dominated":   { "fasy": 0.7, "abal": 0.7, "pisy": 0.6, "frex": 0.7, "acps": 0.6, "quro": 0.7, "rest": 0.6 },
+            "broadleaf_dominated": { "fasy": 0.7, "abal": 0.7, "pisy": 0.6, "frex": 0.7, "acps": 0.6, "quro": 0.7, "rest": 0.6 },
+            "mixed":               { "pisy": 0.6, "frex": 0.7, "acps": 0.6, "quro": 0.7, "rest": 0.7 },
+            "pioneer":             { "pisy": 0.6, "frex": 0.7, "acps": 0.6, "quro": 0.7, "rest": 0.6 }
         },
         "EN": {
-            "conifer_dominated":   { "piab": 0.3, "psme": 0.4, "fasy": 1.0, "qupe": 1.0, "abal": 0.9, "rest": 0.6 },
-            "broadleaf_dominated": { "rest": 0.7 },
-            "mixed":               { "rest": 0.7 },
-            "pioneer":             { "rest": 0.7 }
+            "conifer_dominated":   { "piab": 0.3, "psme": 0.4, "fasy": 1.0, "qupe": 1.0, "abal": 0.9, "pisy": 0.3, "frex": 1.0, "acps": 0.9, "quro": 1.0, "rest": 0.6 },
+            "broadleaf_dominated": { "pisy": 0.2, "frex": 0.8, "acps": 0.7, "rest": 0.7 },
+            "mixed":               { "pisy": 0.3, "frex": 0.8, "acps": 0.8, "rest": 0.7 },
+            "pioneer":             { "pisy": 0.4, "frex": 0.7, "acps": 0.6, "rest": 0.7 }
         }
     },
 
     "PLANTING_CONFIG": {
-        "MF": { "n_species": 3, "weights": { "piab": 0.15, "psme": 0.15, "fasy": 0.30, "qupe": 0.15, "abal": 0.25 } },
-        "OP": { "n_species": 1, "weights": { "piab": 0.45, "psme": 0.35, "fasy": 0.05, "qupe": 0.05, "abal": 0.10 } },
-        "TR": { "n_species": 2, "weights": { "piab": 0.10, "fasy": 0.40, "qupe": 0.15, "abal": 0.35 } },
+        "MF": { "n_species": 3, "weights": { "piab": 0.12, "psme": 0.12, "fasy": 0.25, "qupe": 0.12, "abal": 0.20, "frex": 0.10, "acps": 0.09 } },
+        "OP": { "n_species": 1, "weights": { "piab": 0.40, "psme": 0.30, "fasy": 0.05, "qupe": 0.05, "abal": 0.10, "pisy": 0.10 } },
+        "TR": { "n_species": 2, "weights": { "piab": 0.08, "fasy": 0.35, "qupe": 0.12, "abal": 0.30, "frex": 0.10, "acps": 0.05 } },
         "PA": null,
-        "EN": { "n_species": 3, "weights": { "fasy": 0.35, "qupe": 0.40, "abal": 0.25 } }
+        "EN": { "n_species": 3, "weights": { "fasy": 0.30, "qupe": 0.35, "abal": 0.20, "frex": 0.10, "acps": 0.05 } }
     }
 }

@@ -1,105 +1,47 @@
 // FILE: soco_src/core/stand_data.js
 
 class stand_data {
-    constructor(stand_id, agent) { // Changed signature to accept the agent object
-        // --- I. IDENTIFIERS & FIXED TRAITS ---
-        this.stand_id = stand_id;
-        this.agent_id = agent.id;
-        this.owner_type = agent.owner ? agent.owner.type : 'unknown';
-        this.behavioral_type = agent.behavioral_type || 'unknown';
-        this.preference_focus = "none";
+    constructor(stand_id, agent) {
 
-        // --- II. PERCEPTION DATA ---
+        // --- I. IDENTIFIERS ---
+        this.stand_id         = stand_id;
+        this.preference_focus = "none";   // set at init; used in planning logic
+
+        // --- II. PERCEPTION ---
         this.iLand_stand_data = {
-            absolute_age_soco: 0,
-            absolute_age_iLand: 0,
-            stand_age: 0,
-            basal_area: 0,
-            volume: 0,
-            top_height: 0,
-            stems: 0,
-            species_count: 0,
-            U: 0,
-            year_of_observation: -1,
-            needs_reassessment: false,
-
-            // Harvest tracking
-            last_harvest_volume: 0,
-            last_harvest_trees: 0,
-            last_harvest_year: -1,
-            years_since_harvest: -1,
-            rotation_total_harvest: 0,
-
-            // Disturbance tracking
-            disturbance_detected: false,
-            disturbance_year: -1,
-            disturbance_volume: 0,
+            absolute_age_iLand:   0,
+            volume:               0,
+            basal_area:           0,
+            needs_salvage:        false,
             disturbance_severity: 0,
-            years_since_disturbance: -1,
-            needs_salvage: false,
-            salvage_response: 'none',  // 'none', 'salvage_only', 'clearcut', 'leave'
-
-            // Dead wood tracking (snags + downed dead wood)
-            deadwood_volume_snags: 0,    // Standing dead trees (m³)
-            deadwood_volume_dwd: 0,      // Downed dead wood (m³)
-            needs_planting: false        // Set by final harvest actions
+            disturbance_volume:   0
         };
+
+        // --- III. CLASSIFICATION ---
         this.classified = {
-            age_class: 'unknown',
-            structure_class: 'unknown',
-            species_dominance: 'unknown'
+            dominant_species: []    // [{id, share}...] for ConditionClassifier only
         };
+
+        // --- IV. HISTORY ---
         this.history = {
-            last_activity: 'none',
-            last_activity_Year: -1,
-            time_since_last_activity: -1,
-            last_satisfied_phase: 'none',
-            target_species: [],
-
-            // Harvest events list (separate from activity_history)
-            harvest_events: []
+            last_activity:      'none',
+            last_activity_Year: -1
         };
 
-        // --- III. AGENT'S PLAN ---
+        // --- V. PLAN STATE ---
         this.activity = {
-            chosen_Activity: 'noManagement',
-            parameters: {},
-            target_year: -1,
-            is_actionable: false,
-            is_Sequence: false,
-            timeline: [],
-            sequence_total_steps: 0,
+            chosen_Activity:       'noManagement',
+            parameters:            {},
+            target_year:           -1,
+            is_actionable:         false,
+            is_Sequence:           false,
+            timeline:              [],
+            sequence_total_steps:  0,
             sequence_current_step: 0,
             sequence_sub_activity: 'none',
-            decided_window: 'none',
-            planned_phase: 'none',
-            defer_count: 0
-        };
-
-        // --- IV. MONITORING SNAPSHOT ---
-        this.monitoringSnapshot = null;
-        this.is_monitoring_candidate = false; 
-        
-        // --- V. DATA LOGS ---
-        // These were missing and are required by Monitoring.snapshot
-        this.detailed_history = [];
-
-        // Activity history log for monitoring
-        this.activity_history = {
-            log: [],
-            max_length: 20,
-
-            add_entry: function(year, activity, params, context) {
-                this.log.push({
-                    year: year,
-                    activity: activity,
-                    parameters: params,
-                    context: context
-                });
-                if (this.log.length > this.max_length) {
-                    this.log.shift();
-                }
-            }
+            decided_window:        'none',
+            planned_phase:         'none',
+            defer_count:           0
         };
     }
 

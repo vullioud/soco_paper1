@@ -1,0 +1,33 @@
+# --- Large data directories ---
+lip/
+database/
+gis/
+init/
+output/
+Wind/
+
+# --- iLand runner (entire directory) ---
+ilandc-runner/
+
+# --- iLand ABE library (read-only reference) ---
+abe/abe-lib/
+
+# --- SOCO non-source files ---
+abe/SOCO/documentation/
+abe/SOCO/stand_files/
+abe/SOCO/create_snapshot.py
+abe/SOCO/full_mod_snapshot_*.txt
+abe/SOCO/source_code.txt
+
+# --- landscape_init generated / non-R files ---
+landscape_init/*.py
+landscape_init/*.txt
+landscape_init/*.md
+
+# --- OS and editor noise ---
+.DS_Store
+Thumbs.db
+*.pyc
+__pycache__/
+.Rhistory
+.RData

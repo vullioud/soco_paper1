@@ -8,30 +8,6 @@ if (typeof lib === 'undefined') {
     fmengine.abort("ABE Library ('lib') is not defined. MegaSTP cannot be built.");
 }
 
-console.log("--- Defining the SoCoABE Mega-STP ---");
-
-/**
- * Conditional logging for mega_STP activities.
- * Checks SoCoABE_CONFIG.SOCO_LOG settings to determine if logging should occur.
- * This reduces console spam and improves performance during production runs.
- */
-function megaLog(message) {
-    // Check if logging is enabled
-    if (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.SOCO_LOG) {
-        if (!SoCoABE_CONFIG.SOCO_LOG.ENABLED) return;
-        if (!SoCoABE_CONFIG.SOCO_LOG.LOG_ACTIVITIES) return;
-
-        // Check warming period
-        if (SoCoABE_CONFIG.WARMING && SoCoABE_CONFIG.WARMING.ENABLED) {
-            var warmingEnd = SoCoABE_CONFIG.WARMING.DURATION || 0;
-            if (Globals.year <= warmingEnd && !SoCoABE_CONFIG.SOCO_LOG.ENABLED_DURING_WARMING) {
-                return;
-            }
-        }
-    }
-    console.log(message);
-}
-
 const MEGA_STP_ACTIVITIES = {};
 
 // --- ACTIVITY DEFINITIONS ---
@@ -42,11 +18,11 @@ MEGA_STP_ACTIVITIES['noManagement'] = {
     type: 'general',
     schedule: { signal: 'do_noManagement' },
     action: function() {
-        megaLog(`[MEGA-STP] Executing 'noManagement' for stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'noManagement' for stand ${stand.id}.`);
     },
     // onExecuted is the reliable event for post-action logic for both general and scheduled activities.
     onExecuted: function() {
-        megaLog(`[MEGA-STP] onExecuted for noManagement on stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] onExecuted for noManagement on stand ${stand.id}.`);
         stand.setFlag('abe_last_activity', 'MegaSTP_NoManagement');
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_reassessment', false);
@@ -65,7 +41,7 @@ MEGA_STP_ACTIVITIES['clearcut'] = {
     },
 
     onExecute: function() {
-        megaLog(`[MEGA-STP] Executing 'clearcut' for stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'clearcut' for stand ${stand.id}.`);
 
         // Capture volume before harvest
         var volumeBefore = stand.volume;
@@ -86,15 +62,15 @@ MEGA_STP_ACTIVITIES['clearcut'] = {
         stand.setFlag('abe_last_harvest_trees', harvested_count);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`[MEGA-STP] -> Harvested ${harvested_count} trees, ${volumeRemoved.toFixed(2)} m³/ha removed`);
+        SoCoLog.debug(`[MEGA-STP] -> Harvested ${harvested_count} trees, ${volumeRemoved.toFixed(2)} m³/ha removed`);
     },
 
     // onExecuted is called after a successful onExecute, even for signal-triggered activities.
     onExecuted: function() {
-        megaLog(`[MEGA-STP] onExecuted for clearcut on stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] onExecuted for clearcut on stand ${stand.id}.`);
         // DEBUG: Log at years ending in 9
         if (Globals.year % 10 === 9) {
-            megaLog(`[DEBUG clearcut onExecuted] Year ${Globals.year}, Stand ${stand.id}: SETTING abe_last_activity_year=${Globals.year}`);
+            SoCoLog.debug(`[DEBUG clearcut onExecuted] Year ${Globals.year}, Stand ${stand.id}: SETTING abe_last_activity_year=${Globals.year}`);
         }
         stand.setFlag('abe_last_activity', 'MegaSTP_Clearcut');
         stand.setFlag('abe_last_activity_year', Globals.year);
@@ -115,7 +91,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
     },
 
     onExecute: function() {
-        megaLog(`[MEGA-STP] Executing 'targetDBH' for stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'targetDBH' for stand ${stand.id}.`);
 
         // Capture volume and BA before harvest
         var volumeBefore = stand.volume;
@@ -126,17 +102,17 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
         var volumeFallbackShare = stand.flag('abe_param_volumeFallbackShare') || 0.3; // Default: remove 30% in fallback
         var total_harvested_count = 0;
 
-        megaLog("[MEGA-STP] -> Received dbhList: " + JSON.stringify(dbhList));
-        megaLog("[MEGA-STP] -> Max removal share: " + (maxRemovalShare * 100).toFixed(0) + "%");
+        SoCoLog.debug("[MEGA-STP] -> Received dbhList: " + JSON.stringify(dbhList));
+        SoCoLog.debug("[MEGA-STP] -> Max removal share: " + (maxRemovalShare * 100).toFixed(0) + "%");
 
         // --- DETAILED STAND INVENTORY LOGGING ---
-        megaLog("[MEGA-STP] -> Stand Inventory Before Harvest:");
+        SoCoLog.debug("[MEGA-STP] -> Stand Inventory Before Harvest:");
         stand.trees.loadAll();
         var totalVolume = stand.trees.sum('volume');
         var totalBA = stand.trees.sum('basalarea');
         var totalTreeCount = stand.trees.count;
 
-        megaLog(`[MEGA-STP] -> Total: ${totalTreeCount} trees, ${totalVolume.toFixed(1)} m³, ${totalBA.toFixed(1)} m² BA`);
+        SoCoLog.debug(`[MEGA-STP] -> Total: ${totalTreeCount} trees, ${totalVolume.toFixed(1)} m³, ${totalBA.toFixed(1)} m² BA`);
 
         // Get a list of unique species IDs present in the stand
         var species_ids = [];
@@ -152,7 +128,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
             if (species_count > 0) {
                 var min_dbh = stand.trees.mean('dbh', filter, 'min');
                 var max_dbh = stand.trees.mean('dbh', filter, 'max');
-                megaLog(`  - Species: ${species_id}, Count: ${species_count}, DBH Range: [${min_dbh.toFixed(1)} - ${max_dbh.toFixed(1)}] cm`);
+                SoCoLog.debug(`  - Species: ${species_id}, Count: ${species_count}, DBH Range: [${min_dbh.toFixed(1)} - ${max_dbh.toFixed(1)}] cm`);
             }
         }
 
@@ -205,24 +181,24 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                 volumeToRemove += stand.trees.sum('volume');
                 baToRemove += stand.trees.sum('basalarea');
                 treesToRemove += rest_count;
-                megaLog(`[MEGA-STP] -> WARNING: Empty dbhList - all trees dbh > ${rest_dbh} would be removed`);
+                SoCoLog.debug(`[MEGA-STP] -> WARNING: Empty dbhList - all trees dbh > ${rest_dbh} would be removed`);
             }
         }
 
         var removalShareVolume = totalVolume > 0 ? volumeToRemove / totalVolume : 0;
         var removalShareBA = totalBA > 0 ? baToRemove / totalBA : 0;
 
-        megaLog(`[MEGA-STP] -> PRE-CHECK: DBH-based harvest would remove:`);
-        megaLog(`  - ${treesToRemove} trees (${(treesToRemove/totalTreeCount*100).toFixed(1)}%)`);
-        megaLog(`  - ${volumeToRemove.toFixed(1)} m³ (${(removalShareVolume*100).toFixed(1)}%)`);
-        megaLog(`  - ${baToRemove.toFixed(1)} m² BA (${(removalShareBA*100).toFixed(1)}%)`);
+        SoCoLog.debug(`[MEGA-STP] -> PRE-CHECK: DBH-based harvest would remove:`);
+        SoCoLog.debug(`  - ${treesToRemove} trees (${(treesToRemove/totalTreeCount*100).toFixed(1)}%)`);
+        SoCoLog.debug(`  - ${volumeToRemove.toFixed(1)} m³ (${(removalShareVolume*100).toFixed(1)}%)`);
+        SoCoLog.debug(`  - ${baToRemove.toFixed(1)} m² BA (${(removalShareBA*100).toFixed(1)}%)`);
 
         // ===== DECISION: DBH-based or volume-based fallback? =====
         var useFallback = (removalShareVolume > maxRemovalShare || removalShareBA > maxRemovalShare);
 
         if (useFallback) {
-            megaLog(`[MEGA-STP] -> FALLBACK TRIGGERED: Removal would exceed ${(maxRemovalShare*100).toFixed(0)}% threshold.`);
-            megaLog(`[MEGA-STP] -> Switching to volume-based harvest (${(volumeFallbackShare*100).toFixed(0)}% of standing volume).`);
+            SoCoLog.debug(`[MEGA-STP] -> FALLBACK TRIGGERED: Removal would exceed ${(maxRemovalShare*100).toFixed(0)}% threshold.`);
+            SoCoLog.debug(`[MEGA-STP] -> Switching to volume-based harvest (${(volumeFallbackShare*100).toFixed(0)}% of standing volume).`);
 
             // ===== VOLUME-BASED FALLBACK =====
             var targetVolume = totalVolume * volumeFallbackShare;
@@ -251,7 +227,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                             var harvested = stand.trees.harvest();
                             total_harvested_count += harvested;
                             removedVolume += speciesTarget;
-                            megaLog(`  - ${species}: harvested ${harvested} trees, ~${speciesTarget.toFixed(1)} m³`);
+                            SoCoLog.debug(`  - ${species}: harvested ${harvested} trees, ~${speciesTarget.toFixed(1)} m³`);
                         }
                     }
                 }
@@ -279,10 +255,10 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                     if (restVolume <= remainingTarget) {
                         var rest_harvested = stand.trees.harvest();
                         total_harvested_count += rest_harvested;
-                        megaLog(`  - rest species: harvested ${rest_harvested} trees`);
+                        SoCoLog.debug(`  - rest species: harvested ${rest_harvested} trees`);
                     } else {
                         // Need to harvest partially - harvest largest first
-                        megaLog(`  - rest species: partial harvest to meet volume target`);
+                        SoCoLog.debug(`  - rest species: partial harvest to meet volume target`);
                         var rest_harvested = stand.trees.harvest();
                         total_harvested_count += rest_harvested;
                     }
@@ -291,11 +267,11 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
 
             stand.trees.removeMarkedTrees();
 
-            megaLog(`[MEGA-STP] -> Volume fallback completed: ${total_harvested_count} trees, target ~${targetVolume.toFixed(1)} m³`);
+            SoCoLog.debug(`[MEGA-STP] -> Volume fallback completed: ${total_harvested_count} trees, target ~${targetVolume.toFixed(1)} m³`);
             stand.setFlag('abe_targetDBH_mode', 'volume_fallback');
 
         } else {
-            megaLog(`[MEGA-STP] -> Proceeding with standard DBH-based harvest (${(removalShareVolume*100).toFixed(1)}% < ${(maxRemovalShare*100).toFixed(0)}%).`);
+            SoCoLog.debug(`[MEGA-STP] -> Proceeding with standard DBH-based harvest (${(removalShareVolume*100).toFixed(1)}% < ${(maxRemovalShare*100).toFixed(0)}%).`);
 
             // ===== STANDARD DBH-BASED HARVEST =====
             // Harvest explicitly listed species
@@ -320,7 +296,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                 var rest_harvested = stand.trees.harvest();
                 total_harvested_count += rest_harvested;
                 if (rest_harvested > 0) {
-                    megaLog(`[MEGA-STP] -> Harvested ${rest_harvested} unlisted species trees (dbh > ${rest_dbh})`);
+                    SoCoLog.debug(`[MEGA-STP] -> Harvested ${rest_harvested} unlisted species trees (dbh > ${rest_dbh})`);
                 }
             } else {
                 // Empty dbhList case - this should normally trigger fallback via pre-check
@@ -330,7 +306,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                 var rest_harvested = stand.trees.harvest();
                 total_harvested_count += rest_harvested;
                 if (rest_harvested > 0) {
-                    megaLog(`[MEGA-STP] -> Harvested ${rest_harvested} trees (dbh > ${rest_dbh}) - empty dbhList mode`);
+                    SoCoLog.debug(`[MEGA-STP] -> Harvested ${rest_harvested} trees (dbh > ${rest_dbh}) - empty dbhList mode`);
                 }
             }
 
@@ -350,11 +326,11 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
         stand.setFlag('abe_last_harvest_year', Globals.year);
         stand.setFlag('abe_targetDBH_removal_share', actualRemovalShare);
 
-        megaLog(`[MEGA-STP] -> ACTUAL RESULT: ${total_harvested_count} trees, ${volumeRemoved.toFixed(2)} m³/ha removed (${(actualRemovalShare*100).toFixed(1)}%)`);
+        SoCoLog.debug(`[MEGA-STP] -> ACTUAL RESULT: ${total_harvested_count} trees, ${volumeRemoved.toFixed(2)} m³/ha removed (${(actualRemovalShare*100).toFixed(1)}%)`);
     },
 
     onExecuted: function() {
-        megaLog(`[MEGA-STP] onExecuted for targetDBH on stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] onExecuted for targetDBH on stand ${stand.id}.`);
         stand.setFlag('abe_last_activity', 'MegaSTP_TargetDBH');
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_reassessment', false);
@@ -373,7 +349,7 @@ MEGA_STP_ACTIVITIES['plenter'] = {
     },
 
 onExecute: function() {
-        megaLog(`[MEGA-STP] Executing 'plenter' for stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'plenter' for stand ${stand.id}.`);
 
         // Capture volume before harvest
         var volumeBefore = stand.volume;
@@ -382,10 +358,10 @@ onExecute: function() {
         const dbhSteps = 5;
         var total_harvested_count = 0;
 
-        megaLog("[MEGA-STP] -> Received plenterCurve: " + JSON.stringify(plenterCurve));
+        SoCoLog.debug("[MEGA-STP] -> Received plenterCurve: " + JSON.stringify(plenterCurve));
 
 
-        megaLog("[MEGA-STP] -> Stand Inventory Before Harvest:");
+        SoCoLog.debug("[MEGA-STP] -> Stand Inventory Before Harvest:");
         stand.trees.loadAll(); // Load all trees FROM THE CURRENT STAND.
 
         // Diagnostic Logging (now correctly scoped)
@@ -402,7 +378,7 @@ onExecute: function() {
             // Use sum() on the already loaded list for efficiency
             var species_count = stand.trees.sum('1', filter_string);
             if (species_count > 0) {
-                megaLog(`  - Species: ${species_id}, Count: ${species_count}`);
+                SoCoLog.debug(`  - Species: ${species_id}, Count: ${species_count}`);
             }
         }
 
@@ -425,7 +401,7 @@ onExecute: function() {
 
                 var harvested_this_class = stand.trees.harvest();
                 total_harvested_count += harvested_this_class;
-                megaLog(`  - DBH Class ${dbh}: In stand=${treesInClass}, Target=${targetCount.toFixed(0)}. Surplus=${treesToHarvest}. Marking ${harvested_this_class} trees for harvest.`);
+                SoCoLog.debug(`  - DBH Class ${dbh}: In stand=${treesInClass}, Target=${targetCount.toFixed(0)}. Surplus=${treesToHarvest}. Marking ${harvested_this_class} trees for harvest.`);
             }
         }
 
@@ -441,10 +417,10 @@ onExecute: function() {
         stand.setFlag('abe_last_harvest_trees', total_harvested_count);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`[MEGA-STP] -> Total harvested trees: ${total_harvested_count}, ${volumeRemoved.toFixed(2)} m³/ha removed`);
+        SoCoLog.debug(`[MEGA-STP] -> Total harvested trees: ${total_harvested_count}, ${volumeRemoved.toFixed(2)} m³/ha removed`);
     },
     onExecuted: function() {
-        megaLog(`[MEGA-STP] onExecuted for plenter on stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] onExecuted for plenter on stand ${stand.id}.`);
         stand.setFlag('abe_last_activity', 'MegaSTP_Plenter');
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_reassessment', false);
@@ -467,7 +443,7 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
     // --- ENABLED: Species Selectivity ---
     speciesSelectivity: function() { 
         var val = stand.flag('abe_param_speciesSelectivity');
-        megaLog(`[MEGA-STP] Shelterwood Select: Fetching species selectivity: ${JSON.stringify(val)}`);
+        SoCoLog.debug(`[MEGA-STP] Shelterwood Select: Fetching species selectivity: ${JSON.stringify(val)}`);
         return val; 
     },
 
@@ -478,7 +454,7 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
     },
 
     onExecuted: function() {
-        megaLog(`[MEGA-STP] Shelterwood Select: Marking complete.`);
+        SoCoLog.debug(`[MEGA-STP] Shelterwood Select: Marking complete.`);
         
         // Snapshot total competitors marked
         var total_competitors = stand.trees.load('markcompetitor=true');
@@ -488,13 +464,13 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
         var fraction = stand.flag('abe_param_fraction_to_remove') || 0;
         var to_remove = Math.ceil(total_competitors * fraction);
 
-        megaLog(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
+        SoCoLog.debug(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
         
         if (to_remove > 0) {
             stand.trees.filterRandom(to_remove); // Keep 'to_remove' random trees in list
             var harvested = stand.trees.harvest(); // Harvest them
             // DO NOT reset marks here, they persist for next steps
-            megaLog(`  -> Harvested ${harvested} trees.`);
+            SoCoLog.debug(`  -> Harvested ${harvested} trees.`);
         }
 
         // Set Initialization Flag
@@ -519,7 +495,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
     // --- Species Selectivity ---
     speciesSelectivity: function() {
         var val = stand.flag('abe_param_speciesSelectivity');
-        megaLog(`[MEGA-STP] SelectiveThinning Select: Fetching species selectivity: ${JSON.stringify(val)}`);
+        SoCoLog.debug(`[MEGA-STP] SelectiveThinning Select: Fetching species selectivity: ${JSON.stringify(val)}`);
         return val;
     },
 
@@ -530,11 +506,11 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
     },
 
     onExecute: function() {
-        megaLog(`[MEGA-STP] SelectiveThinning Select: Starting tree selection for stand ${stand.id}`);
+        SoCoLog.debug(`[MEGA-STP] SelectiveThinning Select: Starting tree selection for stand ${stand.id}`);
     },
 
     onExecuted: function() {
-        megaLog(`[MEGA-STP] SelectiveThinning Select: Marking complete for stand ${stand.id}`);
+        SoCoLog.debug(`[MEGA-STP] SelectiveThinning Select: Marking complete for stand ${stand.id}`);
 
         // Snapshot total competitors marked
         var total_competitors = stand.trees.load('markcompetitor=true');
@@ -544,7 +520,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
         var fraction = stand.flag('abe_param_fraction_to_remove') || 0;
         var to_remove = Math.ceil(total_competitors * fraction);
 
-        megaLog(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
+        SoCoLog.debug(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
 
         // Capture volume before harvest
         var volumeBefore = stand.volume;
@@ -554,7 +530,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
             stand.trees.filterRandom(to_remove); // Keep 'to_remove' random trees in list
             treesHarvested = stand.trees.harvest(); // Harvest them
             // DO NOT reset marks here, they persist for next steps
-            megaLog(`  -> Harvested ${treesHarvested} trees.`);
+            SoCoLog.debug(`  -> Harvested ${treesHarvested} trees.`);
         }
 
         // Calculate volume removed
@@ -573,7 +549,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_reassessment', false);
 
-        megaLog(`  -> SelectiveThinning Select complete: ${volumeRemoved.toFixed(2)} m³/ha removed`);
+        SoCoLog.debug(`  -> SelectiveThinning Select complete: ${volumeRemoved.toFixed(2)} m³/ha removed`);
     }
 };
 
@@ -584,7 +560,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_remove'] = {
     schedule: { signal: 'do_selectiveThinning_remove' },
     
     action: function() {
-        megaLog(`\n[MEGA-STP - action] REMOVE phase for stand ${stand.id}.`);
+        SoCoLog.debug(`\n[MEGA-STP - action] REMOVE phase for stand ${stand.id}.`);
 
         // Capture volume before harvest
         var volumeBefore = stand.volume;
@@ -592,8 +568,8 @@ MEGA_STP_ACTIVITIES['selectiveThinning_remove'] = {
         var fraction_to_remove = stand.flag('abe_param_fraction_to_remove') || 0;
         var remaining_competitors = stand.trees.load('markcompetitor=true');
 
-        megaLog(`  -> Found ${remaining_competitors} remaining competitors.`);
-        megaLog(`  -> Agent requested removal of fraction: ${fraction_to_remove.toFixed(2)}`);
+        SoCoLog.debug(`  -> Found ${remaining_competitors} remaining competitors.`);
+        SoCoLog.debug(`  -> Agent requested removal of fraction: ${fraction_to_remove.toFixed(2)}`);
 
         var trees_to_remove_this_step = Math.ceil(remaining_competitors * fraction_to_remove);
 
@@ -611,10 +587,10 @@ MEGA_STP_ACTIVITIES['selectiveThinning_remove'] = {
         stand.setFlag('abe_last_harvest_trees', harvested_count);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`  -> Subsequent removal: Harvested ${harvested_count} trees, ${volumeRemoved.toFixed(2)} m³/ha removed`);
+        SoCoLog.debug(`  -> Subsequent removal: Harvested ${harvested_count} trees, ${volumeRemoved.toFixed(2)} m³/ha removed`);
     },
     onExecuted: function() {
-        megaLog(`[MEGA-STP - onExecuted] REMOVE phase complete for stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP - onExecuted] REMOVE phase complete for stand ${stand.id}.`);
         stand.setFlag('abe_last_activity', 'MegaSTP_SelectiveThinning_Remove');
         stand.setFlag('abe_last_activity_year', Globals.year);
     }
@@ -634,33 +610,33 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
     },
 
     onExecute: function() {
-        megaLog(`[MEGA-STP] Executing 'thinningFromBelow' for stand ${stand.id}`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'thinningFromBelow' for stand ${stand.id}`);
 
         // Get parameters from flags
         var share = stand.flag('abe_param_thinningShare');
         if (share === undefined || share === null || typeof share !== 'number' || isNaN(share)) {
-            console.warn(`[MEGA-STP] WARNING: Invalid thinningShare for stand ${stand.id}: ${share}. Using default 0.2`);
+            SoCoLog.warn(`[MEGA-STP] WARNING: Invalid thinningShare for stand ${stand.id}: ${share}. Using default 0.2`);
             share = 0.2;
         }
 
         var selectivity = stand.flag('abe_param_speciesSelectivity') || {};
-        megaLog(`[MEGA-STP] ThinningFromBelow params: share=${(share*100).toFixed(1)}%, selectivity=${JSON.stringify(selectivity)}`);
+        SoCoLog.debug(`[MEGA-STP] ThinningFromBelow params: share=${(share*100).toFixed(1)}%, selectivity=${JSON.stringify(selectivity)}`);
 
         // Capture volume before
         var volumeBefore = stand.volume;
         stand.setFlag('abe_volume_before_thinning', volumeBefore);
-        megaLog(`  -> Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`  -> Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
 
         // Calculate target volume to remove
         var targetRemoval = volumeBefore * share;
-        megaLog(`  -> Target removal: ${targetRemoval.toFixed(2)} m³/ha (${(share*100).toFixed(1)}%)`);
+        SoCoLog.debug(`  -> Target removal: ${targetRemoval.toFixed(2)} m³/ha (${(share*100).toFixed(1)}%)`);
 
         // Load all trees sorted by volume (ascending - smallest first for thinning from below)
         stand.trees.loadAll();
         var totalTrees = stand.trees.count;
 
         if (totalTrees === 0) {
-            megaLog(`  -> No trees in stand, nothing to thin`);
+            SoCoLog.debug(`  -> No trees in stand, nothing to thin`);
             stand.setFlag('abe_last_harvest_volume', 0);
             stand.setFlag('abe_last_harvest_trees', 0);
             stand.setFlag('abe_last_harvest_year', Globals.year);
@@ -668,7 +644,7 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
         }
 
         stand.trees.sort('volume');
-        megaLog(`  -> Total trees: ${totalTrees}`);
+        SoCoLog.debug(`  -> Total trees: ${totalTrees}`);
 
         // Thinning from below: remove smallest trees first
         var totalHarvested = 0;
@@ -685,7 +661,7 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
         // Don't remove more than 80% of trees
         approxTreesToRemove = Math.min(approxTreesToRemove, Math.floor(totalTrees * 0.8));
 
-        megaLog(`  -> Avg tree volume: ${avgTreeVolume.toFixed(3)} m³, approx trees to remove: ${approxTreesToRemove}`);
+        SoCoLog.debug(`  -> Avg tree volume: ${avgTreeVolume.toFixed(3)} m³, approx trees to remove: ${approxTreesToRemove}`);
 
         if (approxTreesToRemove > 0) {
             // filterRandom keeps N random trees from the current list
@@ -708,9 +684,9 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
         stand.setFlag('abe_last_harvest_trees', totalHarvested);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`[MEGA-STP] ThinningFromBelow complete for stand ${stand.id}:`);
-        megaLog(`  -> Volume after: ${volumeAfter.toFixed(2)} m³/ha`);
-        megaLog(`  -> Removed: ${removedVolume.toFixed(2)} m³/ha, ${totalHarvested} trees`);
+        SoCoLog.debug(`[MEGA-STP] ThinningFromBelow complete for stand ${stand.id}:`);
+        SoCoLog.debug(`  -> Volume after: ${volumeAfter.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`  -> Removed: ${removedVolume.toFixed(2)} m³/ha, ${totalHarvested} trees`);
     },
 
     onExecuted: function() {
@@ -724,7 +700,7 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
         stand.setFlag('abe_last_harvest_volume', volumeRemoved);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`[MEGA-STP] ThinningFromBelow removed ${volumeRemoved.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`[MEGA-STP] ThinningFromBelow removed ${volumeRemoved.toFixed(2)} m³/ha`);
 
         stand.setFlag('abe_last_activity', 'MegaSTP_ThinningFromBelow');
         stand.setFlag('abe_last_activity_year', Globals.year);
@@ -739,12 +715,12 @@ MEGA_STP_ACTIVITIES['femel_select'] = {
 
     action: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Femel Select: Initializing gap for stand ${stand.id}. Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`[MEGA-STP] Femel Select: Initializing gap for stand ${stand.id}. Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
 
         // 1. Initialize Patches
         // Uses parameter for number/size. Default 1 gap.
         var init_size = stand.flag('abe_param_femel_initial_size') || 1;
-        megaLog(`[DEBUG] Femel init_size flag: ${init_size}`);
+        SoCoLog.debug(`[DEBUG] Femel init_size flag: ${init_size}`);
 
         stand.patches.clear();
         stand.patches.createRandomPatches(init_size);
@@ -755,7 +731,7 @@ MEGA_STP_ACTIVITIES['femel_select'] = {
 
         // 3. Harvest the Patch
         var trees_in_patch = stand.trees.load('patch=' + initial_patch_id);
-        megaLog(`[DEBUG] Femel: Trees in patch ${initial_patch_id}: ${trees_in_patch}`);
+        SoCoLog.debug(`[DEBUG] Femel: Trees in patch ${initial_patch_id}: ${trees_in_patch}`);
 
         var harvested = stand.trees.harvest();
 
@@ -768,7 +744,7 @@ MEGA_STP_ACTIVITIES['femel_select'] = {
         stand.setFlag('abe_last_harvest_volume', volumeRemoved);
         stand.setFlag('abe_last_harvest_trees', harvested);
         stand.setFlag('abe_last_harvest_year', Globals.year);
-        megaLog(`[MEGA-STP] Femel Select: Created initial gap (ID ${initial_patch_id}). Harvested ${harvested} trees, ${volumeRemoved.toFixed(2)} m³/ha removed`);
+        SoCoLog.debug(`[MEGA-STP] Femel Select: Created initial gap (ID ${initial_patch_id}). Harvested ${harvested} trees, ${volumeRemoved.toFixed(2)} m³/ha removed`);
 
         // 4. Update Flags
         stand.setFlag('abe_femel_initialized', true);
@@ -776,7 +752,7 @@ MEGA_STP_ACTIVITIES['femel_select'] = {
     },
 
     onExecuted: function() {
-        megaLog(`[MEGA-STP] Femel Select onExecuted: Setting flags for stand ${stand.id}`);
+        SoCoLog.debug(`[MEGA-STP] Femel Select onExecuted: Setting flags for stand ${stand.id}`);
         stand.setFlag('abe_last_activity', 'MegaSTP_Femel_Select');
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_reassessment', false);
@@ -791,16 +767,16 @@ MEGA_STP_ACTIVITIES['femel_step'] = {
 
     action: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Femel Step: Expanding gap for stand ${stand.id}. Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`[MEGA-STP] Femel Step: Expanding gap for stand ${stand.id}. Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
 
         // 1. Read State
         var current_ring = stand.flag('abe_femel_current_ring');
         var grow_width = stand.flag('abe_param_femel_growth_width') || 1;
 
-        megaLog(`[DEBUG] Femel Step: current_ring=${current_ring}, grow_width=${grow_width}`);
+        SoCoLog.debug(`[DEBUG] Femel Step: current_ring=${current_ring}, grow_width=${grow_width}`);
 
         if (!current_ring) {
-            console.warn(`[MEGA-STP] ERROR: Femel step called but current_ring is undefined for stand ${stand.id}. Aborting expansion.`);
+            SoCoLog.warn(`[MEGA-STP] ERROR: Femel step called but current_ring is undefined for stand ${stand.id}. Aborting expansion.`);
             // Set flags to indicate failure
             stand.setFlag('abe_last_harvest_volume', 0);
             stand.setFlag('abe_last_harvest_trees', 0);
@@ -816,12 +792,12 @@ MEGA_STP_ACTIVITIES['femel_step'] = {
         // Update iLand grid
         stand.patches.updateGrid();
 
-        megaLog(`[MEGA-STP] Femel Step: Expanded Ring ${current_ring} to ${next_ring}. Added ${cells_added} cells.`);
+        SoCoLog.debug(`[MEGA-STP] Femel Step: Expanded Ring ${current_ring} to ${next_ring}. Added ${cells_added} cells.`);
 
         if (cells_added > 0) {
             // 3. Harvest the New Ring
             var trees_in_ring = stand.trees.load('patch=' + next_ring);
-            megaLog(`[DEBUG] Femel Step: Trees in ring ${next_ring}: ${trees_in_ring}`);
+            SoCoLog.debug(`[DEBUG] Femel Step: Trees in ring ${next_ring}: ${trees_in_ring}`);
 
             var harvested = stand.trees.harvest();
 
@@ -834,12 +810,12 @@ MEGA_STP_ACTIVITIES['femel_step'] = {
             stand.setFlag('abe_last_harvest_volume', volumeRemoved);
             stand.setFlag('abe_last_harvest_trees', harvested);
             stand.setFlag('abe_last_harvest_year', Globals.year);
-            megaLog(`[MEGA-STP] Femel Step: Harvested ${harvested} trees from Ring ${next_ring}, ${volumeRemoved.toFixed(2)} m³/ha removed`);
+            SoCoLog.debug(`[MEGA-STP] Femel Step: Harvested ${harvested} trees from Ring ${next_ring}, ${volumeRemoved.toFixed(2)} m³/ha removed`);
 
             // 4. Update State
             stand.setFlag('abe_femel_current_ring', next_ring);
         } else {
-            megaLog(`[MEGA-STP] Femel Step: No expansion possible (stand boundary reached?) for stand ${stand.id}.`);
+            SoCoLog.debug(`[MEGA-STP] Femel Step: No expansion possible (stand boundary reached?) for stand ${stand.id}.`);
             // Still set flags to 0 to track that step was attempted
             stand.setFlag('abe_last_harvest_volume', 0);
             stand.setFlag('abe_last_harvest_trees', 0);
@@ -847,7 +823,7 @@ MEGA_STP_ACTIVITIES['femel_step'] = {
     },
 
     onExecuted: function() {
-        megaLog(`[MEGA-STP] Femel Step onExecuted: Setting flags for stand ${stand.id}`);
+        SoCoLog.debug(`[MEGA-STP] Femel Step onExecuted: Setting flags for stand ${stand.id}`);
         stand.setFlag('abe_last_activity', 'MegaSTP_Femel_Step');
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_reassessment', false);
@@ -866,7 +842,7 @@ MEGA_STP_ACTIVITIES['femel_final'] = {
 
     onExecute: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Femel Final: Clearing matrix for stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] Femel Final: Clearing matrix for stand ${stand.id}.`);
         
         // Harvest everything remaining (The Matrix)
         stand.trees.loadAll();
@@ -883,7 +859,7 @@ MEGA_STP_ACTIVITIES['femel_final'] = {
         stand.setFlag('abe_last_harvest_year', Globals.year);
         stand.trees.removeMarkedTrees();
         
-        megaLog(`  -> Harvested ${harvested} remaining trees.`);
+        SoCoLog.debug(`  -> Harvested ${harvested} remaining trees.`);
 
         // Cleanup
         stand.setAbsoluteAge(0);
@@ -922,14 +898,14 @@ MEGA_STP_ACTIVITIES['tending'] = {
         var basalArea = stand.basalArea;
         var totalTreesBefore = 0;
 
-        megaLog(`[MEGA-STP] Executing 'tending' for stand ${stand.id}:`);
-        megaLog(`  -> Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
-        megaLog(`  -> Stand age: ${standAge.toFixed(1)} years`);
-        megaLog(`  -> Basal area: ${basalArea.toFixed(2)} m²/ha`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'tending' for stand ${stand.id}:`);
+        SoCoLog.debug(`  -> Volume before: ${volumeBefore.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`  -> Stand age: ${standAge.toFixed(1)} years`);
+        SoCoLog.debug(`  -> Basal area: ${basalArea.toFixed(2)} m²/ha`);
 
         // Check if stand has enough volume for tending
         if (volumeBefore < 5) {
-            megaLog(`  -> Volume too low (${volumeBefore.toFixed(2)} < 5 m³/ha), skipping tending`);
+            SoCoLog.debug(`  -> Volume too low (${volumeBefore.toFixed(2)} < 5 m³/ha), skipping tending`);
             stand.setFlag('abe_last_harvest_volume', 0);
             stand.setFlag('abe_last_harvest_trees', 0);
             stand.setFlag('abe_last_harvest_year', Globals.year);
@@ -938,7 +914,7 @@ MEGA_STP_ACTIVITIES['tending'] = {
 
         // Get species selectivity if set
         var selectivity = stand.flag('abe_param_speciesSelectivity') || {};
-        megaLog(`  -> Species selectivity: ${JSON.stringify(selectivity)}`);
+        SoCoLog.debug(`  -> Species selectivity: ${JSON.stringify(selectivity)}`);
 
         // Tending removes ~25% of suppressed trees (moderate intensity)
         var removalFraction = 0.25;
@@ -948,14 +924,14 @@ MEGA_STP_ACTIVITIES['tending'] = {
         totalTreesBefore = stand.trees.count;
 
         if (totalTreesBefore === 0) {
-            megaLog(`  -> No trees in stand, nothing to tend`);
+            SoCoLog.debug(`  -> No trees in stand, nothing to tend`);
             stand.setFlag('abe_last_harvest_volume', 0);
             stand.setFlag('abe_last_harvest_trees', 0);
             stand.setFlag('abe_last_harvest_year', Globals.year);
             return;
         }
 
-        megaLog(`  -> Total trees: ${totalTreesBefore}`);
+        SoCoLog.debug(`  -> Total trees: ${totalTreesBefore}`);
 
         // Sort by height descending - we want to keep the tallest (crop) trees
         // and remove the smallest (suppressed) trees
@@ -969,14 +945,14 @@ MEGA_STP_ACTIVITIES['tending'] = {
 
         // Need at least a few trees to make tending worthwhile
         if (treesToRemove < 5) {
-            megaLog(`  -> Too few trees to remove (${treesToRemove}), skipping tending`);
+            SoCoLog.debug(`  -> Too few trees to remove (${treesToRemove}), skipping tending`);
             stand.setFlag('abe_last_harvest_volume', 0);
             stand.setFlag('abe_last_harvest_trees', 0);
             stand.setFlag('abe_last_harvest_year', Globals.year);
             return;
         }
 
-        megaLog(`  -> Target removal: ${treesToRemove} trees (${(removalFraction*100).toFixed(0)}%)`);
+        SoCoLog.debug(`  -> Target removal: ${treesToRemove} trees (${(removalFraction*100).toFixed(0)}%)`);
 
         // Reload and sort ascending (smallest first) to harvest suppressed trees
         stand.trees.loadAll();
@@ -999,12 +975,12 @@ MEGA_STP_ACTIVITIES['tending'] = {
         stand.setFlag('abe_last_harvest_trees', totalHarvested);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`[MEGA-STP] Tending complete for stand ${stand.id}:`);
-        megaLog(`  -> Volume after: ${volumeAfter.toFixed(2)} m³/ha`);
-        megaLog(`  -> Removed: ${volumeRemoved.toFixed(2)} m³/ha, ${totalHarvested} trees`);
+        SoCoLog.debug(`[MEGA-STP] Tending complete for stand ${stand.id}:`);
+        SoCoLog.debug(`  -> Volume after: ${volumeAfter.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`  -> Removed: ${volumeRemoved.toFixed(2)} m³/ha, ${totalHarvested} trees`);
 
         if (volumeRemoved < 0.01 && totalHarvested > 0) {
-            console.warn(`[MEGA-STP] WARNING: Tending harvested ${totalHarvested} trees but removed minimal volume`);
+            SoCoLog.warn(`[MEGA-STP] WARNING: Tending harvested ${totalHarvested} trees but removed minimal volume`);
         }
     },
 
@@ -1037,12 +1013,12 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
         // Capture volume before (C++ marking hasn't executed yet)
         var volumeBefore = stand.volume;
         stand.setFlag('abe_volume_before_thinning', volumeBefore);
-        megaLog(`[MEGA-STP] Executing 'shelterwood_select' for stand ${stand.id}, volume before: ${volumeBefore.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`[MEGA-STP] Executing 'shelterwood_select' for stand ${stand.id}, volume before: ${volumeBefore.toFixed(2)} m³/ha`);
     },
 
     // Post-marking logic: Record stats and perform FIRST removal pass.
     onExecuted: function() {
-        megaLog(`[MEGA-STP] Shelterwood Select: Marking complete.`);
+        SoCoLog.debug(`[MEGA-STP] Shelterwood Select: Marking complete.`);
 
         // Get volume before removal
         var volumeBefore = stand.flag('abe_volume_before_thinning') || stand.volume;
@@ -1056,14 +1032,14 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
         var fraction = stand.flag('abe_param_fraction_to_remove') || 0;
         var to_remove = Math.ceil(total_competitors * fraction);
 
-        megaLog(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
+        SoCoLog.debug(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
 
         var harvested = 0;
         if (to_remove > 0) {
             stand.trees.filterRandom(to_remove); // Keep 'to_remove' in list
             harvested = stand.trees.harvest(); // Remove them
             // Do NOT call removeMarkedTrees() here; we need marks for next steps!
-            megaLog(`  -> Harvested ${harvested} trees.`);
+            SoCoLog.debug(`  -> Harvested ${harvested} trees.`);
         }
 
         // Calculate volume removed
@@ -1076,7 +1052,7 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
         stand.setFlag('abe_last_harvest_trees', harvested);
         stand.setFlag('abe_last_harvest_year', Globals.year);
 
-        megaLog(`[MEGA-STP] Shelterwood Select removed ${volumeRemoved.toFixed(2)} m³/ha`);
+        SoCoLog.debug(`[MEGA-STP] Shelterwood Select removed ${volumeRemoved.toFixed(2)} m³/ha`);
 
         // 3. Set Initialization Flag
         stand.setFlag('abe_shelterwood_initialized', true);
@@ -1093,7 +1069,7 @@ MEGA_STP_ACTIVITIES['shelterwood_remove'] = {
     
     action: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Shelterwood Remove: Executing phase.`);
+        SoCoLog.debug(`[MEGA-STP] Shelterwood Remove: Executing phase.`);
 
         // 1. Load remaining marked competitors
         var remaining = stand.trees.load('markcompetitor=true');
@@ -1102,7 +1078,7 @@ MEGA_STP_ACTIVITIES['shelterwood_remove'] = {
         var fraction = stand.flag('abe_param_fraction_to_remove') || 0;
         var to_remove = Math.ceil(remaining * fraction);
 
-        megaLog(`  -> Remaining competitors: ${remaining}. Target removal: ${to_remove} (${(fraction*100).toFixed(1)}%).`);
+        SoCoLog.debug(`  -> Remaining competitors: ${remaining}. Target removal: ${to_remove} (${(fraction*100).toFixed(1)}%).`);
 
         if (to_remove > 0) {
             stand.trees.filterRandomExclude(to_remove);
@@ -1117,7 +1093,7 @@ MEGA_STP_ACTIVITIES['shelterwood_remove'] = {
         stand.setFlag('abe_last_harvest_volume', volumeRemoved);
         stand.setFlag('abe_last_harvest_trees', harvested);
         stand.setFlag('abe_last_harvest_year', Globals.year);
-            megaLog(`  -> Harvested ${harvested} trees.`);
+            SoCoLog.debug(`  -> Harvested ${harvested} trees.`);
         }
     },
     onExecuted: function() {
@@ -1143,7 +1119,7 @@ MEGA_STP_ACTIVITIES['shelterwood_final'] = {
 
     onExecute: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Shelterwood Final Harvest: Clearing overstory.`);
+        SoCoLog.debug(`[MEGA-STP] Shelterwood Final Harvest: Clearing overstory.`);
         
         // Load EVERYTHING marked (Crop trees + any leftover competitors)
         stand.trees.load('markcompetitor=true or markcrop=true');
@@ -1163,7 +1139,7 @@ MEGA_STP_ACTIVITIES['shelterwood_final'] = {
         // Cleanup: Remove any stray marks on the stand
         stand.trees.resetMarks(); 
         
-        megaLog(`  -> Removed ${count} seed trees and remnants.`);
+        SoCoLog.debug(`  -> Removed ${count} seed trees and remnants.`);
         
         // Reset Rotation
         stand.setAbsoluteAge(0);
@@ -1188,14 +1164,14 @@ MEGA_STP_ACTIVITIES['planting'] = {
     onEvaluate: function() { return true; },
 
     onExecute: function() {
-        megaLog(`[MEGA-STP] Executing Planting on stand ${stand.id}.`);
+        SoCoLog.debug(`[MEGA-STP] Executing Planting on stand ${stand.id}.`);
         
         // 1. Read Flags
         var species_val = stand.flag('abe_param_planting_species');
         var fraction_val = stand.flag('abe_param_planting_fraction');
 
         // Log what we got (The Critical Check)
-        megaLog(`[MEGA-STP] Flags Received -> Species: ${JSON.stringify(species_val)}, Fractions: ${JSON.stringify(fraction_val)}`);
+        SoCoLog.debug(`[MEGA-STP] Flags Received -> Species: ${JSON.stringify(species_val)}, Fractions: ${JSON.stringify(fraction_val)}`);
 
         // --- Helper to force Arrays ---
         function toArray(val, isNumeric) {
@@ -1230,7 +1206,7 @@ MEGA_STP_ACTIVITIES['planting'] = {
                 clear: false 
             };
             
-            megaLog(`  -> Running iLand Planting: ${sp} on ${(fr*100).toFixed(0)}% of area.`);
+            SoCoLog.debug(`  -> Running iLand Planting: ${sp} on ${(fr*100).toFixed(0)}% of area.`);
             fmengine.runPlanting(stand.id, item);
         }
     },
@@ -1262,10 +1238,10 @@ MEGA_STP_ACTIVITIES['salvage'] = {
         var volume_before = stand.volume + disturbedVolume;  // Approximate pre-disturbance volume
         var severity_fraction = (volume_before > 0) ? disturbedVolume / volume_before : 0;
 
-        megaLog(`[MEGA-STP SALVAGE] Disturbance detected on stand ${stand.id}!`);
-        megaLog(`  -> Disturbed volume: ${disturbedVolume.toFixed(1)} m³ (${severity_m3ha.toFixed(1)} m³/ha)`);
-        megaLog(`  -> Severity fraction: ${(severity_fraction * 100).toFixed(1)}%`);
-        megaLog(`  -> Remaining volume: ${stand.volume.toFixed(1)} m³/ha`);
+        SoCoLog.debug(`[MEGA-STP SALVAGE] Disturbance detected on stand ${stand.id}!`);
+        SoCoLog.debug(`  -> Disturbed volume: ${disturbedVolume.toFixed(1)} m³ (${severity_m3ha.toFixed(1)} m³/ha)`);
+        SoCoLog.debug(`  -> Severity fraction: ${(severity_fraction * 100).toFixed(1)}%`);
+        SoCoLog.debug(`  -> Remaining volume: ${stand.volume.toFixed(1)} m³/ha`);
 
         // Set flags for SOCO perception to read
         stand.setFlag('abe_disturbance_detected', true);
@@ -1278,7 +1254,7 @@ MEGA_STP_ACTIVITIES['salvage'] = {
         // Check if we're in the middle of a sequence activity
         var current_activity = stand.flag('abe_next_activity');
         if (current_activity === 'shelterwood' || current_activity === 'femel' || current_activity === 'selectiveThinning') {
-            megaLog(`  -> Interrupting ongoing ${current_activity} sequence due to disturbance.`);
+            SoCoLog.debug(`  -> Interrupting ongoing ${current_activity} sequence due to disturbance.`);
 
             // Clear sequence-specific flags
             if (typeof Action !== 'undefined' && Action.prepare) {
@@ -1313,7 +1289,7 @@ MEGA_STP_ACTIVITIES['salvage'] = {
             volume_remaining: stand.volume
         });
 
-        megaLog(`  -> Flags set. SOCO will decide salvage response.`);
+        SoCoLog.debug(`  -> Flags set. SOCO will decide salvage response.`);
     }
 };
 
@@ -1329,7 +1305,7 @@ MEGA_STP_ACTIVITIES['salvage_harvest'] = {
 
     onExecute: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Salvage Harvest: Removing damaged/dead trees.`);
+        SoCoLog.debug(`[MEGA-STP] Salvage Harvest: Removing damaged/dead trees.`);
 
         // Get salvage parameters from flags
         var min_dbh = stand.flag('abe_param_salvage_min_dbh') || 10;
@@ -1358,7 +1334,7 @@ MEGA_STP_ACTIVITIES['salvage_harvest'] = {
         var volumeAfter = stand.volume;
         var volumeRemoved = Math.max(0, volumeBefore - volumeAfter);
 
-        megaLog(`  -> Salvage removed ${volumeRemoved.toFixed(1)} m³/ha`);
+        SoCoLog.debug(`  -> Salvage removed ${volumeRemoved.toFixed(1)} m³/ha`);
 
         // Store results
         stand.setFlag('abe_last_harvest_volume', volumeRemoved);
@@ -1384,7 +1360,7 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
 
     onExecute: function() {
         var volumeBefore = stand.volume;
-        megaLog(`[MEGA-STP] Salvage Clearcut: Complete stand reset after severe disturbance.`);
+        SoCoLog.debug(`[MEGA-STP] Salvage Clearcut: Complete stand reset after severe disturbance.`);
 
         // Remove all remaining trees
         stand.trees.loadAll();
@@ -1394,7 +1370,7 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
         if (stand.reload) stand.reload();
         var volumeRemoved = Math.max(0, volumeBefore);
 
-        megaLog(`  -> Salvage clearcut removed ${count} trees, ${volumeRemoved.toFixed(1)} m³/ha`);
+        SoCoLog.debug(`  -> Salvage clearcut removed ${count} trees, ${volumeRemoved.toFixed(1)} m³/ha`);
 
         // Store results
         stand.setFlag('abe_last_harvest_volume', volumeRemoved);
@@ -1413,7 +1389,7 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
         stand.setFlag('abe_need_reassessment', true);
 
         // Trigger replanting signal
-        megaLog(`  -> Sending do_planting signal for post-salvage replanting.`);
+        SoCoLog.debug(`  -> Sending do_planting signal for post-salvage replanting.`);
         stand.stp.signal('do_planting');
     }
 };
@@ -1426,11 +1402,11 @@ MEGA_STP_ACTIVITIES['salvage_leave'] = {
     onEvaluate: function() { return true; },
 
     onExecute: function() {
-        megaLog(`[MEGA-STP] Salvage Leave: Leaving disturbed stand for natural recovery (biodiversity option).`);
+        SoCoLog.debug(`[MEGA-STP] Salvage Leave: Leaving disturbed stand for natural recovery (biodiversity option).`);
 
         // No harvesting - just record the decision
         var remaining_volume = stand.volume;
-        megaLog(`  -> Leaving ${remaining_volume.toFixed(1)} m³/ha standing for habitat/deadwood.`);
+        SoCoLog.debug(`  -> Leaving ${remaining_volume.toFixed(1)} m³/ha standing for habitat/deadwood.`);
 
         // Could optionally set flags for monitoring recovery
         stand.setFlag('abe_salvage_left_for_recovery', true);
@@ -1453,4 +1429,4 @@ var MegaSTP = {
 
 // Make it available for registration
 this.MegaSTP = MegaSTP;
-console.log("--- SoCoABE Mega-STP defined successfully. ---");
+SoCoLog.debug("--- SoCoABE Mega-STP defined successfully. ---");

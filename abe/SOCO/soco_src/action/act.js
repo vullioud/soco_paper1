@@ -8,7 +8,7 @@
  * =================================================================================
  */
 
-Action.trigger_activity = function(stand_data_obj) {
+Action.trigger_activity = function(stand_data_obj, agent) {
     // 1. Set context to the correct stand
     fmengine.standId = stand_data_obj.stand_id;
     if (!stand || stand.id <= 0) {
@@ -17,7 +17,7 @@ Action.trigger_activity = function(stand_data_obj) {
     }
 
     // 1.5. LOG ML TRAINING DATA - Capture pre-activity state BEFORE execution
-    Monitoring.log_ml_activity(stand_data_obj);
+    Monitoring.log_ml_activity(stand_data_obj, agent);
 
     // 2. Clear previous flags to ensure clean state
     Action.prepare.clear_flags();
@@ -55,7 +55,7 @@ Action.trigger_activity = function(stand_data_obj) {
     var prepare_function = Action.prepare[execution_activity_name];
 
     if (typeof prepare_function === 'function') {
-        prepare_function(stand_data_obj.activity.parameters, stand_data_obj);
+        prepare_function(stand_data_obj.activity.parameters, stand_data_obj, agent);
     } else {
         SoCoLog.warn(`[Action] No prepare function found for '${execution_activity_name}' (from '${cognitive_activity_name}')`);
     }

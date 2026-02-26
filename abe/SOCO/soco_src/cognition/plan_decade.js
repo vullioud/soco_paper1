@@ -3,6 +3,8 @@
 
 Cognition.plan_decade = function(agent, current_year) {
 
+    agent.unit_state.harvest_commits_this_decade = 0;
+
     var mandatory = [];
     var harvest_pool = [];
     var thinning_pool = [];
@@ -16,7 +18,7 @@ Cognition.plan_decade = function(agent, current_year) {
         var status = Cognition.classify_stand_status(s, current_year);
         if (status !== "candidate") continue;
 
-        var window = Cognition.get_decision_window(s.iLand_stand_data.absolute_age_soco);
+        var window = Cognition.get_decision_window(s.iLand_stand_data.absolute_age_iLand);
 
         switch (window) {
             case "Planting":
@@ -35,7 +37,7 @@ Cognition.plan_decade = function(agent, current_year) {
     // --- MANDATORY: Planting + Tending ---
     for (var i = 0; i < mandatory.length; i++) {
         var ms = mandatory[i];
-        var mw = Cognition.get_decision_window(ms.iLand_stand_data.absolute_age_soco);
+        var mw = Cognition.get_decision_window(ms.iLand_stand_data.absolute_age_iLand);
         var activity = Cognition.draw_activity(agent, mw);
 
         if (activity === "noManagement") {
@@ -49,6 +51,9 @@ Cognition.plan_decade = function(agent, current_year) {
         }
         ms.activity.decided_window = mw;
         ms.activity.planned_phase = mw;
+        if (Monitoring.isDecadeLogEnabled()) {
+            Monitoring.log_decade_decision(agent, current_year, "Mandatory", ms, i, true);
+        }
     }
 
     // --- HARVESTING: Sustained yield ---
@@ -84,6 +89,10 @@ Cognition.plan_decade = function(agent, current_year) {
         hs.activity.planned_phase = "Harvesting";
         Cognition.select_parameters(hs, agent);
         harvest_count++;
+        if (Monitoring.isDecadeLogEnabled()) {
+            Monitoring.log_decade_decision(agent, current_year, "Harvesting", hs, h,
+                harvest_count <= harvest_target);
+        }
     }
 
     // --- THINNING ---
@@ -106,6 +115,9 @@ Cognition.plan_decade = function(agent, current_year) {
         }
         ts.activity.decided_window = "Thinning";
         ts.activity.planned_phase = "Thinning";
+        if (Monitoring.isDecadeLogEnabled()) {
+            Monitoring.log_decade_decision(agent, current_year, "Thinning", ts, t, true);
+        }
     }
 };
 

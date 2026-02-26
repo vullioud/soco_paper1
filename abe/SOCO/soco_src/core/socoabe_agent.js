@@ -29,11 +29,11 @@ class socoabe_agent {
         this.planning_offset = Math.floor(Math.random() * 10) + 5;
         this.is_initialized = false;
 
-        // Unit Data
-        this.unit_data = [];
-        this.my_unit = {
-            unit_id: this.id + "_unit",
-            history: []
+        this.unit_state = {
+            harvest_commits_this_decade: 0,   // reset at start of each plan_decade call
+            resource_used_this_year:     0,   // reset at start of execute_yearly each year
+            salvage_count_this_year:     0,   // counted in handle_salvage_and_ongoing
+            decade_outcomes:             []   // Paper 2 landing zone
         };
 
         this.init();
@@ -102,37 +102,41 @@ class socoabe_agent {
         }
     }
 
-    handle_reactive_planting(current_year) {
+    handle_mandatory_planting(current_year) {
         for (var stand_id in this.managed_stands_data) {
             var s = this.managed_stands_data[stand_id];
-            if (s.iLand_stand_data.needs_planting) {
-                var activity = Cognition.draw_activity(this, "Planting");
-                if (activity !== "noManagement") {
-                    s.activity.chosen_Activity = activity;
-                    s.activity.target_year = current_year;
-                    s.activity.is_actionable = true;
-                    Cognition.select_parameters(s, this);
-                }
-                s.activity.decided_window = "Planting";
-                s.iLand_stand_data.needs_planting = false;
-            }
+            var age = s.iLand_stand_data.absolute_age_iLand;
+
+            if (Cognition.get_decision_window(age) !== "Planting") continue;
+            if (s.activity.decided_window === "Planting") continue;
+            if (s.activity.is_Sequence) continue;
+            if (s.preference_focus === 'NoManagement') continue;
+
+            // Stand-level reactive decision — bypasses portfolio logic
+            var activity = Cognition.draw_activity(this, "Planting");
+            s.activity.chosen_Activity = activity || "noManagement";
+            s.activity.is_actionable   = (activity && activity !== "noManagement");
+            s.activity.target_year     = s.activity.is_actionable ? current_year + 1 : -1;
+            s.activity.decided_window  = "Planting";
+            if (s.activity.is_actionable) Cognition.select_parameters(s, this);
         }
     }
 
     handle_salvage_and_ongoing(current_year) {
-        this.salvage_count_this_year = 0;
+        this.unit_state.salvage_count_this_year = 0;
         for (var stand_id in this.managed_stands_data) {
             var s = this.managed_stands_data[stand_id];
-            s = Cognition.think(s, this);
+            s = Cognition.think_reactive(s, this);
             this.managed_stands_data[stand_id] = s;
 
             if (s.activity.chosen_Activity === 'salvage' && s.activity.is_actionable) {
-                this.salvage_count_this_year++;
+                this.unit_state.salvage_count_this_year++;
             }
         }
     }
 
     execute_yearly(current_year) {
+        this.unit_state.resource_used_this_year = 0;
         var scheduled = [];
         for (var sid in this.managed_stands_data) {
             var s = this.managed_stands_data[sid];
@@ -149,13 +153,13 @@ class socoabe_agent {
         var capacity = Math.max(1, Math.ceil(
             this.resources * this.managed_stand_ids.length / 10
         ));
-        capacity -= (this.salvage_count_this_year || 0) * 2;
+        capacity -= (this.unit_state.salvage_count_this_year || 0) * 2;
         if (capacity < 0) capacity = 0;
 
         for (var i = 0; i < scheduled.length; i++) {
             var sd = scheduled[i];
             if (capacity > 0) {
-                Action.trigger_activity(sd);
+                Action.trigger_activity(sd, this);
                 capacity--;
             } else {
                 sd.activity.target_year += 1;
@@ -170,6 +174,21 @@ class socoabe_agent {
     }
 
     run_yearly_cycle(current_year) {
+        // ── COGNITIVE ARCHITECTURE ────────────────────────────────────────────────
+        // Two distinct modes run each year:
+        //
+        //   REACTIVE  (per-stand, every year):
+        //     think_reactive()            — salvage priority + ongoing sequence continuation
+        //     handle_mandatory_planting() — post-harvest young stands, observation-driven
+        //
+        //   PROACTIVE (unit-level, every 10 years):
+        //     plan_decade()               — portfolio planning, sustained yield, activity draw
+        //
+        // Extension points:
+        //   Paper 2: social observation → call observe_social() before plan_decade()
+        //   Paper 3: guideline dynamics → institution.update_guidelines() before agents run
+        // ─────────────────────────────────────────────────────────────────────────
+
         // 1. Observe all stands
         this.observe();
 
@@ -178,11 +197,11 @@ class socoabe_agent {
             this.is_initialized = true;
         }
 
-        // 3. Log baseline
+        // 3. Log baseline (pass agent for identity fields — Task 0.10)
         var recording_start_year = SoCoLog.getRecordingStartYear();
         if (current_year === recording_start_year) {
             for (var stand_id in this.managed_stands_data) {
-                Monitoring.log_ml_baseline(this.managed_stands_data[stand_id]);
+                Monitoring.log_ml_baseline(this.managed_stands_data[stand_id], this);
             }
         }
 
@@ -193,8 +212,8 @@ class socoabe_agent {
             // 4. Handle reactive events (salvage, ongoing sequences)
             this.handle_salvage_and_ongoing(current_year);
 
-            // 5. Handle reactive planting (post-harvest)
-            this.handle_reactive_planting(current_year);
+            // 5. Handle mandatory planting (observation-driven)
+            this.handle_mandatory_planting(current_year);
 
             // 6. Is this a planning year? (every 10 years)
             var is_planning_year = (current_year >= this.planning_offset &&
@@ -208,15 +227,6 @@ class socoabe_agent {
             this.execute_yearly(current_year);
         }
 
-        // 8. Monitor/log
-        for (var sid in this.managed_stands_data) {
-            Monitoring.snapshot(this, this.managed_stands_data[sid]);
-            Monitoring.log_yearly_structure(this.managed_stands_data[sid]);
-        }
-
-        if (current_year % 10 === 0) {
-            Monitoring.snapshot_unit(this, current_year);
-        }
     }
 };
 this.socoabe_agent = socoabe_agent;

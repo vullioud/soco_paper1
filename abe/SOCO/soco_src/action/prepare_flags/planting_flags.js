@@ -1,8 +1,5 @@
 
-Action.prepare.planting = function(params, stand_data_obj) {
-
-    // 1. Get the Agent
-    var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
+Action.prepare.planting = function(params, stand_data_obj, agent) {
 
     // 2. Execute Strategy — returns { species: [...], fractions: [...] }
     var result = SpeciesStrategies.execute(stand_data_obj, agent, 'planting');

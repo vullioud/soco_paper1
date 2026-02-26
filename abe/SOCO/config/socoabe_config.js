@@ -79,6 +79,11 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
             LOG_PERCEPTION: false,
         },
 
+        LOGGING: {
+            DEBUG: false,   // true during dev; false for cluster runs
+            WARN:  true
+        },
+
         // Bark beetle outbreak scenario
         BARK_BEETLE: {
             ENABLED: true,
@@ -137,25 +142,12 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         },
 
         MONITORING: {
-            ENABLED: true,
-            sample_size: 10,
-
+            ML_LOG:      true,
+            DECADE_LOG:  true,
             OUTPUT_FILES: {
-                ML_ACTIVITY: "soco_ml_activities",
-                SIMPLE_ACTIVITY: "soco_log_activities",
-                HARVEST: "soco_log_harvest",
-                DETAILED_STANDS: "soco_log_detailed_stands",
-                AGGREGATED: "soco_log_aggregated_species",
-                YEARLY_STRUCTURE: "soco_yearly_structure"
-            },
-
-            ML_ACTIVITY_LOG: true,
-            SIMPLE_ACTIVITY_LOG: false,
-            HARVEST_LOG: false,
-            DETAILED_STAND_LOG: false,
-            DETAILED_LOG_SAMPLE_SIZE: 10,
-            AGGREGATED_LOG: false,
-            YEARLY_STRUCTURE_LOG: true
+                ML_ACTIVITY:      "soco_ml_activities",
+                DECADE_DECISIONS: "soco_decade_decisions"
+            }
         }
     };
 }

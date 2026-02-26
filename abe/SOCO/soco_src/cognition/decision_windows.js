@@ -10,7 +10,7 @@ Cognition.get_decision_window = function(age) {
 };
 
 Cognition.classify_stand_status = function(stand_data_obj, current_year) {
-    var age = stand_data_obj.iLand_stand_data.absolute_age_soco;
+    var age = stand_data_obj.iLand_stand_data.absolute_age_iLand;
     var window = Cognition.get_decision_window(age);
     var is_ongoing = stand_data_obj.activity.is_Sequence;
     var decided_window = stand_data_obj.activity.decided_window;

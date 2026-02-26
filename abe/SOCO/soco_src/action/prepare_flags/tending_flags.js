@@ -12,10 +12,7 @@
  * =================================================================================
  */
 
-Action.prepare.tending = function(params, stand_data_obj) {
-
-    // 1. Get Agent & Execute Strategy for 'tending'
-    var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
+Action.prepare.tending = function(params, stand_data_obj, agent) {
     var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'tending');
 
     // DIAGNOSTIC: Validate selectivity

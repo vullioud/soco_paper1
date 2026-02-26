@@ -1,9 +1,0 @@
-documentation/
-utils/changed.txt
-create_snapshot.py
-socoabe_code_snapshot_recursive.txt
-*.txt
-.Rproj.user
-CONTROL_TOWER/created_json_tables
-CONTROL_TOWER/ODDSTUFF
-doc/

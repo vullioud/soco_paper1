@@ -34,7 +34,6 @@ try {
     // Load Cognition Module
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decision_windows.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/think.js'));
-    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_groups.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/condition_classifier.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_strategies.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_parameters.js'));

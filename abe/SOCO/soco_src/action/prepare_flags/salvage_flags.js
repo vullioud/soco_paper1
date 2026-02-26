@@ -1,11 +1,8 @@
 // FILE: soco_src/action/prepare_flags/salvage_flags.js
 // Paper 1: Salvage response by behavioral_type instead of preference_focus.
 
-Action.prepare.salvage = function(params, stand_data_obj) {
+Action.prepare.salvage = function(params, stand_data_obj, agent) {
     var severity = stand_data_obj.iLand_stand_data.disturbance_severity || 0;
-
-    // Find agent to get behavioral_type
-    var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
     var btype = agent ? agent.behavioral_type : 'TR';
 
     var response = { type: 'salvage_leave', fraction: 0, replant: false };
@@ -41,13 +38,6 @@ Action.prepare.salvage = function(params, stand_data_obj) {
     stand.setFlag('abe_param_salvage_fraction', salvage_fraction);
     stand.setFlag('abe_param_salvage_min_dbh', min_dbh);
     stand.setFlag('abe_param_salvage_trigger_replant', response.replant);
-
-    stand_data_obj.iLand_stand_data.salvage_response = salvage_type;
-
-    // Trigger reactive planting if replant is true
-    if (response.replant) {
-        stand_data_obj.iLand_stand_data.needs_planting = true;
-    }
 
     return salvage_type;
 };

@@ -12,7 +12,7 @@
  * =================================================================================
  */
 
-Action.prepare.thinningFromBelow = function(params, stand_data_obj) {
+Action.prepare.thinningFromBelow = function(params, stand_data_obj, agent) {
 
     // 1. Thinning Share (Volume fraction)
     var share = params.thinningShare !== undefined ? params.thinningShare : 0.2;
@@ -30,7 +30,6 @@ Action.prepare.thinningFromBelow = function(params, stand_data_obj) {
     stand.setFlag('abe_param_thinningShare', share);
 
     // 2. Species Selectivity via Strategy
-    var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
     var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'thinning');
 
     // DIAGNOSTIC: Validate selectivity

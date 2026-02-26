@@ -12,7 +12,7 @@
  * =================================================================================
  */
 
-Action.prepare.shelterwood = function(params, stand_data_obj) {
+Action.prepare.shelterwood = function(params, stand_data_obj, agent) {
     
     // 1. Numerical Parameters
     stand.setFlag('abe_param_nTrees', params.nTrees || 40); 
@@ -42,7 +42,6 @@ Action.prepare.shelterwood = function(params, stand_data_obj) {
     stand.setFlag('abe_param_fraction_to_remove', fraction);
 
     // 3. Species Selectivity via Strategy
-    var agent = socoabe.institution.all_agents.find(function(a) { return a.id === stand_data_obj.agent_id; });
     var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'shelterwood');
     
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
