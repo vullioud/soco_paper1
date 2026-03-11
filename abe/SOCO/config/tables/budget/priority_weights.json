@@ -1,0 +1,8 @@
+{
+  "_comment": "Phase priority weights by behavioral type. Higher = agent prioritizes this phase when budget is tight. MF prioritizes thinning (WET trajectory shaping). OP prioritizes harvest (maximize return). EN prioritizes tending+thinning (composition shift).",
+  "MF": { "Planting": 1.0, "Tending": 1.2, "Thinning": 1.5, "Harvesting": 1.0 },
+  "OP": { "Planting": 1.0, "Tending": 0.8, "Thinning": 1.0, "Harvesting": 1.5 },
+  "TR": { "Planting": 1.0, "Tending": 1.0, "Thinning": 1.0, "Harvesting": 1.0 },
+  "PA": { "Planting": 0.5, "Tending": 0.5, "Thinning": 0.5, "Harvesting": 0.5 },
+  "EN": { "Planting": 1.2, "Tending": 1.5, "Thinning": 1.3, "Harvesting": 0.5 }
+}

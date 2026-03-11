@@ -1,0 +1,102 @@
+{
+    "_comment": "Structural phase thresholds by dominant species. Derived from WET 2024 Oberhoehe (top height) gates. 'default' is fallback. Forward thresholds determine growth transitions. Regression thresholds are stricter — only crossed by real structural collapse (disturbance), not noise. harvest_entry_top_height: top height at which E&V becomes urgent regardless of DBH (WET risk rule). Units: height in m, dbh in cm, volume in m3/ha.",
+    "default": {
+        "planting_max_volume": 10,
+        "tending_stem_threshold": 1050,
+        "regression_tending_stems": 1800,
+        "harvest_min_dbh": 35,
+        "harvest_entry_top_height": 32,
+        "regression_thinning_dbh": 25,
+        "force_forward_tending": 35,
+        "force_forward_thinning": 45,
+        "force_forward_harvesting": 70
+    },
+    "piab": {
+        "_comment": "Fichte. WET: JDf ab OH 12m (>2000St) / OH 15m (<2000St). ADf ab OH 22m. E&V ab OH 28m, dringend ab OH 32m. Zieldurchmesser 50cm.",
+        "tending_stem_threshold": 1150,
+        "regression_tending_stems": 2000,
+        "harvest_min_dbh": 50,
+        "harvest_entry_top_height": 32,
+        "regression_thinning_dbh": 35,
+        "force_forward_tending": 25,
+        "force_forward_thinning": 35,
+        "force_forward_harvesting": 60
+    },
+    "fasy": {
+        "_comment": "Buche. WET: Tending bis OH 15m. JDf ab OH 15-17m. ADf ab OH 25m. Zieldurchmesser 55cm.",
+        "tending_stem_threshold": 1050,
+        "regression_tending_stems": 1700,
+        "harvest_min_dbh": 55,
+        "harvest_entry_top_height": 35,
+        "regression_thinning_dbh": 38,
+        "force_forward_tending": 40,
+        "force_forward_thinning": 50,
+        "force_forward_harvesting": 80
+    },
+    "quro": {
+        "_comment": "Eiche (Traubeneiche). WET: Tending bis OH 15m. JDf ab OH 15-17m. ADf ab OH 22-25m. Zieldurchmesser 70cm (Wertholz).",
+        "tending_stem_threshold": 950,
+        "regression_tending_stems": 1700,
+        "harvest_min_dbh": 70,
+        "harvest_entry_top_height": 35,
+        "regression_thinning_dbh": 45,
+        "force_forward_tending": 50,
+        "force_forward_thinning": 65,
+        "force_forward_harvesting": 110
+    },
+    "qupe": {
+        "_comment": "Eiche (Stieleiche). Same as quro.",
+        "tending_stem_threshold": 950,
+        "regression_tending_stems": 1700,
+        "harvest_min_dbh": 70,
+        "harvest_entry_top_height": 35,
+        "regression_thinning_dbh": 45,
+        "force_forward_tending": 50,
+        "force_forward_thinning": 65,
+        "force_forward_harvesting": 110
+    },
+    "psme": {
+        "_comment": "Douglasie. WET: JDf ab OH 12m. Zieldurchmesser 50cm standard, 80cm best.",
+        "tending_stem_threshold": 850,
+        "regression_tending_stems": 1500,
+        "harvest_min_dbh": 50,
+        "harvest_entry_top_height": 38,
+        "regression_thinning_dbh": 35,
+        "force_forward_tending": 25,
+        "force_forward_thinning": 35,
+        "force_forward_harvesting": 60
+    },
+    "pisy": {
+        "_comment": "Kiefer. WET: JDf ab OH 10m. Zieldurchmesser 45cm.",
+        "tending_stem_threshold": 950,
+        "regression_tending_stems": 1700,
+        "harvest_min_dbh": 45,
+        "harvest_entry_top_height": 28,
+        "regression_thinning_dbh": 30,
+        "force_forward_tending": 30,
+        "force_forward_thinning": 40,
+        "force_forward_harvesting": 65
+    },
+    "abal": {
+        "_comment": "Tanne. WET: JDf ab OH 12m. Zieldurchmesser 50cm standard, 80cm best.",
+        "tending_stem_threshold": 1250,
+        "regression_tending_stems": 2000,
+        "harvest_min_dbh": 50,
+        "harvest_entry_top_height": 35,
+        "regression_thinning_dbh": 35,
+        "force_forward_tending": 30,
+        "force_forward_thinning": 40,
+        "force_forward_harvesting": 70
+    },
+    "lade": {
+        "_comment": "Laerche. WET: JDf ab OH 10m. Zieldurchmesser 45cm.",
+        "tending_stem_threshold": 850,
+        "regression_tending_stems": 1500,
+        "harvest_min_dbh": 45,
+        "harvest_entry_top_height": 30,
+        "regression_thinning_dbh": 30,
+        "force_forward_tending": 25,
+        "force_forward_thinning": 35,
+        "force_forward_harvesting": 55
+    }
+}

@@ -9,6 +9,10 @@ class institution {
         this.es_demand = SoCoABE_CONFIG.ES_DEMAND || {};
         this.guideline_period = (SoCoABE_CONFIG.GUIDELINE && SoCoABE_CONFIG.GUIDELINE.period) || 0;
 
+        // WET species selectivity tables (deep copy for runtime policy scenarios)
+        this.wet_targets = JSON.parse(JSON.stringify(SoCoABE_CONFIG.WET_TARGETS || {}));
+        this.owner_species_params = JSON.parse(JSON.stringify(SoCoABE_CONFIG.OWNER_SPECIES_PARAMS || {}));
+
         this.discover_and_create();
     }
 

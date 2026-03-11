@@ -1,22 +1,62 @@
 // FILE: soco_src/cognition/decision_windows.js
-// Paper 1: Age-based decision windows for 10-year planning.
+// Phase-based stand lifecycle. Age → phase → activity.
 
-Cognition.get_decision_window = function(age) {
-    if (age >= 0 && age <= 5)   return "Planting";
-    if (age >= 10 && age <= 20) return "Tending";
-    if (age >= 30 && age <= 70) return "Thinning";
-    if (age >= 80)              return "Harvesting";
-    return "limbo";
+Cognition.get_phase = function(age) {
+    var P = SoCoABE_CONFIG.PHASES;
+    if (age >= P.Harvesting.start) return "Harvesting";
+    if (age >= P.Thinning.start)   return "Thinning";
+    if (age >= P.Tending.start)    return "Tending";
+    return "Planting";
 };
 
-Cognition.classify_stand_status = function(stand_data_obj, current_year) {
-    var age = stand_data_obj.iLand_stand_data.absolute_age_iLand;
-    var window = Cognition.get_decision_window(age);
-    var is_ongoing = stand_data_obj.activity.is_Sequence;
-    var decided_window = stand_data_obj.activity.decided_window;
+// Alias for backward compat (used by monitoring)
+Cognition.get_decision_window = Cognition.get_phase;
 
-    if (is_ongoing) return "ongoing";
-    if (decided_window === window) return "locked";
-    if (window === "limbo") return "limbo";
-    return "candidate";
+Cognition.can_start_new_activity = function(age, phase) {
+    var P = SoCoABE_CONFIG.PHASES;
+    var phase_config = P[phase];
+    if (!phase_config) return true;
+    return age <= phase_config.start_by;
+};
+
+/**
+ * Structural phase classifier — uses topHeight + DBH + volume, no age.
+ * MONITORING ONLY. Does not drive any decisions in Paper 1.
+ *
+ * Logic (what a forester sees walking into the stand):
+ *   1. "Nothing here"          → Planting   (low volume + low topHeight)
+ *   2. "Dense thicket"         → Tending    (stems > threshold, purely density-driven)
+ *   3. "Growing stock"         → Thinning   (topHeight ≥ 12m, dbh < 35cm)
+ *   4. "Mature timber"         → Harvesting (dbh ≥ 35cm)
+ */
+Cognition.get_structural_phase = function(stand_data_obj) {
+    var d = stand_data_obj.iLand_stand_data;
+
+    // Use the same threshold resolution as the real classifier:
+    // default thresholds merged with species-specific overrides.
+    var T = Cognition.StructuralPhase._get_thresholds(stand_data_obj);
+
+    if (!T) return "unknown";
+
+    // 1. Bare / post-disturbance / failed regen
+    if (d.volume < T.planting_max_volume) {
+        return "Planting";
+    }
+
+    // 2. Dense stand — needs tending (Stammzahlreduktion, density-driven)
+    var tending_stems = T.tending_stem_threshold || 1250;
+    if (d.stems > tending_stems) {
+        return "Tending";
+    }
+
+    // 3. Mature — dual gate (DBH target OR top-height risk urgency)
+    if (d.mean_dbh >= T.harvest_min_dbh) {
+        return "Harvesting";
+    }
+    if (T.harvest_entry_top_height && d.top_height >= T.harvest_entry_top_height) {
+        return "Harvesting";
+    }
+
+    // 4. Not yet mature — thinnable growing stock
+    return "Thinning";
 };

@@ -80,14 +80,24 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         },
 
         LOGGING: {
-            DEBUG: false,   // true during dev; false for cluster runs
-            WARN:  true
+            DEBUG: true,   // true during dev; false for cluster runs
+            WARN: true
         },
 
-        // Bark beetle outbreak scenario
+        // Disturbance control: suppress all disturbances before this year.
+        // Both wind and bark beetle XML modules remain enabled but are
+        // neutered via JS API until this year, then restored to XML defaults.
+        DISTURBANCE_START_YEAR: 100,
+
+        // Bark beetle outbreak scenario (on top of XML baseline)
+        // Sustained pressure from year 100 to 150, moderate probability
         BARK_BEETLE: {
             ENABLED: true,
-            OUTBREAK_YEARS: [15, 30],
+            OUTBREAK_YEARS: [100,101,102,103,104,105,106,107,108,109,110,
+                             111,112,113,114,115,116,117,118,119,120,
+                             121,122,123,124,125,126,127,128,129,130,
+                             131,132,133,134,135,136,137,138,139,140,
+                             141,142,143,144,145,146,147,148,149,150],
             OUTBREAK_PROBABILITY: 0.05,
             BASELINE_PROBABILITY: 0.000685,
             LOG_ENABLED: true
@@ -100,20 +110,44 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         BEHAVIORAL_TYPES: ["MF", "OP", "TR", "PA", "EN"],
         SMALL_PRIVATE_SPLIT: { TR: 0.40, PA: 0.30, EN: 0.30 },
 
+        // Budget system (Paper 1 - resource-constrained planning)
+        BUDGET: {
+            POINTS_PER_STAND_PER_DECADE: 10,  // budget = resources * n_ALL_stands * this
+            SALVAGE_PRIORITY_BONUS: 100,       // salvage always top of queue
+            MAX_CARRYOVER_FACTOR: 2.0,
+            ALLOW_DEBT: true,
+            MAX_DEBT_FACTOR: 0.5
+        },
+
+        // Phase windows with start-by cutoffs (can't start new activity after start_by)
+        PHASES: {
+            Planting: { start: 0, end: 5, start_by: 5 },
+            Tending: { start: 6, end: 20, start_by: 18 },
+            Thinning: { start: 21, end: 79, start_by: 60 },
+            Harvesting: { start: 80, end: 999, start_by: 999 }
+        },
+
+        // Structural thresholds — loaded from JSON in SOCO_main.load_all_configs()
+        PHASE_THRESHOLDS: {},
+
+        // Sustained yield: fraction of stands harvested per rotation-decade
+        HARVEST_INTENSITY: { MF: 1.0, OP: 1.2, TR: 0.6, EN: 0.3, PA: 0.3 },
+        HARVEST_ROTATION_DECADES: 8,
+
         // Institutional guideline (Paper 1: identical to MF own_ideal)
         GUIDELINE: {
             period: { start: 0, end: 999 },
             Harvesting: {
-                options: ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
-                alpha: [4, 3, 0, 3, 5, 0]
+                options: ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel"],
+                alpha: [4, 3, 0, 3, 5]
             },
             Thinning: {
                 options: ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
-                alpha: [5, 3, 2, 0]
+                alpha: [5, 3, 2, 0.5]
             },
             Tending: {
                 options: ["tending", "noManagement"],
-                alpha: [8, 2]
+                alpha: [9, 1]
             },
             Planting: {
                 options: ["planting", "noManagement"],
@@ -125,6 +159,37 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         // config/tables/species/species_strategies.json at init time (SOCO_main.js).
         // They are injected into this config object at runtime.
 
+        // "age" = age-based phases (current). "structural" = topH/DBH/volume phases.
+        PHASE_ENGINE: "structural",
+
+        // Species selectivity mode
+        // 'static': use speciesSelectivity from STP options as-is (current behavior)
+        // 'wet_dynamic': classify stand into WET type, compute owner-specific target
+        SPECIES_SELECTIVITY_MODE: 'wet_dynamic',
+
+        // WET reference target compositions (midpoints from WET 2024)
+        WET_TARGETS: {
+            'b': { fasy: 0.60, qusp: 0.15, acsp: 0.10, piab: 0.10, rest: 0.05 },
+            'e': { qusp: 0.55, fasy: 0.15, cabe: 0.10, tico: 0.10, rest: 0.10 },
+            'f': { piab: 0.50, fasy: 0.25, abal: 0.10, psme: 0.10, rest: 0.05 },
+            't': { abal: 0.35, fasy: 0.25, piab: 0.15, qusp: 0.15, rest: 0.10 },
+            'd': { psme: 0.55, fasy: 0.25, acsp: 0.10, rest: 0.10 },
+            'k': { pisy: 0.60, fasy: 0.15, abal: 0.10, qusp: 0.10, rest: 0.05 },
+            'h': { acsp: 0.25, frex: 0.20, qusp: 0.20, fasy: 0.15, rest: 0.20 },
+            'j': { acsp: 0.25, qusp: 0.25, cabe: 0.15, tico: 0.15, rest: 0.20 }
+        },
+
+        // Owner-type species params
+        // c: 0=WET target, 1=current composition, >1=amplify dominant, <0=more diverse
+        // intensity: 0=no regulation, 1=full
+        OWNER_SPECIES_PARAMS: {
+            'MF': { c: 0.0, intensity: 0.9 },
+            'EN': { c: -0.2, intensity: 0.5 },
+            'TR': { c: 0.7, intensity: 0.3 },
+            'PA': { c: 0.0, intensity: 0.0 },
+            'OP': { c: 1.3, intensity: 0.6 }
+        },
+
         // Run without agent interventions
         NO_INTERVENTION: false,
 
@@ -133,20 +198,26 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
 
         // Data source paths (for documentation / programmatic access)
         DATA_SOURCES: {
-            activities:   'tables/activities/activity_distributions.json',
-            traits:       'tables/traits/agent_traits.json',
-            parameters:   'tables/params/parameter_distributions.json',
+            activities: 'tables/activities/activity_distributions.json',
+            traits: 'tables/traits/agent_traits.json',
+            parameters: 'tables/params/parameter_distributions.json',
             profiles_dbh: 'tables/profiles/targetDBH_profiles.json',
-            profiles_pl:  'tables/profiles/plenter_profiles.json',
-            species:      'tables/species/species_strategies.json'
+            profiles_pl: 'tables/profiles/plenter_profiles.json',
+            species: 'tables/species/species_strategies.json',
+            activity_costs: 'tables/budget/activity_costs.json',
+            set_aside_rates: 'tables/budget/set_aside_rates.json',
+            priority_weights: 'tables/budget/priority_weights.json'
         },
 
         MONITORING: {
-            ML_LOG:      true,
-            DECADE_LOG:  true,
+            ML_LOG: true,
+            DECADE_LOG: true,
+            STAND_STATE_LOG: true,
             OUTPUT_FILES: {
-                ML_ACTIVITY:      "soco_ml_activities",
-                DECADE_DECISIONS: "soco_decade_decisions"
+                ML_ACTIVITY: "soco_ml_activities",
+                DECADE_DECISIONS: "soco_decade_decisions",
+                DECADE_SNAPSHOT: "soco_decade_snapshot",
+                STAND_STATE: "soco_stand_state"
             }
         }
     };

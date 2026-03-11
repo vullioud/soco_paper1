@@ -23,10 +23,16 @@ Action.prepare.shelterwood = function(params, stand_data_obj, agent) {
     // 'sequence_total_steps' includes Select(0), Remove(1), Final(2).
     var current_step = stand_data_obj.activity.sequence_current_step;
     var total_steps = stand_data_obj.activity.sequence_total_steps;
-    
+
+    // For _planting variants, total_steps includes the appended planting step.
+    // The final *harvest* step is second-to-last. Exclude planting from fraction calc.
+    var includes_planting = stand_data_obj.activity.chosen_Activity.indexOf('_planting') > -1
+                         && stand_data_obj.activity.chosen_Activity.indexOf('_no_planting') === -1;
+    var harvest_total_steps = includes_planting ? total_steps - 1 : total_steps;
+
     // Final step is clearcut. Steps before that are removals.
     // Steps remaining *before* final harvest:
-    var final_step_index = total_steps - 1;
+    var final_step_index = harvest_total_steps - 1;
     var removal_events_remaining = final_step_index - current_step;
 
     var fraction = 1.0; 
@@ -41,9 +47,16 @@ Action.prepare.shelterwood = function(params, stand_data_obj, agent) {
     
     stand.setFlag('abe_param_fraction_to_remove', fraction);
 
-    // 3. Species Selectivity via Strategy
-    var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'shelterwood');
-    
+    // 3. Species Selectivity: WET dynamic mode reads pre-computed selectivity from think.js.
+    // Static mode (or fallback) uses the condition-based THINNING_WEIGHTS table.
+    var speciesSelectivity;
+    if (SoCoABE_CONFIG.SPECIES_SELECTIVITY_MODE === 'wet_dynamic') {
+        speciesSelectivity = stand.flag('speciesSelectivity');
+    }
+    if (!speciesSelectivity || typeof speciesSelectivity !== 'object' || Object.keys(speciesSelectivity).length === 0) {
+        speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'shelterwood');
+    }
+
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
     
 };

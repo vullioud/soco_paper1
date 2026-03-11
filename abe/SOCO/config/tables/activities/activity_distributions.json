@@ -1,17 +1,17 @@
 {
-  "_comment": "Activity choice distributions (Dirichlet alpha vectors) by behavioral type and phase. Structure: type -> phase -> {options:[], alpha:[]}. own_ideal values — blended with GUIDELINE at agent init using adherence score.",
+  "_comment": "Activity choice distributions (Dirichlet alpha vectors) by behavioral type and phase. Harvesting has NO noManagement — sustained yield selection handles that. Tending/Thinning/Planting: noManagement = legitimate skip choice. own_ideal values — blended with GUIDELINE at agent init using adherence score.",
   "MF": {
     "Harvesting": {
-      "options": ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
-      "alpha": [4, 3, 0, 3, 5, 0]
+      "options": ["shelterwood_planting", "shelterwood_no_planting", "targetDBH", "clearcut_planting", "plenter_harvest", "femel_planting", "femel_no_planting"],
+      "alpha": [3, 1, 3, 0.5, 3, 4, 1]
     },
     "Thinning": {
       "options": ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
-      "alpha": [5, 3, 2, 0]
+      "alpha": [5, 3, 2, 0.5]
     },
     "Tending": {
       "options": ["tending", "noManagement"],
-      "alpha": [8, 2]
+      "alpha": [9, 1]
     },
     "Planting": {
       "options": ["planting", "noManagement"],
@@ -20,16 +20,16 @@
   },
   "OP": {
     "Harvesting": {
-      "options": ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
-      "alpha": [2, 2, 7, 0, 1, 0]
+      "options": ["shelterwood_planting", "shelterwood_no_planting", "targetDBH", "clearcut_planting", "femel_planting", "femel_no_planting"],
+      "alpha": [1.5, 0.5, 2, 7, 0.5, 0.5]
     },
     "Thinning": {
-      "options": ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
-      "alpha": [3, 6, 0, 1]
+      "options": ["selectiveThinning", "fromBelow", "noManagement"],
+      "alpha": [3, 6, 1]
     },
     "Tending": {
       "options": ["tending", "noManagement"],
-      "alpha": [6, 4]
+      "alpha": [7, 3]
     },
     "Planting": {
       "options": ["planting", "noManagement"],
@@ -38,56 +38,57 @@
   },
   "TR": {
     "Harvesting": {
-      "options": ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
-      "alpha": [2, 1, 0, 0, 1, 6]
+      "options": ["shelterwood_planting", "shelterwood_no_planting", "targetDBH", "femel_planting", "femel_no_planting"],
+      "alpha": [2, 1, 2, 1, 1]
     },
     "Thinning": {
-      "options": ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
-      "alpha": [3, 2, 0, 5]
+      "options": ["selectiveThinning", "fromBelow", "noManagement"],
+      "alpha": [3, 3, 4]
     },
     "Tending": {
       "options": ["tending", "noManagement"],
-      "alpha": [3, 7]
+      "alpha": [4, 6]
     },
     "Planting": {
       "options": ["planting", "noManagement"],
-      "alpha": [3, 7]
+      "alpha": [5, 5]
     }
   },
   "PA": {
+    "_comment": "PA non-set-aside stands (~20%) do get managed. Low-intensity activities.",
     "Harvesting": {
-      "options": ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
-      "alpha": [0, 0, 0, 0, 0, 10]
+      "options": ["targetDBH", "plenter_harvest"],
+      "alpha": [3, 2]
     },
     "Thinning": {
-      "options": ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
-      "alpha": [0, 0, 0, 10]
+      "options": ["fromBelow", "noManagement"],
+      "alpha": [3, 7]
     },
     "Tending": {
       "options": ["tending", "noManagement"],
-      "alpha": [0, 10]
+      "alpha": [2, 8]
     },
     "Planting": {
       "options": ["planting", "noManagement"],
-      "alpha": [0, 10]
+      "alpha": [3, 7]
     }
   },
   "EN": {
     "Harvesting": {
-      "options": ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel", "noManagement"],
-      "alpha": [0, 3, 0, 3, 0, 6]
+      "options": ["targetDBH", "plenter_harvest", "femel_planting", "femel_no_planting"],
+      "alpha": [3, 4, 1.5, 0.5]
     },
     "Thinning": {
-      "options": ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],
-      "alpha": [0, 0, 2, 8]
+      "options": ["selectiveThinning", "plenter_thinning", "noManagement"],
+      "alpha": [2, 3, 5]
     },
     "Tending": {
       "options": ["tending", "noManagement"],
-      "alpha": [0, 10]
+      "alpha": [4, 6]
     },
     "Planting": {
       "options": ["planting", "noManagement"],
-      "alpha": [1, 9]
+      "alpha": [5, 5]
     }
   }
 }

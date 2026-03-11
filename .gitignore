@@ -23,6 +23,19 @@ abe/SOCO/source_code.txt
 landscape_init/*.py
 landscape_init/*.txt
 landscape_init/*.md
+landscape_init/init_german_landcape_rep/
+
+# --- Analysis, docs, batch runner ---
+analysis/
+analysis_batch/
+runner/
+abe/SOCO/soco_src/docs/
+
+# --- Generated / temp files ---
+Rplots.pdf
+0{print}
+fatallog.txt
+logfile.txt
 
 # --- OS and editor noise ---
 .DS_Store

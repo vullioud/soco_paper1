@@ -129,7 +129,7 @@
   "plenter_harvest": {
     "MF": {
       "interval": 5,
-      "times": 1000,
+      "times": 10,
       "plenterCurve": {
         "10": 350,
         "15": 220,
@@ -144,7 +144,7 @@
     },
     "OP": {
       "interval": 5,
-      "times": 1000,
+      "times": 10,
       "plenterCurve": {
         "10": 300,
         "15": 200,
@@ -159,7 +159,7 @@
     },
     "TR": {
       "interval": 5,
-      "times": 1000,
+      "times": 10,
       "plenterCurve": {
         "10": 350,
         "15": 220,
@@ -174,7 +174,7 @@
     },
     "PA": {
       "interval": 5,
-      "times": 1000,
+      "times": 10,
       "plenterCurve": {
         "10": 350,
         "15": 220,
@@ -189,7 +189,7 @@
     },
     "EN": {
       "interval": 5,
-      "times": 1000,
+      "times": 10,
       "plenterCurve": {
         "10": 400,
         "15": 250,

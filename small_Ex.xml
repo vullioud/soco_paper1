@@ -267,7 +267,7 @@
 
             <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
             <!-- UPDATED: Using regular grid environment file -->
-            <environmentFile>init/env_file_regular.csv</environmentFile>
+            <environmentFile>init/random/rep_001/env_file_diverse_seed1.csv</environmentFile>
             <areaMask>
                 <enabled>false</enabled>
                 <imageFile></imageFile>
@@ -344,11 +344,9 @@
             <type>distribution</type>
             <randomFunction>max(1-x^2,0)</randomFunction>
             <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
-            <!-- UPDATED: Using regular grid tree file (1200 records, 400 stands) -->
-            <file>tree_veryyoung.csv</file>
+            <file>random/rep_001/tree2_diverse_seed1.csv</file>
             <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
-            <!-- UPDATED: Using regular grid sapling file (800 records, 400 stands) -->
-            <saplingFile>sapling_regular.csv</saplingFile>
+            <saplingFile>random/rep_001/sapling2_diverse_seed1.csv</saplingFile>
             <!-- sap_init.txt or empty_saplings.csv -->
             <snags>
                 <!-- SWD C, SWD count, SWD CN, Ast/Wurzel C, Ast/Wurzel CN, ksw, hl -->
@@ -381,7 +379,7 @@
             <abe>
                 <file>abe/ABE_tiny_ex.js</file>
                 <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
-                <agentDataFile>abe/stand_files/agent_table_High_shuffled-false.csv</agentDataFile>
+                <agentDataFile>abe/SOCO/stand_files/agent_table_High_shuffled-false.csv</agentDataFile>
             </abe>
         </management>
         <parameter>
@@ -398,17 +396,7 @@
     </model>
       
 <output>
-    <!-- 1. AGENT DECISIONS (The "Brain") -->
-    <!-- CUSTOM SCRIPT OUTPUT -->
-    <!-- The tag name 'socoDecisions' tells iLand this is a user-defined output -->
-    <socoDecisions>
-        <enabled>false</enabled>
-        <type>script</type> <!-- This forces the C++ engine to look for the JS function -->
-        <javascript>getSoCoData</javascript>
-        <columns>year, stand_id, agent_id, owner_type, activity, activity_type, strategy, reason, param_info</columns>
-    </socoDecisions>
-
-    <!-- 2. PHYSICAL STAND STATE (The "Body") -->
+    <!-- 1. PHYSICAL STAND STATE (The "Body") -->
     <!-- Volume, Age, Height, Basal Area per stand -->
     <abeStand>
         <enabled>true</enabled>
@@ -552,7 +540,7 @@
         <barkbeetle>
             <enabled>true</enabled>
             <minimumDbh>15</minimumDbh>
-            <backgroundInfestationProbability>0.000685</backgroundInfestationProbability>
+            <backgroundInfestationProbability>0.00001</backgroundInfestationProbability>
             <!--0.000685= 1/365*1/4, assuming a 365 year rotation period (Thom et al. 2013) and a mean size of 4 ha; NB: the size could actually be estimated theoretically from the dispersal and generations parameters, assuming that hosts are not limited: if we assume that every generation spreads on average 3 10m cells (area= 0.28ha), and if the average number of generations is 2, and the average outbreak duration 6 years, we get an average outbreak area of 3.39 ha, so the 4 ha assumed above were in the right ballbark!!-->
             <stormInfestationProbability>0.05</stormInfestationProbability>
             <baseWinterMortality>0.4</baseWinterMortality>
@@ -575,8 +563,8 @@
             <outbreakDurationMin>5</outbreakDurationMin>
             <outbreakDurationMax>6</outbreakDurationMax>
             <outbreakDurationMortalityFormula>polygon(t, 0.5,0, 1,1)</outbreakDurationMortalityFormula>
-            <initialInfestationProbability>0.001</initialInfestationProbability>
-            <!-- p that a potential host pixel is infested at startup (as a result of pre-simulation dynamics) -->
+            <initialInfestationProbability>0.0000000001</initialInfestationProbability>
+            <!-- Near-zero: JS disables module at yr 0. BarkBeetle API handles activation at DISTURBANCE_START_YEAR. -->
             <referenceClimate>
                 <tableName>ICHEC-EC-EARTH_historical_point37179</tableName>
                 <seasonalPrecipSum>196.6,252.7,206.8,146.3</seasonalPrecipSum>

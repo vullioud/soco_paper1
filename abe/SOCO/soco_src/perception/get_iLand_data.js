@@ -12,6 +12,11 @@ Perception.get_iLand_data = function(stand_data_obj) {
     data.absolute_age_iLand   = stand.absoluteAge;
     data.volume               = stand.volume;
     data.basal_area           = stand.basalArea;
+    data.top_height           = stand.topHeight;
+    data.mean_dbh             = stand.dbh;
+    // stand.stems is not exposed as a JS Q_PROPERTY — calculate from tree list
+    stand.trees.loadAll();
+    data.stems                = (stand.area > 0) ? stand.trees.count / stand.area : 0;
     data.needs_salvage        = stand.flag('abe_need_salvage') || false;
     data.disturbance_severity = stand.flag('abe_disturbance_severity') || 0;
     data.disturbance_volume   = stand.flag('abe_disturbance_volume') || 0;

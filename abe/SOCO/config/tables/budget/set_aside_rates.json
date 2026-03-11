@@ -1,0 +1,8 @@
+{
+  "_comment": "Probability that a stand is permanently set-aside (no management). By behavioral type. This is the ONLY source of hard noManagement.",
+  "MF": 0.03,
+  "OP": 0.02,
+  "TR": 0.15,
+  "PA": 0.80,
+  "EN": 0.35
+}

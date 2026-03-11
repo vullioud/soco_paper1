@@ -25,29 +25,40 @@ Action.trigger_activity = function(stand_data_obj, agent) {
     const cognitive_activity_name = stand_data_obj.activity.chosen_Activity;
     let execution_activity_name = cognitive_activity_name;
 
+    // Resolve compound harvest+planting names for dispatch routing.
+    var includes_planting = cognitive_activity_name.indexOf('_planting') > -1
+                         && cognitive_activity_name.indexOf('_no_planting') === -1;
+    var base_cognitive_name = cognitive_activity_name
+        .replace('_planting', '').replace('_no_planting', '');
+
     // --- 3. MAPPING LOGIC ---
-    if (cognitive_activity_name === 'plenter_harvest' || cognitive_activity_name === 'plenter_thinning') {
+    // Map cognitive activity name to execution activity name.
+    // Use base name (without _planting/_no_planting suffix) for harvest activities.
+    if (base_cognitive_name === 'plenter_harvest' || base_cognitive_name === 'plenter_thinning') {
         execution_activity_name = 'plenter';
     }
-    else if (cognitive_activity_name === 'fromBelow' || cognitive_activity_name === 'thinningFromBelow') {
+    else if (base_cognitive_name === 'fromBelow' || base_cognitive_name === 'thinningFromBelow') {
         execution_activity_name = 'thinningFromBelow';
     }
-    else if (cognitive_activity_name === 'tending') {
+    else if (base_cognitive_name === 'tending') {
         execution_activity_name = 'tending';
     }
-    else if (cognitive_activity_name === 'shelterwood') {
+    else if (base_cognitive_name === 'shelterwood') {
         execution_activity_name = 'shelterwood';
     }
-    else if (cognitive_activity_name === 'planting') {
+    else if (base_cognitive_name === 'planting') {
         execution_activity_name = 'planting';
     }
-    else if (cognitive_activity_name === 'femel') {
+    else if (base_cognitive_name === 'femel') {
         execution_activity_name = 'femel';
     }
-    else if (cognitive_activity_name === 'salvage' ||
-             cognitive_activity_name === 'salvage_harvest' ||
-             cognitive_activity_name === 'salvage_clearcut' ||
-             cognitive_activity_name === 'salvage_leave') {
+    else if (base_cognitive_name === 'clearcut') {
+        execution_activity_name = 'clearcut';
+    }
+    else if (base_cognitive_name === 'salvage' ||
+             base_cognitive_name === 'salvage_harvest' ||
+             base_cognitive_name === 'salvage_clearcut' ||
+             base_cognitive_name === 'salvage_leave') {
         execution_activity_name = 'salvage';
     }
 
@@ -69,12 +80,21 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         signal_name = (is_initialized === true) ? 'do_selectiveThinning_remove' : 'do_selectiveThinning_select';
     }
     // Logic B: Shelterwood (State Machine via Flag + Step Index)
+    // For _planting variants: last step = planting, second-to-last = final harvest.
+    // For _no_planting or bare: last step = final harvest.
     else if (execution_activity_name === 'shelterwood') {
         var current_step = stand_data_obj.activity.sequence_current_step;
         var total_steps = stand_data_obj.activity.sequence_total_steps;
         var is_initialized = stand.flag('abe_shelterwood_initialized');
 
-        if (current_step >= total_steps - 1) {
+        // Planting step: always the very last step of _planting variant
+        if (includes_planting && current_step >= total_steps - 1) {
+            signal_name = 'do_planting';
+            execution_activity_name = 'planting';  // so prepare_flags calls Action.prepare.planting()
+        }
+        // Final harvest: last step (no planting) or second-to-last (with planting)
+        else if (current_step >= total_steps - 1 ||
+                 (includes_planting && current_step >= total_steps - 2)) {
             signal_name = 'do_shelterwood_final';
         }
         else if (!is_initialized) {
@@ -84,13 +104,21 @@ Action.trigger_activity = function(stand_data_obj, agent) {
             signal_name = 'do_shelterwood_remove';
         }
     }
-    // Logic C: Femel
+    // Logic C: Femel (State Machine via Flag + Step Index)
+    // Same _planting logic as shelterwood.
     else if (execution_activity_name === 'femel') {
         var current_step = stand_data_obj.activity.sequence_current_step;
         var total_steps = stand_data_obj.activity.sequence_total_steps;
         var is_initialized = stand.flag('abe_femel_initialized');
 
-        if (current_step >= total_steps - 1) {
+        // Planting step
+        if (includes_planting && current_step >= total_steps - 1) {
+            signal_name = 'do_planting';
+            execution_activity_name = 'planting';
+        }
+        // Final harvest
+        else if (current_step >= total_steps - 1 ||
+                 (includes_planting && current_step >= total_steps - 2)) {
             signal_name = 'do_femel_final';
         }
         else if (!is_initialized) {
@@ -98,6 +126,17 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         }
         else {
             signal_name = 'do_femel_step';
+        }
+    }
+    // Logic C2: Clearcut (now a sequence for _planting variant)
+    else if (execution_activity_name === 'clearcut') {
+        var current_step = stand_data_obj.activity.sequence_current_step;
+
+        if (includes_planting && current_step >= 1) {
+            signal_name = 'do_planting';
+            execution_activity_name = 'planting';
+        } else {
+            signal_name = 'do_clearcut';
         }
     }
     // Logic D: Salvage

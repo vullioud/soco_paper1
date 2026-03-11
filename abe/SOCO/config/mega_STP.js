@@ -16,7 +16,7 @@ const MEGA_STP_ACTIVITIES = {};
 MEGA_STP_ACTIVITIES['noManagement'] = {
     id: 'MegaSTP_NoManagement',
     type: 'general',
-    schedule: { signal: 'do_noManagement' },
+    schedule: { opt: 0, signal: 'do_noManagement' },
     action: function() {
         SoCoLog.debug(`[MEGA-STP] Executing 'noManagement' for stand ${stand.id}.`);
     },
@@ -33,7 +33,7 @@ MEGA_STP_ACTIVITIES['noManagement'] = {
 MEGA_STP_ACTIVITIES['clearcut'] = {
     id: 'MegaSTP_Clearcut',
     type: 'scheduled',
-    schedule: { signal: 'do_clearcut' },
+    schedule: { opt: 0, signal: 'do_clearcut' },
     finalHarvest: true,
 
     onEvaluate: function() {
@@ -83,7 +83,7 @@ MEGA_STP_ACTIVITIES['clearcut'] = {
 MEGA_STP_ACTIVITIES['targetDBH'] = {
     id: 'MegaSTP_TargetDBH',
     type: 'scheduled',
-    schedule: { signal: 'do_targetDBH' },
+    schedule: { opt: 0, signal: 'do_targetDBH' },
     finalHarvest: false,
 
     onEvaluate: function() {
@@ -201,29 +201,28 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
             SoCoLog.debug(`[MEGA-STP] -> Switching to volume-based harvest (${(volumeFallbackShare*100).toFixed(0)}% of standing volume).`);
 
             // ===== VOLUME-BASED FALLBACK =====
+            // Harvest largest trees first per species, but cap at targetVolume total.
+            // Uses incsum(volume) after sorting by -dbh to enforce the volume cap.
             var targetVolume = totalVolume * volumeFallbackShare;
             var removedVolume = 0;
-            var harvestedTrees = [];
-
-            // Collect all candidate trees (above DBH thresholds), sorted by DBH descending
-            var candidates = [];
 
             for (var species in dbhList) {
                 if (dbhList.hasOwnProperty(species) && species !== 'rest') {
+                    if (removedVolume >= targetVolume) break;
+
                     var dbh_min = dbhList[species];
                     var filter = 'species = ' + species + ' and dbh > ' + dbh_min;
                     var count = stand.trees.load(filter);
 
                     if (count > 0) {
-                        // Get tree data (iLand doesn't expose individual tree objects easily,
-                        // so we'll work with aggregates per DBH class)
-                        stand.trees.sort('-dbh'); // Sort descending
+                        stand.trees.sort('-dbh'); // Largest first
                         var speciesVolume = stand.trees.sum('volume');
-
-                        // Mark trees for harvest proportionally
                         var speciesTarget = Math.min(speciesVolume, targetVolume - removedVolume);
-                        if (speciesTarget > 0) {
-                            // Harvest largest trees first (already sorted)
+
+                        // Guard: skip near-zero targets (avoids scientific notation in expression)
+                        if (speciesTarget > 0.01) {
+                            // Keep only trees whose cumulative volume fits the budget
+                            stand.trees.filter('incsum(volume) <= ' + speciesTarget.toFixed(4));
                             var harvested = stand.trees.harvest();
                             total_harvested_count += harvested;
                             removedVolume += speciesTarget;
@@ -233,7 +232,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                 }
             }
 
-            // Handle 'rest' species in fallback (or all species if dbhList empty)
+            // Handle 'rest' species in fallback
             if (removedVolume < targetVolume) {
                 var rest_filter;
                 if (listed_species.length > 0) {
@@ -243,25 +242,16 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
                     }
                     rest_filter = exclude_parts.join(' and ') + ' and dbh > ' + rest_dbh;
                 } else {
-                    // Empty dbhList - harvest from all species but respect volume target
                     rest_filter = 'dbh > ' + rest_dbh;
                 }
                 var rest_count = stand.trees.load(rest_filter);
-                if (rest_count > 0) {
+                var remainingTarget = targetVolume - removedVolume;
+                if (rest_count > 0 && remainingTarget > 0.01) {
                     stand.trees.sort('-dbh');
-                    // In fallback mode, only harvest up to remaining target volume
-                    var restVolume = stand.trees.sum('volume');
-                    var remainingTarget = targetVolume - removedVolume;
-                    if (restVolume <= remainingTarget) {
-                        var rest_harvested = stand.trees.harvest();
-                        total_harvested_count += rest_harvested;
-                        SoCoLog.debug(`  - rest species: harvested ${rest_harvested} trees`);
-                    } else {
-                        // Need to harvest partially - harvest largest first
-                        SoCoLog.debug(`  - rest species: partial harvest to meet volume target`);
-                        var rest_harvested = stand.trees.harvest();
-                        total_harvested_count += rest_harvested;
-                    }
+                    stand.trees.filter('incsum(volume) <= ' + remainingTarget.toFixed(4));
+                    var rest_harvested = stand.trees.harvest();
+                    total_harvested_count += rest_harvested;
+                    SoCoLog.debug(`  - rest species: harvested ${rest_harvested} trees, ~${remainingTarget.toFixed(1)} m³`);
                 }
             }
 
@@ -341,7 +331,7 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
 MEGA_STP_ACTIVITIES['plenter'] = {
     id: 'MegaSTP_Plenter',
     type: 'scheduled',
-    schedule: { signal: 'do_plenter' },
+    schedule: { opt: 0, signal: 'do_plenter' },
     finalHarvest: false,
 
     onEvaluate: function() {
@@ -428,65 +418,12 @@ onExecute: function() {
 };
 
 
-// 5. Selective Thinning - Phase 1: SELECTION (CORRECT LIBRARY PATTERN)
-
-MEGA_STP_ACTIVITIES['shelterwood_select'] = {
-    // id: 'MegaSTP_Shelterwood_Select',
-    type: 'thinning',
-    thinning: 'selection',
-    schedule: { signal: 'do_shelterwood_select' },
-
-    // Dynamic parameters from flags
-    N: function() { return stand.flag('abe_param_nTrees'); },
-    NCompetitors: function() { return stand.flag('abe_param_nCompetitors'); },
-    
-    // --- ENABLED: Species Selectivity ---
-    speciesSelectivity: function() { 
-        var val = stand.flag('abe_param_speciesSelectivity');
-        SoCoLog.debug(`[MEGA-STP] Shelterwood Select: Fetching species selectivity: ${JSON.stringify(val)}`);
-        return val; 
-    },
-
-    ranking: 'height', // Keep dominant trees
-
-    onCreate: function(act) { 
-        act.scheduled = false; 
-    },
-
-    onExecuted: function() {
-        SoCoLog.debug(`[MEGA-STP] Shelterwood Select: Marking complete.`);
-        
-        // Snapshot total competitors marked
-        var total_competitors = stand.trees.load('markcompetitor=true');
-        stand.setFlag('abe_param_totalCompetitors', total_competitors);
-        
-        // Perform First Removal Pass immediately
-        var fraction = stand.flag('abe_param_fraction_to_remove') || 0;
-        var to_remove = Math.ceil(total_competitors * fraction);
-
-        SoCoLog.debug(`  -> Marked ${total_competitors} competitors. Removing ${to_remove} (${(fraction*100).toFixed(1)}%).`);
-        
-        if (to_remove > 0) {
-            stand.trees.filterRandom(to_remove); // Keep 'to_remove' random trees in list
-            var harvested = stand.trees.harvest(); // Harvest them
-            // DO NOT reset marks here, they persist for next steps
-            SoCoLog.debug(`  -> Harvested ${harvested} trees.`);
-        }
-
-        // Set Initialization Flag
-        stand.setFlag('abe_shelterwood_initialized', true);
-        stand.setFlag('abe_last_activity', 'MegaSTP_Shelterwood_Select');
-        stand.setFlag('abe_last_activity_year', Globals.year);
-        stand.setFlag('abe_need_reassessment', false);
-    }
-};
-
-// 6a. Selective Thinning - Phase 1: SELECTION
+// 5. Selective Thinning - Phase 1: SELECTION
 MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
     id: 'MegaSTP_SelectiveThinning_Select',
     type: 'thinning',
     thinning: 'selection',
-    schedule: { signal: 'do_selectiveThinning_select' },
+    schedule: { opt: 0, signal: 'do_selectiveThinning_select' },
 
     // Dynamic parameters from flags
     N: function() { return stand.flag('abe_param_nTrees'); },
@@ -527,8 +464,8 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
         var treesHarvested = 0;
 
         if (to_remove > 0) {
-            stand.trees.filterRandom(to_remove); // Keep 'to_remove' random trees in list
-            treesHarvested = stand.trees.harvest(); // Harvest them
+            stand.trees.filterRandomExclude(to_remove); // Keep 'to_remove' in list, remove rest
+            treesHarvested = stand.trees.harvest(); // Harvest the kept subset
             // DO NOT reset marks here, they persist for next steps
             SoCoLog.debug(`  -> Harvested ${treesHarvested} trees.`);
         }
@@ -557,7 +494,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_select'] = {
 MEGA_STP_ACTIVITIES['selectiveThinning_remove'] = {
     id: 'MegaSTP_SelectiveThinning_Remove',
     type: 'general', // Use 'general' for custom removal logic
-    schedule: { signal: 'do_selectiveThinning_remove' },
+    schedule: { opt: 0, signal: 'do_selectiveThinning_remove' },
     
     action: function() {
         SoCoLog.debug(`\n[MEGA-STP - action] REMOVE phase for stand ${stand.id}.`);
@@ -603,7 +540,7 @@ MEGA_STP_ACTIVITIES['selectiveThinning_remove'] = {
 MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
     id: 'MegaSTP_ThinningFromBelow',
     type: 'scheduled',  // Changed from 'thinning' - handles harvest in onExecute
-    schedule: { signal: 'do_thinningFromBelow' },
+    schedule: { opt: 0, signal: 'do_thinningFromBelow' },
 
     onEvaluate: function() {
         return true;
@@ -631,7 +568,7 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
         var targetRemoval = volumeBefore * share;
         SoCoLog.debug(`  -> Target removal: ${targetRemoval.toFixed(2)} m³/ha (${(share*100).toFixed(1)}%)`);
 
-        // Load all trees sorted by volume (ascending - smallest first for thinning from below)
+        // Load all trees
         stand.trees.loadAll();
         var totalTrees = stand.trees.count;
 
@@ -643,18 +580,42 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
             return;
         }
 
-        stand.trees.sort('volume');
         SoCoLog.debug(`  -> Total trees: ${totalTrees}`);
 
-        // Thinning from below: remove smallest trees first
+        // Build species-aware sort expression.
+        // speciesSelectivity: higher = more protected (kept), lower = removed first.
+        // Clamp to [0,1] to match iLand C++ populateSpeciesSelectivity behavior
+        // (rarity protection in species_strategies.js can push values above 1).
+        // Weight: volume * selectivity — protected species sort higher (kept).
+        var hasSelectivity = false;
+        var rest_sel = Math.min(Math.max(selectivity['rest'] !== undefined ? selectivity['rest'] : 1.0, 0), 1);
+        var selKeys = [];
+        for (var sp in selectivity) {
+            if (selectivity.hasOwnProperty(sp) && sp !== 'rest') {
+                selKeys.push(sp);
+                hasSelectivity = true;
+            }
+        }
+
+        if (hasSelectivity) {
+            // Nested if(): if(species=piab, 0.5, if(species=fasy, 1.0, rest))
+            // Low selectivity → low sort value → removed first (thinning from below).
+            var expr = '' + rest_sel;
+            for (var i = selKeys.length - 1; i >= 0; i--) {
+                var sel_val = Math.min(Math.max(selectivity[selKeys[i]], 0), 1);
+                expr = 'if(species=' + selKeys[i] + ',' + sel_val + ',' + expr + ')';
+            }
+            var sortExpr = 'volume * ' + expr;
+            SoCoLog.debug(`  -> Species-weighted sort: ${sortExpr}`);
+            stand.trees.sort(sortExpr);
+        } else {
+            // No species selectivity — simple volume sort
+            stand.trees.sort('volume');
+        }
+
         var totalHarvested = 0;
 
-        // Load trees sorted by volume ascending (smallest first)
-        stand.trees.loadAll();
-        stand.trees.sort('volume');
-
         // Calculate approximate number of trees to remove
-        // Assume average tree volume = volumeBefore / totalTrees
         var avgTreeVolume = volumeBefore / totalTrees;
         var approxTreesToRemove = Math.ceil(targetRemoval / avgTreeVolume);
 
@@ -664,10 +625,8 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
         SoCoLog.debug(`  -> Avg tree volume: ${avgTreeVolume.toFixed(3)} m³, approx trees to remove: ${approxTreesToRemove}`);
 
         if (approxTreesToRemove > 0) {
-            // filterRandom keeps N random trees from the current list
-            // Since sorted by volume (smallest first), we want to keep the smallest ones for removal
-            // So we filter to keep only the smallest approxTreesToRemove trees
-            stand.trees.filterRandom(approxTreesToRemove);
+            // Keep the first N trees in sort order (smallest weighted-volume first)
+            stand.trees.filter('incsum(1) <= ' + approxTreesToRemove);
             totalHarvested = stand.trees.harvest();
         }
 
@@ -711,7 +670,7 @@ MEGA_STP_ACTIVITIES['thinningFromBelow'] = {
 MEGA_STP_ACTIVITIES['femel_select'] = {
     id: 'MegaSTP_Femel_Select',
     type: 'general',
-    schedule: { signal: 'do_femel_select' },
+    schedule: { opt: 0, signal: 'do_femel_select' },
 
     action: function() {
         var volumeBefore = stand.volume;
@@ -763,7 +722,7 @@ MEGA_STP_ACTIVITIES['femel_select'] = {
 MEGA_STP_ACTIVITIES['femel_step'] = {
     id: 'MegaSTP_Femel_Step',
     type: 'general',
-    schedule: { signal: 'do_femel_step' },
+    schedule: { opt: 0, signal: 'do_femel_step' },
 
     action: function() {
         var volumeBefore = stand.volume;
@@ -834,7 +793,7 @@ MEGA_STP_ACTIVITIES['femel_step'] = {
 MEGA_STP_ACTIVITIES['femel_final'] = {
     id: 'MegaSTP_Femel_Final',
     type: 'scheduled', // Final harvest is scheduled
-    schedule: { signal: 'do_femel_final' },
+    schedule: { opt: 0, signal: 'do_femel_final' },
     finalHarvest: true,
 
     onCreate: function(act) { act.scheduled = false; },
@@ -886,7 +845,7 @@ MEGA_STP_ACTIVITIES['femel_final'] = {
 MEGA_STP_ACTIVITIES['tending'] = {
     id: 'MegaSTP_Tending',
     type: 'scheduled',  // Changed from 'thinning' - handles harvest in onExecute
-    schedule: { signal: 'do_tending' },
+    schedule: { opt: 0, signal: 'do_tending' },
 
     onEvaluate: function() {
         return true;
@@ -933,10 +892,6 @@ MEGA_STP_ACTIVITIES['tending'] = {
 
         SoCoLog.debug(`  -> Total trees: ${totalTreesBefore}`);
 
-        // Sort by height descending - we want to keep the tallest (crop) trees
-        // and remove the smallest (suppressed) trees
-        stand.trees.sort('height');
-
         // Calculate trees to remove (from the suppressed/smallest)
         var treesToRemove = Math.ceil(totalTreesBefore * removalFraction);
 
@@ -954,12 +909,36 @@ MEGA_STP_ACTIVITIES['tending'] = {
 
         SoCoLog.debug(`  -> Target removal: ${treesToRemove} trees (${(removalFraction*100).toFixed(0)}%)`);
 
-        // Reload and sort ascending (smallest first) to harvest suppressed trees
-        stand.trees.loadAll();
-        stand.trees.sort('height');  // smallest height first when ascending
+        // Build species-aware sort expression.
+        // speciesSelectivity: higher = more protected (kept), lower = removed first.
+        // Clamp to [0,1] to match iLand C++ populateSpeciesSelectivity behavior.
+        // Weight: height * selectivity — protected species sort higher (kept).
+        var hasSelectivity = false;
+        var rest_sel = Math.min(Math.max(selectivity['rest'] !== undefined ? selectivity['rest'] : 1.0, 0), 1);
+        var selKeys = [];
+        for (var sp in selectivity) {
+            if (selectivity.hasOwnProperty(sp) && sp !== 'rest') {
+                selKeys.push(sp);
+                hasSelectivity = true;
+            }
+        }
 
-        // Filter to keep only the smallest trees for removal
-        stand.trees.filterRandom(treesToRemove);
+        // Sort ascending: smallest weighted-height first = candidates for removal
+        if (hasSelectivity) {
+            var expr = '' + rest_sel;
+            for (var i = selKeys.length - 1; i >= 0; i--) {
+                var sel_val = Math.min(Math.max(selectivity[selKeys[i]], 0), 1);
+                expr = 'if(species=' + selKeys[i] + ',' + sel_val + ',' + expr + ')';
+            }
+            var sortExpr = 'height * ' + expr;
+            SoCoLog.debug(`  -> Species-weighted sort: ${sortExpr}`);
+            stand.trees.sort(sortExpr);
+        } else {
+            stand.trees.sort('height');  // smallest height first (ascending)
+        }
+
+        // Keep the first N trees in sort order (smallest weighted-height = suppressed + low-selectivity)
+        stand.trees.filter('incsum(1) <= ' + treesToRemove);
         var totalHarvested = stand.trees.harvest();
 
         // Remove marked trees
@@ -996,7 +975,7 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
     // id: 'MegaSTP_Shelterwood_Select',
     type: 'thinning',
     thinning: 'selection',
-    schedule: { signal: 'do_shelterwood_select' },
+    schedule: { opt: 0, signal: 'do_shelterwood_select' },
 
     // Dynamic parameters from flags
     N: function() { return stand.flag('abe_param_nTrees'); },
@@ -1036,8 +1015,8 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
 
         var harvested = 0;
         if (to_remove > 0) {
-            stand.trees.filterRandom(to_remove); // Keep 'to_remove' in list
-            harvested = stand.trees.harvest(); // Remove them
+            stand.trees.filterRandomExclude(to_remove); // Keep 'to_remove' in list, remove rest
+            harvested = stand.trees.harvest(); // Harvest the kept subset
             // Do NOT call removeMarkedTrees() here; we need marks for next steps!
             SoCoLog.debug(`  -> Harvested ${harvested} trees.`);
         }
@@ -1065,7 +1044,7 @@ MEGA_STP_ACTIVITIES['shelterwood_select'] = {
 // 10. Shelterwood - Phase 2: Removal (Subsequent Passes)
 MEGA_STP_ACTIVITIES['shelterwood_remove'] = {
     type: 'general',
-    schedule: { signal: 'do_shelterwood_remove' },
+    schedule: { opt: 0, signal: 'do_shelterwood_remove' },
     
     action: function() {
         var volumeBefore = stand.volume;
@@ -1107,7 +1086,7 @@ MEGA_STP_ACTIVITIES['shelterwood_remove'] = {
 // 11. Shelterwood - Phase 3: Final Harvest (Clearcut)
 MEGA_STP_ACTIVITIES['shelterwood_final'] = {
     type: 'scheduled',
-    schedule: { signal: 'do_shelterwood_final' },
+    schedule: { opt: 0, signal: 'do_shelterwood_final' },
     finalHarvest: true,
 
     // --- FIX: Force signal path for scheduled activity ---
@@ -1158,7 +1137,7 @@ MEGA_STP_ACTIVITIES['shelterwood_final'] = {
 
 MEGA_STP_ACTIVITIES['planting'] = {
     type: 'scheduled',
-    schedule: { signal: 'do_planting' },
+    schedule: { opt: 0, signal: 'do_planting' },
 
     onCreate: function(act) { act.scheduled = false; },
     onEvaluate: function() { return true; },
@@ -1298,7 +1277,7 @@ MEGA_STP_ACTIVITIES['salvage'] = {
 
 MEGA_STP_ACTIVITIES['salvage_harvest'] = {
     type: 'scheduled',
-    schedule: { signal: 'do_salvage_harvest' },
+    schedule: { opt: 0, signal: 'do_salvage_harvest' },
 
     onCreate: function(act) { act.scheduled = false; },
     onEvaluate: function() { return true; },
@@ -1320,8 +1299,9 @@ MEGA_STP_ACTIVITIES['salvage_harvest'] = {
         if (salvage_fraction < 1.0) {
             var trees_to_harvest = Math.floor(total_count * salvage_fraction);
             // Harvest larger trees first (economic value)
-            stand.trees.sort('dbh', true);  // Descending
-            stand.trees.harvest(trees_to_harvest);
+            stand.trees.sort('-dbh');  // Descending (largest first)
+            stand.trees.filter('incsum(1) <= ' + trees_to_harvest);
+            stand.trees.harvest();
         } else {
             // Harvest all merchantable trees
             stand.trees.filter('dbh >= ' + min_dbh);
@@ -1352,7 +1332,7 @@ MEGA_STP_ACTIVITIES['salvage_harvest'] = {
 
 MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
     type: 'scheduled',
-    schedule: { signal: 'do_salvage_clearcut' },
+    schedule: { opt: 0, signal: 'do_salvage_clearcut' },
     finalHarvest: true,
 
     onCreate: function(act) { act.scheduled = false; },
@@ -1396,7 +1376,7 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
 
 MEGA_STP_ACTIVITIES['salvage_leave'] = {
     type: 'scheduled',
-    schedule: { signal: 'do_salvage_leave' },
+    schedule: { opt: 0, signal: 'do_salvage_leave' },
 
     onCreate: function(act) { act.scheduled = false; },
     onEvaluate: function() { return true; },
@@ -1429,4 +1409,4 @@ var MegaSTP = {
 
 // Make it available for registration
 this.MegaSTP = MegaSTP;
-SoCoLog.debug("--- SoCoABE Mega-STP defined successfully. ---");
+if (typeof SoCoLog !== 'undefined') SoCoLog.debug("--- SoCoABE Mega-STP defined successfully. ---");

@@ -17,9 +17,15 @@ try {
 
     // --- Register ABE Components ---
     if (typeof MegaSTP === 'undefined') throw new Error("MegaSTP object not defined.");
-    fmengine.addManagement(MegaSTP, 'SoCo_MegaSTP');
-    
-    fmengine.addAgentType({ scheduler: { enabled: false }, stp: { default: 'SoCo_MegaSTP' } }, SoCoABE_CONFIG.core_abe_agent_type);
+    console.error("[DIAG] MegaSTP keys: " + Object.keys(MegaSTP));
+    console.error("[DIAG] MegaSTP.activities count: " + Object.keys(MegaSTP.activities).length);
+    console.error("[DIAG] MegaSTP.U: " + JSON.stringify(MegaSTP.U));
+
+    var mgmtResult = fmengine.addManagement(MegaSTP, 'SoCo_MegaSTP');
+    console.error("[DIAG] addManagement returned: " + mgmtResult + " (type: " + typeof mgmtResult + ")");
+
+    var atResult = fmengine.addAgentType({ scheduler: { enabled: false }, stp: { default: 'SoCo_MegaSTP' } }, SoCoABE_CONFIG.core_abe_agent_type);
+    console.error("[DIAG] addAgentType returned: " + atResult + " (type: " + typeof atResult + ")");
 
     // Read agent CSV path from XML (overridable via command line)
     var agentDataCsvPath;
@@ -39,7 +45,12 @@ try {
     var seenNames = {};
     for (var i = 0; i < agentDataFile.rowCount; i++) { var name = agentDataFile.value(i, agentColumnIndex).trim(); if (name) seenNames[name] = true; }
     var agentNames = Object.keys(seenNames);
-    agentNames.forEach(name => fmengine.addAgent(SoCoABE_CONFIG.core_abe_agent_type, name));
+    console.error("[DIAG] Registering " + agentNames.length + " agents with type '" + SoCoABE_CONFIG.core_abe_agent_type + "'");
+    console.error("[DIAG] First 3 agent names: " + agentNames.slice(0, 3).join(", "));
+    for (var ai = 0; ai < agentNames.length; ai++) {
+        var aaResult = fmengine.addAgent(SoCoABE_CONFIG.core_abe_agent_type, agentNames[ai]);
+        if (ai < 3) console.error("[DIAG] addAgent('" + agentNames[ai] + "') returned: " + aaResult);
+    }
     
     console.log("--- ABE Core Setup Complete ---");
 
@@ -92,25 +103,49 @@ function onAfterInit() {
 function run(year) {
     console.log(`--- run() called for year ${year} ---`);
 
-    // --- BARK BEETLE OUTBREAK CONTROL ---
-    // iLand execution order: ABE.run() -> tree growth -> disturbance modules (bark beetle)
-    // So setting probability HERE takes effect THIS SAME YEAR when BB module runs later.
-    if (typeof SoCoABE_CONFIG !== 'undefined' &&
+    // --- DISTURBANCE SUPPRESSION / ACTIVATION ---
+    // iLand execution order: ABE.run() -> tree growth -> disturbance modules
+    // Setting parameters HERE takes effect THIS SAME YEAR.
+    var distStart = (typeof SoCoABE_CONFIG !== 'undefined' && SoCoABE_CONFIG.DISTURBANCE_START_YEAR)
+        ? SoCoABE_CONFIG.DISTURBANCE_START_YEAR : 0;
+
+    if (distStart > 0 && year === 0) {
+        // Year 0 only: disable module + clear any residual state.
+        // XML already has near-zero probabilities (0.0000001) as safety net.
+        try {
+            BarkBeetle.enabled = false;
+            BarkBeetle.clear();
+            console.log('[DISTURBANCE] Suppressed until year ' + distStart + '. BB module disabled.');
+        } catch (e) {
+            console.log('[DISTURBANCE] Warning: could not disable BB module: ' + e.message);
+        }
+    } else if (distStart > 0 && year === distStart) {
+        // Activate: enable module and restore real background probability
+        try {
+            BarkBeetle.enabled = true;
+            BarkBeetle.setBackgroundInfestationProbability(0.000685);
+            console.log('[DISTURBANCE] Year ' + year + ': Disturbances ACTIVATED. BB prob restored to 0.000685.');
+        } catch (e) {
+            console.log('[DISTURBANCE] Warning: could not enable BB module: ' + e.message);
+        }
+    }
+
+    // --- BARK BEETLE OUTBREAK CONTROL (on top of baseline) ---
+    if (year >= distStart &&
+        typeof SoCoABE_CONFIG !== 'undefined' &&
         SoCoABE_CONFIG.BARK_BEETLE && SoCoABE_CONFIG.BARK_BEETLE.ENABLED) {
         var bb = SoCoABE_CONFIG.BARK_BEETLE;
         var is_outbreak = (bb.OUTBREAK_YEARS.indexOf(year) !== -1);
 
         if (is_outbreak) {
-            barkbeetle.setBackgroundInfestationProbability(bb.OUTBREAK_PROBABILITY);
+            BarkBeetle.setBackgroundInfestationProbability(bb.OUTBREAK_PROBABILITY);
             if (bb.LOG_ENABLED) {
                 console.log(`[BARK BEETLE] *** OUTBREAK YEAR ${year} *** Probability set to ${bb.OUTBREAK_PROBABILITY}`);
             }
         } else {
-            // Ensure baseline probability outside outbreak years
-            // Only reset after an outbreak year to avoid unnecessary calls every year
             var prev_was_outbreak = (bb.OUTBREAK_YEARS.indexOf(year - 1) !== -1);
             if (prev_was_outbreak) {
-                barkbeetle.setBackgroundInfestationProbability(bb.BASELINE_PROBABILITY);
+                BarkBeetle.setBackgroundInfestationProbability(bb.BASELINE_PROBABILITY);
                 if (bb.LOG_ENABLED) {
                     console.log(`[BARK BEETLE] Year ${year}: Outbreak ended. Probability reset to baseline ${bb.BASELINE_PROBABILITY}`);
                 }

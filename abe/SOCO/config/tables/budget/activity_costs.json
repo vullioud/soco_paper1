@@ -1,0 +1,20 @@
+{
+  "_comment": "Step-level costs for sequenced activities. 'steps' array = cost by step index (last entry repeats for additional intermediate steps). 'final' = cost of final harvest step. 'planting' = cost of appended planting step. Scalar = single-shot activity. Consumed by Cognition._step_cost() in plan_decade.js.",
+  "shelterwood_planting":    { "steps": [1, 2], "final": 3, "planting": 3 },
+  "shelterwood_no_planting": { "steps": [1, 2], "final": 3 },
+  "femel_planting":          { "steps": [1, 2], "final": 3, "planting": 3 },
+  "femel_no_planting":       { "steps": [1, 2], "final": 3 },
+  "clearcut_planting":       { "steps": [10], "planting": 3 },
+  "selectiveThinning":       { "steps": [1, 2], "final": 2 },
+  "tending": 2,
+  "fromBelow": 2,
+  "thinningFromBelow": 2,
+  "planting": 3,
+  "targetDBH": 2,
+  "plenter_harvest": 2,
+  "plenter_thinning": 2,
+  "salvage_harvest": 4,
+  "salvage_clearcut": 10,
+  "salvage_leave": 0,
+  "noManagement": 0
+}

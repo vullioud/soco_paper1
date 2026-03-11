@@ -29,6 +29,16 @@ class socoabe_main {
         SoCoABE_CONFIG.THINNING_WEIGHTS = species_strategies.THINNING_WEIGHTS;
         SoCoABE_CONFIG.PLANTING_CONFIG = species_strategies.PLANTING_CONFIG;
 
+        // Structural phase thresholds (species-specific)
+        SoCoABE_CONFIG.PHASE_THRESHOLDS = JSON.parse(
+            Globals.loadTextFile(Globals.path(base + 'tables/structural_thresholds.json'))
+        );
+
+        // Load budget tables into runtime config
+        SoCoABE_CONFIG.ACTIVITY_COSTS = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/activity_costs.json')));
+        SoCoABE_CONFIG.SET_ASIDE_RATES = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/set_aside_rates.json')));
+        SoCoABE_CONFIG.PRIORITY_WEIGHTS = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/priority_weights.json')));
+
          return configs;
     }
 

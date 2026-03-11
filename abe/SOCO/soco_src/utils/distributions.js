@@ -62,7 +62,9 @@ var Distributions = {
     },
 
     _sampleBeta: function(alpha, beta) {
-        if (alpha <= 0 || beta <= 0) return 0.5;
+        if (alpha <= 0 && beta <= 0) return 0.5;
+        if (alpha <= 0) return 0.0;
+        if (beta <= 0) return 1.0;
         var x = this._sampleGamma(alpha, 1);
         var y = this._sampleGamma(beta, 1);
         return x / (x + y);

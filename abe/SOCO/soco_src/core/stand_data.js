@@ -5,13 +5,17 @@ class stand_data {
 
         // --- I. IDENTIFIERS ---
         this.stand_id         = stand_id;
-        this.preference_focus = "none";   // set at init; used in planning logic
+        this.is_set_aside     = false;    // drawn at init from SET_ASIDE_RATES
+        this.preference_focus = "none";   // Production | Biodiversity | CO2 (no NoManagement)
 
         // --- II. PERCEPTION ---
         this.iLand_stand_data = {
             absolute_age_iLand:   0,
             volume:               0,
             basal_area:           0,
+            top_height:           0,
+            mean_dbh:             0,
+            stems:                0,
             needs_salvage:        false,
             disturbance_severity: 0,
             disturbance_volume:   0
@@ -30,7 +34,7 @@ class stand_data {
 
         // --- V. PLAN STATE ---
         this.activity = {
-            chosen_Activity:       'noManagement',
+            chosen_Activity:       'none',   // 'none' = no plan yet (NOT noManagement)
             parameters:            {},
             target_year:           -1,
             is_actionable:         false,
@@ -39,9 +43,17 @@ class stand_data {
             sequence_total_steps:  0,
             sequence_current_step: 0,
             sequence_sub_activity: 'none',
-            decided_window:        'none',
-            planned_phase:         'none',
-            defer_count:           0
+
+            // Phase lifecycle
+            blocked_until_phase:   null,     // null = available for planning. Phase name = waiting for structural transition.
+            blocked_since_year:    -1,       // year the block was set (-1 if not blocked). For force-forward timeout.
+            last_completed_phase:  'none',   // which phase was most recently completed? For monitoring/debugging.
+
+            // Queue tracking
+            carryover_count:       0,        // decades deferred (priority bump)
+
+            // Utility (execution ordering within a year)
+            utility_score:         0
         };
     }
 

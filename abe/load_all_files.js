@@ -33,10 +33,16 @@ try {
 
     // Load Cognition Module
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decision_windows.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/phase_age.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/phase_structural.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/phase_dispatch.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/think.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/condition_classifier.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/species_strategies.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/wet_classifier.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/species/wet_selectivity.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/select_parameters.js'));
+    Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/build_schedule.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/plan_decade.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/decide_on_going.js'));
     Globals.include(Globals.path('./abe/SOCO/soco_src/cognition/validate_activity.js'));

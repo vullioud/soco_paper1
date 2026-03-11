@@ -13,7 +13,16 @@
  */
 
 Action.prepare.tending = function(params, stand_data_obj, agent) {
-    var speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'tending');
+
+    // Species Selectivity: WET dynamic mode reads pre-computed selectivity from think.js.
+    // Static mode (or fallback) uses the condition-based THINNING_WEIGHTS table.
+    var speciesSelectivity;
+    if (SoCoABE_CONFIG.SPECIES_SELECTIVITY_MODE === 'wet_dynamic') {
+        speciesSelectivity = stand.flag('speciesSelectivity');
+    }
+    if (!speciesSelectivity || typeof speciesSelectivity !== 'object' || Object.keys(speciesSelectivity).length === 0) {
+        speciesSelectivity = SpeciesStrategies.execute(stand_data_obj, agent, 'tending');
+    }
 
     // DIAGNOSTIC: Validate selectivity
     if (!speciesSelectivity || typeof speciesSelectivity !== 'object') {
@@ -21,7 +30,6 @@ Action.prepare.tending = function(params, stand_data_obj, agent) {
         speciesSelectivity = {};
     }
 
-    // 3. Set Flag
     stand.setFlag('abe_param_speciesSelectivity', speciesSelectivity);
 
 };

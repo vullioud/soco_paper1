@@ -30,8 +30,10 @@ class socoabe_agent {
         this.is_initialized = false;
 
         this.unit_state = {
+            work_pile:                   [],  // ordered list of {stand_id, activity, target_year, cost, source, priority}
+            budget_total:                0,   // computed at plan_decade
+            budget_spent:                0,   // tracked during plan_decade
             harvest_commits_this_decade: 0,   // reset at start of each plan_decade call
-            resource_used_this_year:     0,   // reset at start of execute_yearly each year
             salvage_count_this_year:     0,   // counted in handle_salvage_and_ongoing
             decade_outcomes:             []   // Paper 2 landing zone
         };
@@ -87,10 +89,23 @@ class socoabe_agent {
         if (trait_configs.adherence) this.adherence = Distributions.sample(trait_configs.adherence);
     }
 
-   initialize_managed_stands() {
+    initialize_managed_stands() {
+        var set_aside_rate = (SoCoABE_CONFIG.SET_ASIDE_RATES &&
+                              SoCoABE_CONFIG.SET_ASIDE_RATES[this.behavioral_type]) || 0;
+
         this.managed_stand_ids.forEach(id => {
             const stand_data_obj = new stand_data(id, this);
-            stand_data_obj.preference_focus = Distributions.weighted_random_choice(this.preferences);
+
+            // Step 1: Bernoulli draw for set-aside
+            stand_data_obj.is_set_aside = (Math.random() < set_aside_rate);
+
+            // Step 2: Preference focus (3-dim: Production/Biodiversity/CO2)
+            if (!stand_data_obj.is_set_aside) {
+                stand_data_obj.preference_focus = Distributions.weighted_random_choice(this.preferences);
+            } else {
+                stand_data_obj.preference_focus = "SetAside";
+            }
+
             this.managed_stands_data[id] = stand_data_obj;
         });
     }
@@ -99,26 +114,6 @@ class socoabe_agent {
         for (var i = 0; i < this.managed_stand_ids.length; i++) {
             var sid = this.managed_stand_ids[i];
             this.managed_stands_data[sid] = Perception.observe_stand(this.managed_stands_data[sid], this);
-        }
-    }
-
-    handle_mandatory_planting(current_year) {
-        for (var stand_id in this.managed_stands_data) {
-            var s = this.managed_stands_data[stand_id];
-            var age = s.iLand_stand_data.absolute_age_iLand;
-
-            if (Cognition.get_decision_window(age) !== "Planting") continue;
-            if (s.activity.decided_window === "Planting") continue;
-            if (s.activity.is_Sequence) continue;
-            if (s.preference_focus === 'NoManagement') continue;
-
-            // Stand-level reactive decision — bypasses portfolio logic
-            var activity = Cognition.draw_activity(this, "Planting");
-            s.activity.chosen_Activity = activity || "noManagement";
-            s.activity.is_actionable   = (activity && activity !== "noManagement");
-            s.activity.target_year     = s.activity.is_actionable ? current_year + 1 : -1;
-            s.activity.decided_window  = "Planting";
-            if (s.activity.is_actionable) Cognition.select_parameters(s, this);
         }
     }
 
@@ -136,11 +131,11 @@ class socoabe_agent {
     }
 
     execute_yearly(current_year) {
-        this.unit_state.resource_used_this_year = 0;
         var scheduled = [];
         for (var sid in this.managed_stands_data) {
             var s = this.managed_stands_data[sid];
             if (s.activity.target_year === current_year && s.activity.is_actionable) {
+                s = Cognition.validate_activity(s);
                 scheduled.push(s);
             }
         }
@@ -150,25 +145,54 @@ class socoabe_agent {
             return (b.activity.utility_score || 0) - (a.activity.utility_score || 0);
         });
 
-        var capacity = Math.max(1, Math.ceil(
-            this.resources * this.managed_stand_ids.length / 10
-        ));
-        capacity -= (this.unit_state.salvage_count_this_year || 0) * 2;
-        if (capacity < 0) capacity = 0;
-
         for (var i = 0; i < scheduled.length; i++) {
-            var sd = scheduled[i];
-            if (capacity > 0) {
-                Action.trigger_activity(sd, this);
-                capacity--;
-            } else {
-                sd.activity.target_year += 1;
-                sd.activity.defer_count = (sd.activity.defer_count || 0) + 1;
-                if (sd.activity.defer_count > 3) {
-                    sd.activity.chosen_Activity = "noManagement";
-                    sd.activity.is_actionable = false;
-                    sd.activity.defer_count = 0;
+            Action.trigger_activity(scheduled[i], this);
+
+            // Post-execution cleanup for single-shot (non-sequence) activities.
+            // Sequences are handled by update_ongoing_sequence in think_reactive.
+            // Without this, single-shot stands keep chosen_Activity set and are
+            // skipped by plan_decade's candidate filter forever.
+            var act = scheduled[i].activity;
+            if (!act.is_Sequence) {
+                // Salvage: full reset, no blocking. Stand reopens for
+                // normal classify() at next plan_decade.
+                if (act.chosen_Activity === 'salvage') {
+                    act.blocked_until_phase = null;
+                    act.blocked_since_year = -1;
+                    act.last_completed_phase = 'none';
+                    act.chosen_Activity = 'none';
+                    act.parameters = {};
+                    act.target_year = -1;
+                    act.is_actionable = false;
+                    continue;
                 }
+
+                // Record completed phase for hysteresis anchor
+                var completed_phase = Cognition.Phases.classify(scheduled[i]);
+                act.last_completed_phase = completed_phase;
+
+                // Block until next phase (same logic as sequence completion)
+                var is_CCF = (act.chosen_Activity === 'targetDBH' ||
+                              act.chosen_Activity === 'plenter_harvest' ||
+                              act.chosen_Activity === 'plenter_thinning');
+
+                if (is_CCF) {
+                    act.blocked_until_phase = null;
+                    act.blocked_since_year = -1;
+                } else {
+                    var next_phase_map = {
+                        "Planting": "Tending", "Tending": "Thinning",
+                        "Thinning": "Harvesting", "Harvesting": "Tending"
+                    };
+                    act.blocked_until_phase = next_phase_map[completed_phase] || "Tending";
+                    act.blocked_since_year = current_year;
+                }
+
+                // Reset activity state (plan consumed)
+                act.chosen_Activity = 'none';
+                act.parameters = {};
+                act.target_year = -1;
+                act.is_actionable = false;
             }
         }
     }
@@ -179,7 +203,6 @@ class socoabe_agent {
         //
         //   REACTIVE  (per-stand, every year):
         //     think_reactive()            — salvage priority + ongoing sequence continuation
-        //     handle_mandatory_planting() — post-harvest young stands, observation-driven
         //
         //   PROACTIVE (unit-level, every 10 years):
         //     plan_decade()               — portfolio planning, sustained yield, activity draw
@@ -191,6 +214,11 @@ class socoabe_agent {
 
         // 1. Observe all stands
         this.observe();
+
+        // 1b. Log stand state (every year, all stands — structural phase monitoring)
+        for (var _sid in this.managed_stands_data) {
+            Monitoring.log_stand_state(this.managed_stands_data[_sid], this);
+        }
 
         // 2. Initialization (first year)
         if (current_year === 1 || (!this.is_initialized && this.managed_stand_ids.length > 0)) {
@@ -212,10 +240,7 @@ class socoabe_agent {
             // 4. Handle reactive events (salvage, ongoing sequences)
             this.handle_salvage_and_ongoing(current_year);
 
-            // 5. Handle mandatory planting (observation-driven)
-            this.handle_mandatory_planting(current_year);
-
-            // 6. Is this a planning year? (every 10 years)
+            // 5. Is this a planning year? (every 10 years)
             var is_planning_year = (current_year >= this.planning_offset &&
                 (current_year - this.planning_offset) % 10 === 0);
 
