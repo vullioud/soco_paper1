@@ -87,18 +87,19 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         // Disturbance control: suppress all disturbances before this year.
         // Both wind and bark beetle XML modules remain enabled but are
         // neutered via JS API until this year, then restored to XML defaults.
-        DISTURBANCE_START_YEAR: 100,
+        DISTURBANCE_START_YEAR: 1,
 
         // Bark beetle outbreak scenario (on top of XML baseline)
         // Sustained pressure from year 100 to 150, moderate probability
         BARK_BEETLE: {
             ENABLED: true,
-            OUTBREAK_YEARS: [100,101,102,103,104,105,106,107,108,109,110,
-                             111,112,113,114,115,116,117,118,119,120,
-                             121,122,123,124,125,126,127,128,129,130,
-                             131,132,133,134,135,136,137,138,139,140,
-                             141,142,143,144,145,146,147,148,149,150],
-            OUTBREAK_PROBABILITY: 0.05,
+            OUTBREAK_YEARS: [
+                100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+                111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+                121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
+                131, 132, 133, 134, 135, 136, 137, 138, 139, 140,
+                141, 142, 143, 144, 145, 146, 147, 148, 149, 150],
+            OUTBREAK_PROBABILITY: 0.005,
             BASELINE_PROBABILITY: 0.000685,
             LOG_ENABLED: true
         },
@@ -112,11 +113,11 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
 
         // Budget system (Paper 1 - resource-constrained planning)
         BUDGET: {
-            POINTS_PER_STAND_PER_DECADE: 10,  // budget = resources * n_ALL_stands * this
-            SALVAGE_PRIORITY_BONUS: 100,       // salvage always top of queue
+            POINTS_PER_STAND_PER_DECADE: 3,   // budget = resources * n_ALL_stands * this
             MAX_CARRYOVER_FACTOR: 2.0,
             ALLOW_DEBT: true,
-            MAX_DEBT_FACTOR: 0.5
+            MAX_DEBT_FACTOR: 0.5,
+            DISTURBANCE_ENVELOPE: 8            // salvage clearcut cost = max(0, envelope - extraction_paid) + planting
         },
 
         // Phase windows with start-by cutoffs (can't start new activity after start_by)

@@ -15,6 +15,32 @@ try {
     Globals.include(Globals.path('./abe/load_all_files.js'));
     console.log("--- All ABE files loaded successfully. ---");
 
+    // --- Override SoCoABE_CONFIG from user.* CLI settings ---
+    // These are set by the runner via iLand CLI overrides (config.toml → run_table → CLI)
+    try {
+        var bb_val = Globals.setting('user.bb_enabled');
+        if (bb_val === 'false') {
+            SoCoABE_CONFIG.BARK_BEETLE.ENABLED = false;
+            SoCoABE_CONFIG.DISTURBANCE_START_YEAR = 99999;
+        }
+    } catch(e) {}
+    try {
+        var ds_val = Globals.setting('user.disturbance_start_year');
+        if (ds_val) SoCoABE_CONFIG.DISTURBANCE_START_YEAR = parseInt(ds_val, 10);
+    } catch(e) {}
+    try {
+        var op_val = Globals.setting('user.outbreak_probability');
+        if (op_val) SoCoABE_CONFIG.BARK_BEETLE.OUTBREAK_PROBABILITY = parseFloat(op_val);
+    } catch(e) {}
+    try {
+        var bp_val = Globals.setting('user.baseline_probability');
+        if (bp_val) SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY = parseFloat(bp_val);
+    } catch(e) {}
+    console.log("[CONFIG] BB=" + SoCoABE_CONFIG.BARK_BEETLE.ENABLED +
+        " start=" + SoCoABE_CONFIG.DISTURBANCE_START_YEAR +
+        " outbreakProb=" + SoCoABE_CONFIG.BARK_BEETLE.OUTBREAK_PROBABILITY +
+        " baselineProb=" + SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY);
+
     // --- Register ABE Components ---
     if (typeof MegaSTP === 'undefined') throw new Error("MegaSTP object not defined.");
     console.error("[DIAG] MegaSTP keys: " + Object.keys(MegaSTP));
@@ -131,7 +157,8 @@ function run(year) {
     }
 
     // --- BARK BEETLE OUTBREAK CONTROL (on top of baseline) ---
-    if (year >= distStart &&
+    // Skip outbreak logic when distStart=0 (constant BB scenarios need no JS intervention)
+    if (distStart > 0 && year >= distStart &&
         typeof SoCoABE_CONFIG !== 'undefined' &&
         SoCoABE_CONFIG.BARK_BEETLE && SoCoABE_CONFIG.BARK_BEETLE.ENABLED) {
         var bb = SoCoABE_CONFIG.BARK_BEETLE;

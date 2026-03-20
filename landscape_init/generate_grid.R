@@ -20,8 +20,6 @@ if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable())
 source("helpers/create_regular_grid.R")
 source("helpers/create_diverse_init.R")
 source("helpers/grid_helper.R")
-source("helpers/init_grid_helper.R")
-
 # --- Load scenario definitions ---
 source("scenarios/grid_scenarios.R")
 

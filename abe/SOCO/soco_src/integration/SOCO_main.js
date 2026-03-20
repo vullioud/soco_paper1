@@ -38,6 +38,7 @@ class socoabe_main {
         SoCoABE_CONFIG.ACTIVITY_COSTS = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/activity_costs.json')));
         SoCoABE_CONFIG.SET_ASIDE_RATES = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/set_aside_rates.json')));
         SoCoABE_CONFIG.PRIORITY_WEIGHTS = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/priority_weights.json')));
+        SoCoABE_CONFIG.POST_DISTURBANCE_WEIGHTS = JSON.parse(Globals.loadTextFile(Globals.path(base + 'tables/budget/post_disturbance_weights.json')));
 
          return configs;
     }

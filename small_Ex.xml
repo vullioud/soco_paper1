@@ -540,7 +540,7 @@
         <barkbeetle>
             <enabled>true</enabled>
             <minimumDbh>15</minimumDbh>
-            <backgroundInfestationProbability>0.00001</backgroundInfestationProbability>
+            <backgroundInfestationProbability>0.000685</backgroundInfestationProbability>
             <!--0.000685= 1/365*1/4, assuming a 365 year rotation period (Thom et al. 2013) and a mean size of 4 ha; NB: the size could actually be estimated theoretically from the dispersal and generations parameters, assuming that hosts are not limited: if we assume that every generation spreads on average 3 10m cells (area= 0.28ha), and if the average number of generations is 2, and the average outbreak duration 6 years, we get an average outbreak area of 3.39 ha, so the 4 ha assumed above were in the right ballbark!!-->
             <stormInfestationProbability>0.05</stormInfestationProbability>
             <baseWinterMortality>0.4</baseWinterMortality>
@@ -587,5 +587,9 @@
         <Scenario>iLandTV</Scenario>
         <!-- Output prefix for batch runs (overridable via command line) -->
         <output_prefix></output_prefix>
+        <!-- Disturbance control (overridable via command line) -->
+        <bb_enabled>true</bb_enabled>
+        <disturbance_start_year>0</disturbance_start_year>
+        <outbreak_probability>0.000685</outbreak_probability>
     </user>
 </project>

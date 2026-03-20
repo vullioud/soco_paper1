@@ -8,6 +8,10 @@ class stand_data {
         this.is_set_aside     = false;    // drawn at init from SET_ASIDE_RATES
         this.preference_focus = "none";   // Production | Biodiversity | CO2 (no NoManagement)
 
+        // --- I.b DISTURBANCE STATE ---
+        this.needs_post_disturbance  = false;  // set by think_reactive, consumed by plan_decade
+        this.extraction_cost_pending = 0;      // set by think_reactive, consumed by handle_salvage
+
         // --- II. PERCEPTION ---
         this.iLand_stand_data = {
             absolute_age_iLand:   0,
@@ -16,9 +20,19 @@ class stand_data {
             top_height:           0,
             mean_dbh:             0,
             stems:                0,
-            needs_salvage:        false,
-            disturbance_severity: 0,
-            disturbance_volume:   0
+            needs_salvage:              false,
+            disturbance_severity:       0,
+            disturbance_volume:         0,
+            disturbance_cost:           0,
+            actual_salvage_volume_m3ha: 0,
+            deadwood_retained_m3ha:     0,
+            // Structural diversity metrics (computed from tree list)
+            dbh_sd:           0,
+            dbh_gini:         0,
+            n_large_trees:    0,
+            n_height_layers:  0,
+            height_sd:        0,
+            max_dbh:          0
         };
 
         // --- III. CLASSIFICATION ---

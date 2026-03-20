@@ -1,0 +1,8 @@
+{
+  "_comment": "Post-disturbance remnant weights by type. salvage_clearcut weight is multiplied by severity before draw.",
+  "MF": { "salvage_clearcut": 6.0, "salvage_leave": 1.5 },
+  "OP": { "salvage_clearcut": 8.0, "salvage_leave": 1.0 },
+  "TR": { "salvage_clearcut": 1.5, "salvage_leave": 4.0 },
+  "PA": { "salvage_clearcut": 0.1, "salvage_leave": 6.0 },
+  "EN": { "salvage_clearcut": 0.5, "salvage_leave": 6.0 }
+}

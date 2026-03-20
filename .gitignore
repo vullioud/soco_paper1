@@ -27,7 +27,8 @@ landscape_init/init_german_landcape_rep/
 
 # --- Analysis, docs, batch runner ---
 analysis/
-analysis_batch/
+analysis_batch/data/
+analysis_batch/co_author_report/figures/
 runner/
 abe/SOCO/soco_src/docs/
 
@@ -36,6 +37,10 @@ Rplots.pdf
 0{print}
 fatallog.txt
 logfile.txt
+analysis_batch/*_mod_snapshot_*.txt
+analysis_batch/**/*_files/
+analysis_batch/**/*.html
+analysis_batch/*.html
 
 # --- OS and editor noise ---
 .DS_Store
@@ -44,3 +49,4 @@ Thumbs.db
 __pycache__/
 .Rhistory
 .RData
+.claude/

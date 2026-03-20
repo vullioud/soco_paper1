@@ -1210,17 +1210,31 @@ MEGA_STP_ACTIVITIES['salvage'] = {
     // Thresholds for disturbance response
     thresholdIgnoreDamage: 30,   // m³/ha - Below this, no action taken
     thresholdClearStand: 0.6,    // Fraction (0-1) - Above this severity, consider clearcut
+    thresholdSplitStand: 10,     // Effectively disabled (matching abe-lib default)
 
-    // Called automatically by iLand C++ when disturbance is detected
+    // Option B: iLand C++ auto-salvages 100% of killed trees (phytosanitary obligation).
+    // evaluateRemove() is gated by standFlags().enabled() in fmstand.cpp:506,
+    // so per-agent extraction fractions are NOT achievable without C++ changes.
+    // Agent differentiation happens through post-salvage remnant management (clearcut vs leave),
+    // decided in plan_decade's PostDisturbance step.
+
+    // Called automatically by iLand C++ when disturbance is detected on any managed stand.
+    // Stand context IS correct here (inside ABE executeActivity).
     onAfterDisturbance: function(disturbedVolume) {
+        // FIX B2: disturbedVolume is total m³, stand.volume is m³/ha
         var severity_m3ha = disturbedVolume / stand.area;
-        var volume_before = stand.volume + disturbedVolume;  // Approximate pre-disturbance volume
-        var severity_fraction = (volume_before > 0) ? disturbedVolume / volume_before : 0;
+        var volume_before = stand.volume + severity_m3ha;  // Both m³/ha
+        var severity_fraction = (volume_before > 0) ? severity_m3ha / volume_before : 0;
 
-        SoCoLog.debug(`[MEGA-STP SALVAGE] Disturbance detected on stand ${stand.id}!`);
-        SoCoLog.debug(`  -> Disturbed volume: ${disturbedVolume.toFixed(1)} m³ (${severity_m3ha.toFixed(1)} m³/ha)`);
-        SoCoLog.debug(`  -> Severity fraction: ${(severity_fraction * 100).toFixed(1)}%`);
-        SoCoLog.debug(`  -> Remaining volume: ${stand.volume.toFixed(1)} m³/ha`);
+        // Envelope: extraction cost proportional to severity (fraction=1.0 under Option B)
+        var budget_config = SoCoABE_CONFIG.BUDGET || {};
+        var DISTURBANCE_ENVELOPE = budget_config.DISTURBANCE_ENVELOPE || 8;
+        var extraction_cost = Math.round(DISTURBANCE_ENVELOPE * severity_fraction);
+
+        SoCoLog.debug('[MEGA-STP SALVAGE] Disturbance on stand ' + stand.id +
+                      ': ' + severity_m3ha.toFixed(1) + ' m3/ha (' +
+                      (severity_fraction * 100).toFixed(1) + '%), cost=' +
+                      extraction_cost + '/' + DISTURBANCE_ENVELOPE + ' pts');
 
         // Set flags for SOCO perception to read
         stand.setFlag('abe_disturbance_detected', true);
@@ -1228,6 +1242,15 @@ MEGA_STP_ACTIVITIES['salvage'] = {
         stand.setFlag('abe_disturbance_volume', disturbedVolume);
         stand.setFlag('abe_disturbance_severity', severity_fraction);
         stand.setFlag('abe_disturbance_severity_m3ha', severity_m3ha);
+
+        // 100% extraction by iLand C++ (Option B)
+        stand.setFlag('abe_actual_salvage_volume_m3ha', severity_m3ha);
+        stand.setFlag('abe_deadwood_retained_m3ha', 0);
+
+        // Extraction cost for budget deduction in handle_salvage_and_ongoing
+        stand.setFlag('abe_disturbance_cost', extraction_cost);
+        // Store for plan_decade clearcut cost calculation (envelope remainder)
+        stand.setFlag('abe_extraction_cost_paid', extraction_cost);
 
         // Clear any ongoing sequences - disturbance interrupts them
         // Check if we're in the middle of a sequence activity
@@ -1265,7 +1288,8 @@ MEGA_STP_ACTIVITIES['salvage'] = {
             volume_disturbed: disturbedVolume,
             severity_m3ha: severity_m3ha,
             severity_fraction: severity_fraction,
-            volume_remaining: stand.volume
+            volume_remaining: stand.volume,
+            extraction_cost: extraction_cost
         });
 
         SoCoLog.debug(`  -> Flags set. SOCO will decide salvage response.`);
@@ -1275,60 +1299,8 @@ MEGA_STP_ACTIVITIES['salvage'] = {
 // 12a. Salvage Execution Activities - Signal-triggered responses
 // These are called by SOCO after it decides the appropriate response
 
-MEGA_STP_ACTIVITIES['salvage_harvest'] = {
-    type: 'scheduled',
-    schedule: { opt: 0, signal: 'do_salvage_harvest' },
-
-    onCreate: function(act) { act.scheduled = false; },
-    onEvaluate: function() { return true; },
-
-    onExecute: function() {
-        var volumeBefore = stand.volume;
-        SoCoLog.debug(`[MEGA-STP] Salvage Harvest: Removing damaged/dead trees.`);
-
-        // Get salvage parameters from flags
-        var min_dbh = stand.flag('abe_param_salvage_min_dbh') || 10;
-        var salvage_fraction = stand.flag('abe_param_salvage_fraction') || 1.0;
-
-        // Load all trees and harvest damaged ones
-        // In iLand, recently disturbed trees can be identified
-        stand.trees.loadAll();
-        var total_count = stand.trees.count;
-
-        // Apply salvage fraction (some agents may leave portion for habitat)
-        if (salvage_fraction < 1.0) {
-            var trees_to_harvest = Math.floor(total_count * salvage_fraction);
-            // Harvest larger trees first (economic value)
-            stand.trees.sort('-dbh');  // Descending (largest first)
-            stand.trees.filter('incsum(1) <= ' + trees_to_harvest);
-            stand.trees.harvest();
-        } else {
-            // Harvest all merchantable trees
-            stand.trees.filter('dbh >= ' + min_dbh);
-            stand.trees.harvest();
-        }
-
-        stand.trees.removeMarkedTrees();
-
-        if (stand.reload) stand.reload();
-        var volumeAfter = stand.volume;
-        var volumeRemoved = Math.max(0, volumeBefore - volumeAfter);
-
-        SoCoLog.debug(`  -> Salvage removed ${volumeRemoved.toFixed(1)} m³/ha`);
-
-        // Store results
-        stand.setFlag('abe_last_harvest_volume', volumeRemoved);
-        stand.setFlag('abe_last_harvest_year', Globals.year);
-        stand.setFlag('abe_last_salvage_volume', volumeRemoved);
-    },
-
-    onExecuted: function() {
-        stand.setFlag('abe_last_activity', 'MegaSTP_Salvage_Harvest');
-        stand.setFlag('abe_last_activity_year', Globals.year);
-        stand.setFlag('abe_need_salvage', false);  // Salvage completed
-        stand.setFlag('abe_need_reassessment', true);  // Agent should reassess stand
-    }
-};
+// NOTE: salvage_harvest DELETED — B1 fix. iLand C++ auto-extracts 100% of dead
+// trees (Option B). Only salvage_clearcut (remnant management) and salvage_leave remain.
 
 MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
     type: 'scheduled',
@@ -1340,7 +1312,7 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
 
     onExecute: function() {
         var volumeBefore = stand.volume;
-        SoCoLog.debug(`[MEGA-STP] Salvage Clearcut: Complete stand reset after severe disturbance.`);
+        SoCoLog.debug(`[MEGA-STP] Salvage Clearcut: Clearing living remnant + replant.`);
 
         // Remove all remaining trees
         stand.trees.loadAll();
@@ -1356,7 +1328,7 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
         stand.setFlag('abe_last_harvest_volume', volumeRemoved);
         stand.setFlag('abe_last_harvest_trees', count);
         stand.setFlag('abe_last_harvest_year', Globals.year);
-        stand.setFlag('abe_last_salvage_volume', volumeRemoved);
+        stand.setFlag('abe_last_remnant_clearing_volume', volumeRemoved);
 
         // Reset stand age for new rotation
         stand.setAbsoluteAge(0);
@@ -1367,10 +1339,8 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
         stand.setFlag('abe_last_activity_year', Globals.year);
         stand.setFlag('abe_need_salvage', false);
         stand.setFlag('abe_need_reassessment', true);
-
-        // Trigger replanting signal
-        SoCoLog.debug(`  -> Sending do_planting signal for post-salvage replanting.`);
-        stand.stp.signal('do_planting');
+        // Planting is now handled as step 2 of the salvage_clearcut sequence
+        // by the cognitive layer (next year). Do NOT fire do_planting here.
     }
 };
 
@@ -1382,11 +1352,15 @@ MEGA_STP_ACTIVITIES['salvage_leave'] = {
     onEvaluate: function() { return true; },
 
     onExecute: function() {
-        SoCoLog.debug(`[MEGA-STP] Salvage Leave: Leaving disturbed stand for natural recovery (biodiversity option).`);
+        SoCoLog.debug(`[MEGA-STP] Salvage Leave: Leaving living remnant for natural recovery.`);
 
         // No harvesting - just record the decision
         var remaining_volume = stand.volume;
         SoCoLog.debug(`  -> Leaving ${remaining_volume.toFixed(1)} m³/ha standing for habitat/deadwood.`);
+
+        // Record zero harvest for consistent tracking
+        stand.setFlag('abe_last_harvest_volume', 0);
+        stand.setFlag('abe_last_harvest_year', Globals.year);
 
         // Could optionally set flags for monitoring recovery
         stand.setFlag('abe_salvage_left_for_recovery', true);

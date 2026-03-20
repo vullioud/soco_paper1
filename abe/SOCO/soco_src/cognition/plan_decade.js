@@ -187,6 +187,97 @@ Cognition.plan_decade = function(agent, current_year) {
         }
     }
 
+    // ===== STEP 3.5: POST-DISTURBANCE REMNANT MANAGEMENT =====
+    // Stands hit by disturbance since last plan_decade. Extraction cost already deducted.
+    // Severity-modulated Dirichlet draw: clearcut+replant vs leave.
+    // Processed before the unified queue (high priority).
+    var DISTURBANCE_ENVELOPE = budget_config.DISTURBANCE_ENVELOPE || 8;
+    var pd_weight_table = SoCoABE_CONFIG.POST_DISTURBANCE_WEIGHTS || {};
+    var pd_base_weights = pd_weight_table[agent.behavioral_type] ||
+                          { salvage_clearcut: 1.0, salvage_leave: 3.0 };
+
+    for (var sid_pd in agent.managed_stands_data) {
+        var pd = agent.managed_stands_data[sid_pd];
+        if (!pd.needs_post_disturbance) continue;
+        if (pd.is_set_aside) { pd.needs_post_disturbance = false; continue; }
+
+        var pd_severity = pd.iLand_stand_data.disturbance_severity || 0;
+
+        // Severity-modulated draw: mild disturbance biases toward leave
+        var w_cc = (pd_base_weights.salvage_clearcut || 0) * pd_severity;
+        var w_lv = pd_base_weights.salvage_leave || 1.0;
+        var w_total = w_cc + w_lv;
+        if (w_total <= 0) w_total = 1;
+        var pd_draw = Distributions.weighted_random_choice({
+            salvage_clearcut: w_cc / w_total,
+            salvage_leave: w_lv / w_total
+        });
+
+        SoCoLog.debug('[PLAN-DECADE PostDisturbance] stand=' + sid_pd +
+                      ' severity=' + pd_severity.toFixed(2) +
+                      ' P(clearcut)=' + (w_cc / w_total * 100).toFixed(1) + '%' +
+                      ' -> ' + pd_draw);
+
+        pd.needs_post_disturbance = false;
+
+        if (pd_draw === 'salvage_leave') {
+            // Free — clear disturbance state, stand re-enters normal planning
+            pd.activity.chosen_Activity = 'none';
+            pd.activity.is_actionable = false;
+            if (Monitoring.isDecadeLogEnabled()) {
+                Monitoring.log_decade_decision(agent, current_year, "PostDisturbance", pd, 0, true);
+            }
+            continue;
+        }
+
+        // salvage_clearcut: compute cost = (envelope - extraction_paid) + planting
+        fmengine.standId = pd.stand_id;
+        var extraction_paid = stand.flag('abe_extraction_cost_paid') || 0;
+        var clearcut_cost = Math.max(0, DISTURBANCE_ENVELOPE - extraction_paid) + 3;
+
+        if (clearcut_cost > remaining_budget) {
+            // Can't afford — defer to next decade. Re-set flag.
+            pd.needs_post_disturbance = true;
+            pd.activity.chosen_Activity = 'none';
+            pd.activity.is_actionable = false;
+            pd.activity.carryover_count = (pd.activity.carryover_count || 0) + 1;
+            SoCoLog.debug('  -> Cannot afford clearcut (' + clearcut_cost +
+                          ' > ' + remaining_budget + '). Deferred.');
+            if (Monitoring.isDecadeLogEnabled()) {
+                Monitoring.log_decade_decision(agent, current_year, "PostDisturbance", pd, 0, false);
+            }
+            continue;
+        }
+
+        // Commit clearcut + planting sequence
+        remaining_budget -= clearcut_cost;
+        agent.unit_state.budget_spent += clearcut_cost;
+
+        pd.activity.chosen_Activity = 'salvage_clearcut';
+        pd.activity.is_Sequence = true;
+        pd.activity.sequence_current_step = 0;
+        pd.activity.sequence_total_steps = 2;
+        pd.activity.timeline = [current_year, current_year + 1];
+        pd.activity.includes_planting = true;
+        pd.activity.target_year = current_year;
+        pd.activity.is_actionable = true;
+        pd.activity.carryover_count = 0;
+
+        // Set flags for act.js signal routing
+        stand.setFlag('abe_param_salvage_type', 'salvage_clearcut');
+        stand.setFlag('abe_param_salvage_trigger_replant', true);
+
+        Cognition._add_to_work_pile(agent, pd, current_year, cost_table, priority_weights, "PostDisturbance");
+
+        SoCoLog.debug('  -> Committed clearcut+plant, cost=' + clearcut_cost +
+                      ' (envelope=' + DISTURBANCE_ENVELOPE +
+                      ' - extraction=' + extraction_paid + ' + plant=3)');
+
+        if (Monitoring.isDecadeLogEnabled()) {
+            Monitoring.log_decade_decision(agent, current_year, "PostDisturbance", pd, 0, true);
+        }
+    }
+
     // ===== STEP 4: UNIFIED PRIORITY QUEUE (non-harvest) =====
     // Pool all non-harvest candidates, score, sort, process in priority order.
     // This lets phase_weights (type-specific) determine inter-phase budget allocation

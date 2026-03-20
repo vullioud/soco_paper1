@@ -56,7 +56,6 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         execution_activity_name = 'clearcut';
     }
     else if (base_cognitive_name === 'salvage' ||
-             base_cognitive_name === 'salvage_harvest' ||
              base_cognitive_name === 'salvage_clearcut' ||
              base_cognitive_name === 'salvage_leave') {
         execution_activity_name = 'salvage';
@@ -141,8 +140,15 @@ Action.trigger_activity = function(stand_data_obj, agent) {
     }
     // Logic D: Salvage
     else if (execution_activity_name === 'salvage') {
-        var salvage_type = stand.flag('abe_param_salvage_type') || 'salvage_harvest';
-        signal_name = 'do_' + salvage_type;
+        // Salvage-clearcut sequence: planting step fires do_planting
+        if (stand_data_obj.activity.is_Sequence &&
+            stand_data_obj.activity.includes_planting &&
+            stand_data_obj.activity.sequence_current_step >= 1) {
+            signal_name = 'do_planting';
+        } else {
+            var salvage_type = stand.flag('abe_param_salvage_type') || 'salvage_leave';
+            signal_name = 'do_' + salvage_type;
+        }
     }
     // Logic E: Standard Activities
     else {

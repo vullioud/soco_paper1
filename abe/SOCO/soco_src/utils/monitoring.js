@@ -67,6 +67,12 @@ var Monitoring = {
             top_height:       d.top_height,
             mean_dbh:         d.mean_dbh,
             stems:            d.stems,
+            dbh_sd:           d.dbh_sd,
+            dbh_gini:         d.dbh_gini,
+            n_large_trees:    d.n_large_trees,
+            n_height_layers:  d.n_height_layers,
+            height_sd:        d.height_sd,
+            max_dbh:          d.max_dbh,
             age_phase:        age_phase,
             structural_phase: struct_phase,
             active_phase:     active_phase,
@@ -82,6 +88,7 @@ var Monitoring = {
     save_stand_state_csv: function(filename) {
         var header = "year,stand_id,agent_id,behavioral_type,is_set_aside," +
             "age,volume,basal_area,top_height,mean_dbh,stems," +
+            "dbh_sd,dbh_gini,n_large_trees,n_height_layers,height_sd,max_dbh," +
             "age_phase,structural_phase,active_phase,engine,phase_match," +
             "blocked_until,last_completed,chosen_activity,is_sequence";
         var lines = [header];
@@ -96,6 +103,12 @@ var Monitoring = {
                 this._safeFixed(r.top_height, 2) + "," +
                 this._safeFixed(r.mean_dbh, 2) + "," +
                 this._safeFixed(r.stems, 0) + "," +
+                this._safeFixed(r.dbh_sd, 2) + "," +
+                this._safeFixed(r.dbh_gini, 4) + "," +
+                this._safeFixed(r.n_large_trees, 1) + "," +
+                r.n_height_layers + "," +
+                this._safeFixed(r.height_sd, 2) + "," +
+                this._safeFixed(r.max_dbh, 2) + "," +
                 r.age_phase + "," + r.structural_phase + "," +
                 r.active_phase + "," + r.engine + "," + r.phase_match + "," +
                 r.blocked_until + "," + r.last_completed + "," +
@@ -133,7 +146,13 @@ var Monitoring = {
             basal_area_t0:          stand_data_obj.iLand_stand_data.basal_area,
             top_height_t0:          stand.topHeight,
             species_composition_t0: JSON.stringify(stand_data_obj.get_species_composition()),
-            parameters:             JSON.stringify({})
+            parameters:             JSON.stringify({}),
+            salvage_fraction:           0,
+            actual_salvage_volume_m3ha: 0,
+            deadwood_retained_m3ha:     0,
+            disturbance_severity_frac:  0,
+            extraction_cost_paid:       0,
+            remnant_decision:           'none'
         };
 
         this.ml_activity_log.push(record);
@@ -161,8 +180,26 @@ var Monitoring = {
             basal_area_t0:          stand_data_obj.iLand_stand_data.basal_area,
             top_height_t0:          stand.topHeight,
             species_composition_t0: JSON.stringify(stand_data_obj.get_species_composition()),
-            parameters:             JSON.stringify(stand_data_obj.activity.parameters || {})
+            parameters:             JSON.stringify(stand_data_obj.activity.parameters || {}),
+            salvage_fraction:           0,
+            actual_salvage_volume_m3ha: 0,
+            deadwood_retained_m3ha:     0,
+            disturbance_severity_frac:  0,
+            extraction_cost_paid:       0,
+            remnant_decision:           'none'
         };
+
+        // Populate salvage-specific fields when applicable
+        // Option B: iLand extracts 100% of dead trees; salvage_fraction is always 1.0
+        if (stand_data_obj.activity.chosen_Activity === 'salvage_clearcut' ||
+            stand_data_obj.activity.chosen_Activity === 'salvage_leave') {
+            record.salvage_fraction = 1.0;
+            record.actual_salvage_volume_m3ha = stand.flag('abe_actual_salvage_volume_m3ha') || 0;
+            record.deadwood_retained_m3ha = 0;
+            record.disturbance_severity_frac = stand.flag('abe_disturbance_severity') || 0;
+            record.extraction_cost_paid = stand.flag('abe_extraction_cost_paid') || 0;
+            record.remnant_decision = stand.flag('abe_param_salvage_type') || 'none';
+        }
 
         this.ml_activity_log.push(record);
     },
@@ -172,7 +209,9 @@ var Monitoring = {
             "is_sequence,sequence_step," +
             "previous_activity,previous_activity_year," +
             "age_t0,volume_t0,basal_area_t0,top_height_t0," +
-            "species_composition_t0,parameters";
+            "species_composition_t0,parameters," +
+            "salvage_fraction,actual_salvage_volume_m3ha,deadwood_retained_m3ha,disturbance_severity_frac," +
+            "extraction_cost_paid,remnant_decision";
         var lines = [header];
 
         for (var i = 0; i < this.ml_activity_log.length; i++) {
@@ -185,8 +224,14 @@ var Monitoring = {
                 this._safeFixed(r.volume_t0, 2) + "," +
                 this._safeFixed(r.basal_area_t0, 2) + "," +
                 this._safeFixed(r.top_height_t0, 2) + "," +
-                '"' + r.species_composition_t0 + '",' +
-                '"' + r.parameters + '"';
+                '"' + (r.species_composition_t0 || '{}').replace(/"/g, '""') + '",' +
+                '"' + (r.parameters || '{}').replace(/"/g, '""') + '",' +
+                this._safeFixed(r.salvage_fraction, 2) + "," +
+                this._safeFixed(r.actual_salvage_volume_m3ha, 2) + "," +
+                this._safeFixed(r.deadwood_retained_m3ha, 2) + "," +
+                this._safeFixed(r.disturbance_severity_frac, 3) + "," +
+                this._safeFixed(r.extraction_cost_paid, 0) + "," +
+                (r.remnant_decision || 'none');
             lines.push(line);
         }
 
@@ -317,7 +362,7 @@ var Monitoring = {
                 behavioral_type: agent.behavioral_type,
                 stand_id:        s.stand_id,
                 status:          status,
-                current_phase:   Cognition.get_phase(age),
+                current_phase:   Cognition.Phases.classify(s),
                 blocked_until:   s.activity.blocked_until_phase || 'none',
                 last_completed:  s.activity.last_completed_phase || 'none',
                 chosen_activity: s.activity.chosen_Activity || 'none',

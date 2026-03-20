@@ -13,8 +13,7 @@
   "targetDBH": 2,
   "plenter_harvest": 2,
   "plenter_thinning": 2,
-  "salvage_harvest": 4,
-  "salvage_clearcut": 10,
+  "salvage_clearcut": { "steps": [5], "planting": 3 },
   "salvage_leave": 0,
   "noManagement": 0
 }

@@ -44,9 +44,14 @@ class socoabe_agent {
     _assign_behavioral_type() {
         if (this.owner.type === 'state') return 'MF';
         if (this.owner.type === 'big') return 'OP';
-        // small: draw from split
+        // small: deterministic draw from split using agent ID hash
+        // (ensures same agent always gets same type across runs)
         const split = SoCoABE_CONFIG.SMALL_PRIVATE_SPLIT;
-        const r = Math.random();
+        var hash = 0;
+        for (var i = 0; i < this.id.length; i++) {
+            hash = ((hash << 5) - hash + this.id.charCodeAt(i)) | 0;
+        }
+        const r = (Math.abs(hash) % 10000) / 10000;
         let cumulative = 0;
         for (const type in split) {
             cumulative += split[type];
@@ -124,8 +129,14 @@ class socoabe_agent {
             s = Cognition.think_reactive(s, this);
             this.managed_stands_data[stand_id] = s;
 
-            if (s.activity.chosen_Activity === 'salvage' && s.activity.is_actionable) {
+            // Deduct extraction cost (forced tax from 14-pt envelope, off-budget)
+            if (s.extraction_cost_pending && s.extraction_cost_pending > 0) {
+                this.unit_state.budget_spent = (this.unit_state.budget_spent || 0) + s.extraction_cost_pending;
+                this.unit_state.budget_remaining = (this.unit_state.budget_remaining || 0) - s.extraction_cost_pending;
+                SoCoLog.debug('[SALVAGE] Stand ' + stand_id + ': extraction cost ' +
+                              s.extraction_cost_pending + ' pts deducted (forced tax).');
                 this.unit_state.salvage_count_this_year++;
+                s.extraction_cost_pending = 0;
             }
         }
     }
@@ -150,23 +161,9 @@ class socoabe_agent {
 
             // Post-execution cleanup for single-shot (non-sequence) activities.
             // Sequences are handled by update_ongoing_sequence in think_reactive.
-            // Without this, single-shot stands keep chosen_Activity set and are
-            // skipped by plan_decade's candidate filter forever.
+            // Salvage_clearcut is set up as a sequence by plan_decade, so it skips this block.
             var act = scheduled[i].activity;
             if (!act.is_Sequence) {
-                // Salvage: full reset, no blocking. Stand reopens for
-                // normal classify() at next plan_decade.
-                if (act.chosen_Activity === 'salvage') {
-                    act.blocked_until_phase = null;
-                    act.blocked_since_year = -1;
-                    act.last_completed_phase = 'none';
-                    act.chosen_Activity = 'none';
-                    act.parameters = {};
-                    act.target_year = -1;
-                    act.is_actionable = false;
-                    continue;
-                }
-
                 // Record completed phase for hysteresis anchor
                 var completed_phase = Cognition.Phases.classify(scheduled[i]);
                 act.last_completed_phase = completed_phase;

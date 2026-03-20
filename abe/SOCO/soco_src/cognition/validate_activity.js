@@ -16,8 +16,8 @@ Cognition.validate_activity = function(stand_data_obj) {
     var age = stand_data_obj.iLand_stand_data.absolute_age_iLand;
     var act_name = activity.chosen_Activity;
 
-    // Salvage: always first
-    if (act_name === 'salvage' || act_name === 'salvage_harvest' || act_name === 'salvage_clearcut') {
+    // Salvage clearcut: always first (set by plan_decade PostDisturbance step)
+    if (act_name === 'salvage_clearcut') {
         activity.utility_score = 1000;
     }
     // Planting: high priority for empty stands
