@@ -1,0 +1,86 @@
+# ============================================
+# Pilot resilience design: bark beetle response
+# 4 landscapes x 4 aggregations x 2 climates x 2 conditions x 2 replicates = 128 runs
+# Timeline: 1-149 pre-disturbance | 150-160 outbreak | 161-250 recovery
+# ============================================
+
+[general]
+project_dir = "C:/Users/cv1055/Documents/SOCO_paper1"
+ilandc_exe  = "C:/Users/cv1055/Downloads/iLandPackage2.1-win/iLand/ilandc.exe"
+base_xml    = "small_Ex.xml"
+sim_years   = 250
+
+[paths]
+run_table          = "runner/run_table_pilot.csv"
+output_root        = "output/pilot_resilience"
+combined_dir       = "output/pilot_resilience/_combined"
+log_dir            = "runner/logs_pilot"
+status_dir         = "runner/status_pilot"
+extracted_data_dir = "resilience_analysis/pilot/data"
+figures_dir        = "resilience_analysis/pilot/figures"
+
+[experiment]
+design       = "factorial"
+clusters     = ["CLUSTER08", "CLUSTER02", "CLUSTER06", "CLUSTER10"]
+aggregations = ["matched_High", "matched_state_only",
+                "matched_small_only", "matched_big_only"]
+replicate_start = 1
+replicate_end   = 2
+
+[experiment.agent_mapping]
+matched_High           = "High"
+matched_state_only     = "state_only"
+matched_small_only     = "small_only"
+matched_big_only       = "big_only"
+
+[experiment.init_override]
+matched_High           = "base"
+matched_state_only     = "base"
+matched_small_only     = "base"
+matched_big_only       = "base"
+
+[climate]
+scenarios = ["historical", "rcp_8_5"]
+gcm = "ICHEC-EC-EARTH"
+
+[climate.co2]
+historical = 350
+rcp_8_5    = 850
+
+[condition]
+scenarios = ["control", "outbreak"]
+
+[condition.params.control]
+bb_enabled = "false"
+disturbance_start_year = "99999"
+outbreak_start_year = ""
+outbreak_end_year = ""
+outbreak_probability = "0.0"
+baseline_probability = "0.0"
+background_infestation_probability = "0.0"
+time_events_enabled = "false"
+
+[condition.params.outbreak]
+bb_enabled = "true"
+disturbance_start_year = "1"
+outbreak_start_year = "150"
+outbreak_end_year = "160"
+outbreak_probability = "0.01"
+baseline_probability = "0.0001"
+background_infestation_probability = "0.0001"
+time_events_enabled = "false"
+
+[analysis]
+data_start_year = 1
+baseline_start_year = 1
+baseline_end_year = 149
+outbreak_start_year = 150
+outbreak_end_year = 160
+recovery_start_year = 161
+recovery_end_year = 250
+resistance_end_year = 250
+baseline_species_year = 150
+
+[threading]
+max_workers        = 10
+threads_per_worker = 2

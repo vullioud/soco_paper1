@@ -1,0 +1,64 @@
+# ============================================
+# Paper 2 — Resilience Experiment (Full)
+# 5 landscapes × 5 aggregations × 1 disturbance × 5 replicates = 125 runs
+#
+# 300 simulation years.
+# BB active throughout at very low background (0.0001).
+# Outbreak yr 150-160 (prob 0.01), then back to 0.0001.
+# Data tracked for years 100-300.
+# ============================================
+
+[general]
+project_dir = "C:/Users/cv1055/Documents/SOCO_paper1"
+ilandc_exe  = "C:/Users/cv1055/Downloads/iLandPackage2.1-win/iLand/ilandc.exe"
+base_xml    = "small_Ex.xml"
+sim_years   = 300
+
+[experiment]
+design       = "factorial"
+clusters     = ["CLUSTER08", "CLUSTER02", "CLUSTER06", "CLUSTER10", "CLUSTER11"]
+aggregations = ["matched_High", "matched_Random", "matched_state_only",
+                "matched_small_only", "matched_big_only"]
+replicate_start = 1
+replicate_end   = 5
+
+[experiment.agent_mapping]
+matched_High           = "High"
+matched_Random         = "Random"
+matched_state_only     = "state_only"
+matched_small_only     = "small_only"
+matched_big_only       = "big_only"
+
+# All aggregation scenarios reuse the same base forest init.
+[experiment.init_override]
+matched_High           = "base"
+matched_Random         = "base"
+matched_state_only     = "base"
+matched_small_only     = "base"
+matched_big_only       = "base"
+
+[disturbance]
+scenarios = ["outbreak"]
+
+[disturbance.params.outbreak]
+bb_enabled = "true"
+disturbance_start_year = "1"
+outbreak_start_year = "150"
+outbreak_end_year = "160"
+outbreak_probability = "0.01"
+baseline_probability = "0.0001"
+background_infestation_probability = "0.0001"
+time_events_enabled = "false"
+
+[climate]
+gcm = "ICHEC-EC-EARTH"
+scenarios = ["historical", "rcp_4_5", "rcp_8_5"]
+
+[climate.co2]
+historical = 350
+rcp_4_5    = 490
+rcp_8_5    = 850
+
+[threading]
+max_workers        = 12
+threads_per_worker = 2

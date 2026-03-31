@@ -267,7 +267,7 @@
 
             <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
             <!-- UPDATED: Using regular grid environment file -->
-            <environmentFile>init/random/rep_001/env_file_diverse_seed1.csv</environmentFile>
+            <environmentFile>init/CLUSTER10/base/rep_001/env_file_diverse_seed1.csv</environmentFile>
             <areaMask>
                 <enabled>false</enabled>
                 <imageFile></imageFile>
@@ -344,9 +344,9 @@
             <type>distribution</type>
             <randomFunction>max(1-x^2,0)</randomFunction>
             <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
-            <file>random/rep_001/tree2_diverse_seed1.csv</file>
+            <file>CLUSTER10/base/rep_001/tree2_diverse_seed1.csv</file>
             <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
-            <saplingFile>random/rep_001/sapling2_diverse_seed1.csv</saplingFile>
+            <saplingFile>CLUSTER10/base/rep_001/sapling2_diverse_seed1.csv</saplingFile>
             <!-- sap_init.txt or empty_saplings.csv -->
             <snags>
                 <!-- SWD C, SWD count, SWD CN, Ast/Wurzel C, Ast/Wurzel CN, ksw, hl -->
@@ -400,15 +400,14 @@
     <!-- Volume, Age, Height, Basal Area per stand -->
     <abeStand>
         <enabled>true</enabled>
-        <condition></condition> 
+        <condition>year>=1</condition>
     </abeStand>
 
     <!-- 3. SPECIES COMPOSITION (The "Details") -->
     <!-- Replaces your JSON species list. One row per species per stand -->
     <abeStandDetail>
         <enabled>true</enabled>
-        <!-- Optimization: If file size gets too big, output every 5 years: -->
-        <!-- <condition>mod(year, 5)=0</condition> -->
+        <condition>year>=1</condition>
     </abeStandDetail>
 
     <!-- 4. HARVESTS (The "Action") -->
@@ -589,7 +588,11 @@
         <output_prefix></output_prefix>
         <!-- Disturbance control (overridable via command line) -->
         <bb_enabled>true</bb_enabled>
-        <disturbance_start_year>0</disturbance_start_year>
-        <outbreak_probability>0.000685</outbreak_probability>
+        <disturbance_start_year>200</disturbance_start_year>
+        <outbreak_probability>0.001</outbreak_probability>
+        <baseline_probability>0.00001</baseline_probability>
+        <outbreak_start_year>200</outbreak_start_year>
+        <outbreak_end_year>300</outbreak_end_year>
+        <management_enabled>true</management_enabled>
     </user>
 </project>

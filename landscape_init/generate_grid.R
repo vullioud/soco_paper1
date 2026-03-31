@@ -29,23 +29,31 @@ stand_dir  <- "../abe/SOCO/stand_files"          # Agent CSV tables
 
 # Source BWI landscapes (from init_german_landcape_rep/)
 source_data_dir <- "init_german_landcape_rep"
-source_landscapes <- list(
-  list(name = "CLUSTER05",
-       trees = file.path(source_data_dir, "trees_CLUSTER05.csv"),
-       saps  = file.path(source_data_dir, "saplings_CLUSTER05.csv"),
-       env   = file.path(source_data_dir, "env_file_CLUSTER05_REPL0_ICHEC-EC-EARTH_historical.csv")),
-  list(name = "CLUSTER10",
-       trees = file.path(source_data_dir, "trees_CLUSTER10.csv"),
-       saps  = file.path(source_data_dir, "saplings_CLUSTER10.csv"),
-       env   = file.path(source_data_dir, "env_file_CLUSTER10_REPL1_ICHEC-EC-EARTH_historical.csv")),
-  list(name = "CLUSTER14",
-       trees = file.path(source_data_dir, "trees_CLUSTER14.csv"),
-       saps  = file.path(source_data_dir, "saplings_CLUSTER14.csv"),
-       env   = file.path(source_data_dir, "env_file_CLUSTER14_REPL0_ICHEC-EC-EARTH_historical.csv"))
-)
+# All 12 BWI landscape clusters
+all_cluster_ids <- c("02","03","04","05","06","07","08","10","11","12","13","14")
 
-# Which clustering scenarios to generate init files for
-active_scenarios <- c("Random", "High", "state_only")
+# Climate scenarios: GCM + scenario combinations
+# "historical" is the baseline; RCP variants use the same trees/saplings but different env files
+climate_gcm <- "ICHEC-EC-EARTH"
+climate_scenarios <- c("historical", "rcp_4_5", "rcp_8_5")
+
+source_landscapes <- lapply(all_cluster_ids, function(cl_id) {
+  cl_name <- paste0("CLUSTER", cl_id)
+  list(
+    name  = cl_name,
+    trees = file.path(source_data_dir, paste0("trees_", cl_name, ".csv")),
+    saps  = file.path(source_data_dir, paste0("saplings_", cl_name, ".csv")),
+    env   = file.path(source_data_dir,
+                      paste0("env_file_", cl_name, "_REPL0_", climate_gcm, "_historical.csv"))
+  )
+})
+
+# Which ownership scenarios to export agent tables for.
+# These differ only in who manages which stand; forest init is shared.
+ownership_scenarios <- c("Random", "High", "state_only", "small_only", "big_only")
+
+# Shared init folder name used by all aggregation scenarios in the runner.
+base_init_name <- "base"
 
 # --- 1. Generate landscape raster ---
 message("Generating regular grid landscape...")
@@ -89,30 +97,47 @@ for (landscape in source_landscapes) {
     ldir  <- file.path(init_dir, lname)
     message(sprintf("\n>>> Source landscape: %s >>>", lname))
 
-    # RANDOM MODE: One set of files, scenario-agnostic
+    # BASE MODE: One shared set of files per cluster/replicate.
+    # Aggregation scenarios differ only by agent table, not by forest init.
     generate_all_replicates(
         seeds              = 1:10,
         mode               = "random",
-        output_dir         = file.path(ldir, "random"),
+        output_dir         = file.path(ldir, base_init_name),
         source_tree_csv    = landscape$trees,
         source_sapling_csv = landscape$saps,
         source_env_csv     = landscape$env
     )
+}
 
-    # MATCHED MODE: One set per active clustering scenario
-    for (scenario_name in active_scenarios) {
-        if (!scenario_name %in% names(landscape_owner_list)) {
-            message(sprintf("  SKIP: scenario '%s' not found", scenario_name))
+# --- 6. Generate climate-variant env files (RCP scenarios) ---
+# Trees and saplings are climate-independent — only env files change.
+# Uses existing stand mappings from step 5 and swaps the source env file.
+message("\n", strrep("=", 60))
+message("GENERATING CLIMATE-VARIANT ENV FILES")
+message(strrep("=", 60))
+
+for (clim in climate_scenarios) {
+    if (clim == "historical") next   # already generated in step 5
+    message(sprintf("\n--- Climate scenario: %s ---", clim))
+
+    for (landscape in source_landscapes) {
+        lname <- landscape$name
+        cl_id <- sub("CLUSTER", "", lname)
+
+        # Source env for this climate scenario
+        clim_env <- file.path(source_data_dir,
+                              paste0("env_file_", lname, "_REPL0_", climate_gcm, "_", clim, ".csv"))
+        if (!file.exists(clim_env)) {
+            message(sprintf("  SKIP %s: source env not found (%s)", lname, clim_env))
             next
         }
-        generate_all_replicates(
-            seeds              = 1:10,
-            mode               = "matched",
-            output_dir         = file.path(ldir, paste0("matched_", scenario_name)),
-            owner_map          = landscape_owner_list[[scenario_name]],
-            source_tree_csv    = landscape$trees,
-            source_sapling_csv = landscape$saps,
-            source_env_csv     = landscape$env
+
+        # Shared base mode
+        regenerate_climate_env_all_replicates(
+            seeds          = 1:10,
+            source_env_csv = clim_env,
+            climate_label  = clim,
+            output_dir     = file.path(init_dir, lname, base_init_name)
         )
     }
 }

@@ -24,12 +24,22 @@ landscape_init/*.py
 landscape_init/*.txt
 landscape_init/*.md
 landscape_init/init_german_landcape_rep/
+scripts/wind_Events/
 
 # --- Analysis, docs, batch runner ---
-analysis/
+/analysis/
 analysis_batch/data/
 analysis_batch/co_author_report/figures/
-runner/
+resilience_analysis/**/data/
+resilience_analysis/**/figures/
+runner/*
+!runner/00_clean.py
+!runner/01_generate_run_table.py
+!runner/02_run_parallel.py
+!runner/03_post_process.py
+!runner/config.toml
+!runner/README.md
+!runner/summarize.py
 abe/SOCO/soco_src/docs/
 
 # --- Generated / temp files ---

@@ -514,3 +514,92 @@ generate_all_replicates <- function(
 
   message(sprintf("\nDone: %d replicates in %s", length(seeds), output_dir))
 }
+
+
+# ==============================================================================
+# CLIMATE ENV REGENERATION
+# ==============================================================================
+# Re-generates env files for a different climate scenario using existing
+# stand mappings. Trees and saplings are climate-independent and stay unchanged.
+# ==============================================================================
+
+regenerate_env_for_climate <- function(
+    seed,
+    source_env_csv,
+    climate_label,
+    output_dir,
+    n_stands        = 400L,
+    n_cells_per_dim = 40L,
+    cells_per_stand = 2L
+) {
+  rep_dir <- file.path(output_dir, sprintf("rep_%03d", seed))
+  map_file <- file.path(rep_dir, sprintf("stand_mapping_seed%d.csv", seed))
+
+  if (!file.exists(map_file)) {
+    warning(sprintf("Missing mapping: %s — skipping", map_file))
+    return(invisible(NULL))
+  }
+
+  mapping <- read_csv(map_file, show_col_types = FALSE)
+  src_env <- read_csv(source_env_csv, show_col_types = FALSE)
+  src_env_summary <- summarise_env_by_stand(src_env)
+
+  n_per_row <- n_cells_per_dim / cells_per_stand
+  grid_cells <- build_grid_cell_map(n_stands, n_per_row, cells_per_stand)
+
+  # Reassemble env using existing mapping
+  env_out <- vector("list", nrow(mapping))
+  for (r in seq_len(nrow(mapping))) {
+    new_id <- mapping$new_id[r]
+    src_key <- as.character(mapping$source_id[r])
+    env_row <- src_env_summary %>% filter(as.character(id) == src_key)
+    if (nrow(env_row) > 0) {
+      cells <- grid_cells %>% filter(stand_id == new_id)
+      env_out[[r]] <- data.frame(
+        id                            = new_id,
+        x                             = cells$x_cell,
+        y                             = cells$y_cell,
+        model.site.soilDepth          = env_row$soilDepth,
+        model.site.pctSand            = env_row$pctSand,
+        model.site.pctClay            = env_row$pctClay,
+        model.site.pctSilt            = env_row$pctSilt,
+        model.site.availableNitrogen  = env_row$availableNitrogen,
+        model.climate.tableName       = env_row$climate_table,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  env_df <- bind_rows(env_out)
+
+  env_file <- file.path(rep_dir, sprintf("env_file_diverse_seed%d_%s.csv", seed, climate_label))
+  write_csv(env_df, env_file)
+  message(sprintf("  Written climate env: %s (%d rows)", env_file, nrow(env_df)))
+  invisible(env_df)
+}
+
+
+regenerate_climate_env_all_replicates <- function(
+    seeds,
+    source_env_csv,
+    climate_label,
+    output_dir,
+    ...
+) {
+  message(sprintf("\n%s", strrep("=", 60)))
+  message(sprintf("Regenerating env for climate=%s (%d replicates)", climate_label, length(seeds)))
+  message(sprintf("Source env: %s", source_env_csv))
+  message(sprintf("Output: %s", output_dir))
+  message(strrep("=", 60))
+
+  for (s in seeds) {
+    regenerate_env_for_climate(
+      seed           = s,
+      source_env_csv = source_env_csv,
+      climate_label  = climate_label,
+      output_dir     = output_dir,
+      ...
+    )
+  }
+
+  message(sprintf("\nDone: %d climate env files in %s", length(seeds), output_dir))
+}

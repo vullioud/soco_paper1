@@ -14,7 +14,7 @@ cat("=== 04 Ownership Maps ===\n")
 # 1. Read env file and compute stand centroids
 # ---------------------------------------------------------------------------
 env <- read.csv(
-  "init/CLUSTER10/matched_High/rep_001/env_file_diverse_seed1.csv",
+  "init/CLUSTER10/base/rep_001/env_file_diverse_seed1.csv",
   stringsAsFactors = FALSE
 )
 
