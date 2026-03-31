@@ -36,10 +36,32 @@ try {
         var bp_val = Globals.setting('user.baseline_probability');
         if (bp_val) SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY = parseFloat(bp_val);
     } catch(e) {}
+    // Override outbreak window (resilience experiment: years 150-210)
+    try {
+        var os_val = Globals.setting('user.outbreak_start_year');
+        var oe_val = Globals.setting('user.outbreak_end_year');
+        if (os_val && oe_val) {
+            var ob_start = parseInt(os_val, 10);
+            var ob_end = parseInt(oe_val, 10);
+            var ob_years = [];
+            for (var oy = ob_start; oy <= ob_end; oy++) ob_years.push(oy);
+            SoCoABE_CONFIG.BARK_BEETLE.OUTBREAK_YEARS = ob_years;
+            console.log("[CONFIG] Outbreak window overridden: years " + ob_start + "-" + ob_end);
+        }
+    } catch(e) {}
+    // Override management enabled flag (no-management control)
+    try {
+        var mgmt_val = Globals.setting('user.management_enabled');
+        if (mgmt_val === 'false') {
+            SoCoABE_CONFIG.MANAGEMENT_ENABLED = false;
+            console.log("[CONFIG] Management DISABLED (no-management control)");
+        }
+    } catch(e) {}
     console.log("[CONFIG] BB=" + SoCoABE_CONFIG.BARK_BEETLE.ENABLED +
         " start=" + SoCoABE_CONFIG.DISTURBANCE_START_YEAR +
         " outbreakProb=" + SoCoABE_CONFIG.BARK_BEETLE.OUTBREAK_PROBABILITY +
-        " baselineProb=" + SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY);
+        " baselineProb=" + SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY +
+        " mgmt=" + SoCoABE_CONFIG.MANAGEMENT_ENABLED);
 
     // --- Register ABE Components ---
     if (typeof MegaSTP === 'undefined') throw new Error("MegaSTP object not defined.");
@@ -104,8 +126,12 @@ function onAfterInit() {
         
         console.log("--- All stands cleaned and assigned to SoCo_MegaSTP. ---");
 
-        socoabe = new socoabe_main();
-        socoabe.initialize();
+        if (SoCoABE_CONFIG.MANAGEMENT_ENABLED !== false) {
+            socoabe = new socoabe_main();
+            socoabe.initialize();
+        } else {
+            console.log("--- SoCoABE management DISABLED: stands remain unmanaged ---");
+        }
 
         console.log("\n--- SoCoABE INITIALIZATION COMPLETE ---");
         
@@ -149,8 +175,9 @@ function run(year) {
         // Activate: enable module and restore real background probability
         try {
             BarkBeetle.enabled = true;
-            BarkBeetle.setBackgroundInfestationProbability(0.000685);
-            console.log('[DISTURBANCE] Year ' + year + ': Disturbances ACTIVATED. BB prob restored to 0.000685.');
+            var activationProb = SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY || 0.000685;
+            BarkBeetle.setBackgroundInfestationProbability(activationProb);
+            console.log('[DISTURBANCE] Year ' + year + ': Disturbances ACTIVATED. BB prob restored to ' + activationProb + '.');
         } catch (e) {
             console.log('[DISTURBANCE] Warning: could not enable BB module: ' + e.message);
         }
