@@ -46,11 +46,17 @@ class socoabe_agent {
         if (this.owner.type === 'big') return 'OP';
         // small: deterministic draw from split using agent ID hash
         // (ensures same agent always gets same type across runs)
+        // Uses FNV-1a hash for better distribution of sequential IDs
         const split = SoCoABE_CONFIG.SMALL_PRIVATE_SPLIT;
-        var hash = 0;
+        var hash = 2166136261;  // FNV offset basis (32-bit)
         for (var i = 0; i < this.id.length; i++) {
-            hash = ((hash << 5) - hash + this.id.charCodeAt(i)) | 0;
+            hash ^= this.id.charCodeAt(i);
+            hash = Math.imul(hash, 16777619) | 0;  // FNV prime
         }
+        // Extra mixing: xorshift to break remaining patterns
+        hash ^= hash >>> 16;
+        hash = Math.imul(hash, 0x45d9f3b) | 0;
+        hash ^= hash >>> 16;
         const r = (Math.abs(hash) % 10000) / 10000;
         let cumulative = 0;
         for (const type in split) {

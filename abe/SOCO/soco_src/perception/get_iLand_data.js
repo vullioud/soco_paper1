@@ -30,8 +30,8 @@ Perception.get_iLand_data = function(stand_data_obj) {
         stand.trees.sort('dbh');
         data.max_dbh = stand.trees.percentile(100);
 
-        // Large trees: DBH >= 40 cm, scaled to per hectare
-        var n_large = stand.trees.sum('1', 'dbh>=40');
+        // Large trees: DBH >= 30 cm, scaled to per hectare (Albrich 2020 GCB)
+        var n_large = stand.trees.sum('1', 'dbh>=30');
         data.n_large_trees = (stand.area > 0) ? n_large / stand.area : 0;
 
         // Height standard deviation
@@ -75,6 +75,7 @@ Perception.get_iLand_data = function(stand_data_obj) {
     data.disturbance_cost           = stand.flag('abe_disturbance_cost') || 0;
     data.actual_salvage_volume_m3ha = stand.flag('abe_actual_salvage_volume_m3ha') || 0;
     data.deadwood_retained_m3ha     = stand.flag('abe_deadwood_retained_m3ha') || 0;
+    data.disturbance_type           = stand.flag('abe_disturbance_type') || '';
 
     // Clear one-shot disturbance notification on iLand side
     // (side-effect only — value is NOT stored on stand_data)

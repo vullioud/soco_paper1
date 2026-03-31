@@ -84,23 +84,34 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
             WARN: true
         },
 
+        // Management control: set to false to disable SoCoABE cognitive system
+        // (no-management control — forest grows with disturbances only)
+        MANAGEMENT_ENABLED: true,
+
         // Disturbance control: suppress all disturbances before this year.
         // Both wind and bark beetle XML modules remain enabled but are
         // neutered via JS API until this year, then restored to XML defaults.
         DISTURBANCE_START_YEAR: 1,
 
         // Bark beetle outbreak scenario (on top of XML baseline)
-        // Sustained pressure from year 100 to 150, moderate probability
+        // Default outbreak window: years 200-300 (treatment period)
+        // Timeline: 0-100 warmup | 100-200 control (no BB) | 200-300 treatment
+        // Overridable via user.outbreak_start_year / user.outbreak_end_year CLI params
         BARK_BEETLE: {
             ENABLED: true,
             OUTBREAK_YEARS: [
-                100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-                111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-                121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
-                131, 132, 133, 134, 135, 136, 137, 138, 139, 140,
-                141, 142, 143, 144, 145, 146, 147, 148, 149, 150],
-            OUTBREAK_PROBABILITY: 0.005,
-            BASELINE_PROBABILITY: 0.000685,
+                200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
+                211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                221, 222, 223, 224, 225, 226, 227, 228, 229, 230,
+                231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
+                241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
+                251, 252, 253, 254, 255, 256, 257, 258, 259, 260,
+                261, 262, 263, 264, 265, 266, 267, 268, 269, 270,
+                271, 272, 273, 274, 275, 276, 277, 278, 279, 280,
+                281, 282, 283, 284, 285, 286, 287, 288, 289, 290,
+                291, 292, 293, 294, 295, 296, 297, 298, 299, 300],
+            OUTBREAK_PROBABILITY: 0.001,
+            BASELINE_PROBABILITY: 0.00001,
             LOG_ENABLED: true
         },
 
@@ -117,7 +128,11 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
             MAX_CARRYOVER_FACTOR: 2.0,
             ALLOW_DEBT: true,
             MAX_DEBT_FACTOR: 0.5,
-            DISTURBANCE_ENVELOPE: 8            // salvage clearcut cost = max(0, envelope - extraction_paid) + planting
+            DISTURBANCE_ENVELOPE: 8,           // salvage clearcut cost = max(0, envelope - extraction_paid) + planting
+            BUDGET_STRETCH: {
+                REFERENCE_PRESSURE: 2.0,       // pts/stand/decade at which stretch=1.0 (≈ MF level)
+                MAX_STRETCH: 3.0               // cap to prevent absurd intervals
+            }
         },
 
         // Phase windows with start-by cutoffs (can't start new activity after start_by)

@@ -81,7 +81,9 @@ var Monitoring = {
             blocked_until:    stand_data_obj.activity.blocked_until_phase || 'none',
             last_completed:   stand_data_obj.activity.last_completed_phase || 'none',
             chosen_activity:  stand_data_obj.activity.chosen_Activity || 'none',
-            is_sequence:      stand_data_obj.activity.is_Sequence ? 1 : 0
+            is_sequence:      stand_data_obj.activity.is_Sequence ? 1 : 0,
+            wet_type:         stand_data_obj.wet_type || 'b',
+            disturbance_type: d.disturbance_type || ''
         });
     },
 
@@ -90,7 +92,8 @@ var Monitoring = {
             "age,volume,basal_area,top_height,mean_dbh,stems," +
             "dbh_sd,dbh_gini,n_large_trees,n_height_layers,height_sd,max_dbh," +
             "age_phase,structural_phase,active_phase,engine,phase_match," +
-            "blocked_until,last_completed,chosen_activity,is_sequence";
+            "blocked_until,last_completed,chosen_activity,is_sequence," +
+            "wet_type,disturbance_type";
         var lines = [header];
 
         for (var i = 0; i < this.stand_state_log.length; i++) {
@@ -112,7 +115,8 @@ var Monitoring = {
                 r.age_phase + "," + r.structural_phase + "," +
                 r.active_phase + "," + r.engine + "," + r.phase_match + "," +
                 r.blocked_until + "," + r.last_completed + "," +
-                r.chosen_activity + "," + r.is_sequence;
+                r.chosen_activity + "," + r.is_sequence + "," +
+                r.wet_type + "," + r.disturbance_type;
             lines.push(line);
         }
 
@@ -152,7 +156,8 @@ var Monitoring = {
             deadwood_retained_m3ha:     0,
             disturbance_severity_frac:  0,
             extraction_cost_paid:       0,
-            remnant_decision:           'none'
+            remnant_decision:           'none',
+            disturbance_type:           ''
         };
 
         this.ml_activity_log.push(record);
@@ -186,7 +191,8 @@ var Monitoring = {
             deadwood_retained_m3ha:     0,
             disturbance_severity_frac:  0,
             extraction_cost_paid:       0,
-            remnant_decision:           'none'
+            remnant_decision:           'none',
+            disturbance_type:           ''
         };
 
         // Populate salvage-specific fields when applicable
@@ -199,6 +205,7 @@ var Monitoring = {
             record.disturbance_severity_frac = stand.flag('abe_disturbance_severity') || 0;
             record.extraction_cost_paid = stand.flag('abe_extraction_cost_paid') || 0;
             record.remnant_decision = stand.flag('abe_param_salvage_type') || 'none';
+            record.disturbance_type = stand.flag('abe_disturbance_type') || '';
         }
 
         this.ml_activity_log.push(record);
@@ -211,7 +218,7 @@ var Monitoring = {
             "age_t0,volume_t0,basal_area_t0,top_height_t0," +
             "species_composition_t0,parameters," +
             "salvage_fraction,actual_salvage_volume_m3ha,deadwood_retained_m3ha,disturbance_severity_frac," +
-            "extraction_cost_paid,remnant_decision";
+            "extraction_cost_paid,remnant_decision,disturbance_type";
         var lines = [header];
 
         for (var i = 0; i < this.ml_activity_log.length; i++) {
@@ -231,7 +238,8 @@ var Monitoring = {
                 this._safeFixed(r.deadwood_retained_m3ha, 2) + "," +
                 this._safeFixed(r.disturbance_severity_frac, 3) + "," +
                 this._safeFixed(r.extraction_cost_paid, 0) + "," +
-                (r.remnant_decision || 'none');
+                (r.remnant_decision || 'none') + "," +
+                (r.disturbance_type || '');
             lines.push(line);
         }
 

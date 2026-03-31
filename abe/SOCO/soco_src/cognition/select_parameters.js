@@ -23,6 +23,22 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
         params[key] = params_for_type[key];
     }
 
+    // Budget stretch: widen interval for budget-constrained agents.
+    // Poor agents do the same silviculture, just less frequently.
+    var budget_cfg = SoCoABE_CONFIG.BUDGET || {};
+    var stretch_cfg = budget_cfg.BUDGET_STRETCH;
+    if (stretch_cfg && params.interval && agent.resources > 0) {
+        var pps = budget_cfg.POINTS_PER_STAND_PER_DECADE || 3;
+        var pressure = agent.resources * pps;
+        var stretch = Math.min(
+            stretch_cfg.MAX_STRETCH || 3.0,
+            Math.max(1.0, (stretch_cfg.REFERENCE_PRESSURE || 2.0) / pressure)
+        );
+        if (stretch > 1.0) {
+            params.interval = Math.round(params.interval * stretch);
+        }
+    }
+
     stand_data_obj.activity.parameters = params;
     return stand_data_obj;
 };

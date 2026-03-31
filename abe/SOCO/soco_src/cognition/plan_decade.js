@@ -151,12 +151,24 @@ Cognition.plan_decade = function(agent, current_year) {
         // Estimate cost: only for steps landing in THIS decade
         var h_decade_cost = Cognition._estimate_decade_cost(hs, current_year, cost_table);
 
-        // Budget check
+        // Budget check: this decade
         if (h_decade_cost > remaining_budget) {
             // Can't afford — defer, DON'T consume harvest_target slot
             hs.activity.chosen_Activity = 'none';
             hs.activity.is_actionable = false;
             hs.activity.carryover_count = (hs.activity.carryover_count || 0) + 1;
+            continue;
+        }
+
+        // Full-sequence affordability: can the agent sustain future ongoing costs?
+        if (!Cognition._can_afford_sequence(hs, base_budget, cost_table)) {
+            hs.activity.chosen_Activity = 'none';
+            hs.activity.is_actionable = false;
+            hs.activity.carryover_count = (hs.activity.carryover_count || 0) + 1;
+            SoCoLog.debug('[PLAN-DECADE] Sequence too expensive for sustained income: ' +
+                          hs.stand_id + ' act=' + hact +
+                          ' totalCost=' + Cognition._estimate_total_cost(hs, cost_table) +
+                          ' baseBudget=' + base_budget);
             continue;
         }
 
@@ -384,6 +396,21 @@ Cognition.plan_decade = function(agent, current_year) {
             continue;
         }
 
+        // Full-sequence affordability: can the agent sustain future ongoing costs?
+        if (!Cognition._can_afford_sequence(s, base_budget, cost_table)) {
+            s.activity.chosen_Activity = 'none';
+            s.activity.is_actionable = false;
+            s.activity.carryover_count = (s.activity.carryover_count || 0) + 1;
+            SoCoLog.debug('[PLAN-DECADE] Sequence too expensive for sustained income: ' +
+                          s.stand_id + ' act=' + act +
+                          ' totalCost=' + Cognition._estimate_total_cost(s, cost_table) +
+                          ' baseBudget=' + base_budget);
+            if (Monitoring.isDecadeLogEnabled()) {
+                Monitoring.log_decade_decision(agent, current_year, uph, s, ui, false);
+            }
+            continue;
+        }
+
         // Commit
         remaining_budget -= decade_cost;
         agent.unit_state.budget_spent += decade_cost;
@@ -478,6 +505,56 @@ Cognition._estimate_decade_cost = function(stand_data_obj, current_year, cost_ta
         }
     }
     return Math.max(1, total);
+};
+
+
+/**
+ * Estimate TOTAL cost of an activity across ALL decades (full sequence lifetime).
+ * Used to gate commitments: don't start a sequence the agent can't sustain.
+ */
+Cognition._estimate_total_cost = function(stand_data_obj, cost_table) {
+    var act = stand_data_obj.activity;
+    var includes_planting = act.chosen_Activity.indexOf('_planting') > -1
+                         && act.chosen_Activity.indexOf('_no_planting') === -1;
+    var base_activity = act.chosen_Activity
+        .replace('_planting', '').replace('_no_planting', '');
+    var cost_entry = cost_table[act.chosen_Activity] || cost_table[base_activity] || 2;
+
+    if (!act.is_Sequence || !act.timeline || act.timeline.length === 0) {
+        return Cognition._step_cost(cost_entry, 0, 1, includes_planting);
+    }
+
+    var total = 0;
+    var total_steps = act.timeline.length;
+    for (var i = 0; i < total_steps; i++) {
+        total += Cognition._step_cost(cost_entry, i, total_steps, includes_planting);
+    }
+    return total;
+};
+
+
+/**
+ * Check whether an agent can sustain a multi-decade sequence.
+ * Compares total sequence cost against projected base-budget income
+ * over the sequence's span. Returns true if affordable or single-shot.
+ *
+ * base_budget: the agent's raw per-decade budget (resources × n_stands × PPS),
+ *              excluding carryover — this is the stable income projection.
+ */
+Cognition._can_afford_sequence = function(stand_data_obj, base_budget, cost_table) {
+    var act = stand_data_obj.activity;
+    if (!act.is_Sequence || !act.timeline || act.timeline.length <= 1) {
+        return true;  // single-shot — no future burden
+    }
+
+    var total_cost = Cognition._estimate_total_cost(stand_data_obj, cost_table);
+    var first_year = act.timeline[0];
+    var last_year  = act.timeline[act.timeline.length - 1];
+    var span_decades = Math.ceil((last_year - first_year) / 10) + 1;
+
+    // Total cost must fit within projected income over the sequence's duration.
+    // This ensures ongoing_cost in future decades stays within budget on average.
+    return total_cost <= base_budget * span_decades;
 };
 
 

@@ -28,6 +28,7 @@ scripts/wind_Events/
 
 # --- Analysis, docs, batch runner ---
 /analysis/
+analysis_batch/
 analysis_batch/data/
 analysis_batch/co_author_report/figures/
 resilience_analysis/**/data/
@@ -60,3 +61,4 @@ __pycache__/
 .Rhistory
 .RData
 .claude/
+*.md

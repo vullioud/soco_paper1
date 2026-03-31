@@ -1218,6 +1218,15 @@ MEGA_STP_ACTIVITIES['salvage'] = {
     // Agent differentiation happens through post-salvage remnant management (clearcut vs leave),
     // decided in plan_decade's PostDisturbance step.
 
+    // Called by iLand C++ when bark beetle attacks this stand.
+    // Fires BEFORE onAfterDisturbance, so the flag is available when we need it.
+    // Returns false = do not cancel the disturbance (let iLand process it normally).
+    onBarkBeetleAttack: function(generations, infested_pixels_ha) {
+        stand.setFlag('abe_disturbance_type', 'bb');
+        stand.setFlag('abe_bb_generations', generations);
+        return false;
+    },
+
     // Called automatically by iLand C++ when disturbance is detected on any managed stand.
     // Stand context IS correct here (inside ABE executeActivity).
     onAfterDisturbance: function(disturbedVolume) {
@@ -1236,12 +1245,21 @@ MEGA_STP_ACTIVITIES['salvage'] = {
                       (severity_fraction * 100).toFixed(1) + '%), cost=' +
                       extraction_cost + '/' + DISTURBANCE_ENVELOPE + ' pts');
 
+        // Determine disturbance source (wind vs bark beetle)
+        // onBarkBeetleAttack sets 'abe_disturbance_type' to 'bb' BEFORE this callback fires.
+        // If the flag is absent/empty, the disturbance was wind (no BB attack preceded it).
+        var dist_type = stand.flag('abe_disturbance_type') || 'wind';
+        // Clear the BB-detection flag immediately so it doesn't persist to future events.
+        // The resolved dist_type gets re-set on the flag below (line ~1259) for SOCO to read.
+        stand.setFlag('abe_disturbance_type', '');
+
         // Set flags for SOCO perception to read
         stand.setFlag('abe_disturbance_detected', true);
         stand.setFlag('abe_disturbance_year', Globals.year);
         stand.setFlag('abe_disturbance_volume', disturbedVolume);
         stand.setFlag('abe_disturbance_severity', severity_fraction);
         stand.setFlag('abe_disturbance_severity_m3ha', severity_m3ha);
+        stand.setFlag('abe_disturbance_type', dist_type);
 
         // 100% extraction by iLand C++ (Option B)
         stand.setFlag('abe_actual_salvage_volume_m3ha', severity_m3ha);
@@ -1289,7 +1307,8 @@ MEGA_STP_ACTIVITIES['salvage'] = {
             severity_m3ha: severity_m3ha,
             severity_fraction: severity_fraction,
             volume_remaining: stand.volume,
-            extraction_cost: extraction_cost
+            extraction_cost: extraction_cost,
+            disturbance_type: dist_type
         });
 
         SoCoLog.debug(`  -> Flags set. SOCO will decide salvage response.`);

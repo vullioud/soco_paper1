@@ -1,0 +1,82 @@
+# ============================================
+# Paper 1 Experiment Design — V5
+# 4 disturbance regimes:
+#   contbb — constant moderate BB from yr0
+#   bb     — BB spike yr100-150
+#   wind   — low BB baseline + wind storms from yr100
+#   nod    — no disturbance (control)
+# 200 simulation years, all clusters
+# ============================================
+
+[general]
+project_dir = "C:/Users/cv1055/Documents/SOCO_paper1"
+ilandc_exe  = "C:/Users/cv1055/Downloads/iLandPackage2.1-win/iLand/ilandc.exe"
+base_xml    = "small_Ex.xml"
+sim_years   = 200
+
+[experiment]
+design       = "oat"   # "factorial" or "oat"
+clusters     = ["CLUSTER05", "CLUSTER10", "CLUSTER14"]
+aggregations = ["matched_High", "matched_Random", "matched_state_only", "matched_small_only", "matched_big_only"]
+replicate_start = 1
+replicate_end   = 3
+
+[experiment.oat_reference]
+cluster     = "CLUSTER10"
+aggregation = "matched_High"
+disturbance = "contbb"
+replicate   = 1
+
+[experiment.agent_mapping]
+matched_High       = "High"
+matched_Random     = "Random"
+matched_state_only = "state_only"
+matched_small_only = "small_only"
+matched_big_only   = "big_only"
+
+# All aggregation scenarios reuse the same base forest init.
+[experiment.init_override]
+matched_High       = "base"
+matched_Random     = "base"
+matched_state_only = "base"
+matched_small_only = "base"
+matched_big_only   = "base"
+
+[disturbance]
+scenarios = ["contbb", "bb", "wind", "nod"]
+
+[disturbance.params.contbb]
+bb_enabled = "true"
+disturbance_start_year = "0"
+outbreak_probability = "0.001"
+baseline_probability = "0.001"
+background_infestation_probability = "0.001"
+time_events_enabled = "false"
+
+[disturbance.params.bb]
+bb_enabled = "true"
+disturbance_start_year = "100"
+outbreak_probability = "0.0025"
+baseline_probability = "0.000685"
+background_infestation_probability = "0.000685"
+time_events_enabled = "false"
+
+[disturbance.params.wind]
+bb_enabled = "true"
+disturbance_start_year = "0"
+outbreak_probability = "0"
+baseline_probability = "0.000685"
+background_infestation_probability = "0.000685"
+time_events_enabled = "true"
+
+[disturbance.params.nod]
+bb_enabled = "false"
+disturbance_start_year = "99999"
+outbreak_probability = "0"
+baseline_probability = "0"
+background_infestation_probability = "0.00001"
+time_events_enabled = "false"
+
+[threading]
+max_workers        = 11  # parallel ilandc processes (one per OAT run)
+threads_per_worker = 2   # iLand internal threads per process
