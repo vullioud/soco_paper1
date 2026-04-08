@@ -28,8 +28,7 @@ Action.trigger_activity = function(stand_data_obj, agent) {
     // Resolve compound harvest+planting names for dispatch routing.
     var includes_planting = cognitive_activity_name.indexOf('_planting') > -1
                          && cognitive_activity_name.indexOf('_no_planting') === -1;
-    var base_cognitive_name = cognitive_activity_name
-        .replace('_planting', '').replace('_no_planting', '');
+    var base_cognitive_name = Cognition.normalize_activity_name(cognitive_activity_name);
 
     // --- 3. MAPPING LOGIC ---
     // Map cognitive activity name to execution activity name.

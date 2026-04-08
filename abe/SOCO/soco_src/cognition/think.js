@@ -4,6 +4,24 @@
 
 Cognition.think_reactive = function(stand_data_obj, agent) {
 
+    function clear_interrupted_sequence_state(s) {
+        if (!s.activity || !s.activity.is_Sequence) return;
+
+        var base_activity = Cognition.normalize_activity_name(s.activity.chosen_Activity);
+        fmengine.standId = s.stand_id;
+
+        if (base_activity === 'selectiveThinning' &&
+            typeof Action.prepare.clear_selectiveThinning_flags === 'function') {
+            Action.prepare.clear_selectiveThinning_flags();
+        } else if (base_activity === 'shelterwood' &&
+                   typeof Action.prepare.clear_shelterwood_flags === 'function') {
+            Action.prepare.clear_shelterwood_flags();
+        } else if (base_activity === 'femel' &&
+                   typeof Action.prepare.clear_femel_flags === 'function') {
+            Action.prepare.clear_femel_flags();
+        }
+    }
+
     // --- STEP 1: SET-ASIDE ---
     if (stand_data_obj.is_set_aside) {
         // Even set-aside stands incur extraction cost when C++ auto-salvages dead trees
@@ -19,6 +37,8 @@ Cognition.think_reactive = function(stand_data_obj, agent) {
 
     // --- STEP 2: DISTURBANCE DETECTED — deduct extraction cost, defer remnant to plan_decade ---
     if (stand_data_obj.iLand_stand_data.needs_salvage) {
+        clear_interrupted_sequence_state(stand_data_obj);
+
         // Extraction cost already happened at C++ level. Mark for budget deduction.
         fmengine.standId = stand_data_obj.stand_id;
         stand_data_obj.extraction_cost_pending = stand.flag('abe_disturbance_cost') || 0;

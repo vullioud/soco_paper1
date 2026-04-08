@@ -211,6 +211,40 @@ var Monitoring = {
         this.ml_activity_log.push(record);
     },
 
+    log_ml_post_disturbance_decision: function(stand_data_obj, agent, decision_name) {
+        if (!this.isMLEnabled()) return;
+
+        fmengine.standId = stand_data_obj.stand_id;
+
+        var record = {
+            year:                   Globals.year,
+            stand_id:               stand_data_obj.stand_id,
+            agent_id:               agent.id,
+            owner_type:             agent.owner.type,
+            behavioral_type:        agent.behavioral_type,
+            activity_name:          decision_name || 'none',
+            is_sequence:            0,
+            sequence_step:          -1,
+            previous_activity:      stand_data_obj.history.last_activity,
+            previous_activity_year: stand_data_obj.history.last_activity_Year,
+            age_t0:                 stand_data_obj.iLand_stand_data.absolute_age_iLand,
+            volume_t0:              stand_data_obj.iLand_stand_data.volume,
+            basal_area_t0:          stand_data_obj.iLand_stand_data.basal_area,
+            top_height_t0:          stand.topHeight,
+            species_composition_t0: JSON.stringify(stand_data_obj.get_species_composition()),
+            parameters:             JSON.stringify({}),
+            salvage_fraction:           1.0,
+            actual_salvage_volume_m3ha: stand.flag('abe_actual_salvage_volume_m3ha') || 0,
+            deadwood_retained_m3ha:     0,
+            disturbance_severity_frac:  stand.flag('abe_disturbance_severity') || 0,
+            extraction_cost_paid:       stand.flag('abe_extraction_cost_paid') || 0,
+            remnant_decision:           stand.flag('abe_param_salvage_type') || decision_name || 'none',
+            disturbance_type:           stand.flag('abe_disturbance_type') || ''
+        };
+
+        this.ml_activity_log.push(record);
+    },
+
     save_ml_activity_csv: function(filename) {
         var header = "year,stand_id,agent_id,owner_type,behavioral_type,activity_name," +
             "is_sequence,sequence_step," +
@@ -271,7 +305,9 @@ var Monitoring = {
         });
     },
 
-    log_decade_budget: function(agent, year, n_all_stands, budget_total, ongoing_cost, budget_spent, harvest_selected, harvest_target) {
+    log_decade_budget: function(agent, year, n_all_stands, budget_total, ongoing_cost, budget_spent,
+                                harvest_selected, harvest_target, effective_harvest_target,
+                                salvage_severity_equivalent) {
         if (!this.isDecadeLogEnabled()) return;
 
         var n_set_aside = 0;
@@ -295,6 +331,8 @@ var Monitoring = {
             budget_remaining: budget_total - budget_spent,
             harvest_selected: harvest_selected,
             harvest_target:   harvest_target,
+            effective_harvest_target: effective_harvest_target,
+            salvage_severity_equivalent: salvage_severity_equivalent,
             pile_size:        (agent.unit_state.work_pile || []).length
         });
     },
@@ -302,7 +340,8 @@ var Monitoring = {
     save_decade_budget_csv: function(filename) {
         var header = "year,agent_id,behavioral_type,n_all_stands,n_set_aside,n_managed," +
             "resources,budget_total,ongoing_cost,budget_spent,budget_remaining," +
-            "harvest_selected,harvest_target,pile_size";
+            "harvest_selected,harvest_target,effective_harvest_target," +
+            "salvage_severity_equivalent,pile_size";
         var lines = [header];
 
         for (var i = 0; i < this.decade_budget_log.length; i++) {
@@ -312,7 +351,10 @@ var Monitoring = {
                 this._safeFixed(r.resources, 3) + "," +
                 r.budget_total + "," + r.ongoing_cost + "," +
                 r.budget_spent + "," + r.budget_remaining + "," +
-                r.harvest_selected + "," + r.harvest_target + "," + r.pile_size;
+                r.harvest_selected + "," + r.harvest_target + "," +
+                r.effective_harvest_target + "," +
+                this._safeFixed(r.salvage_severity_equivalent, 3) + "," +
+                r.pile_size;
             lines.push(line);
         }
 

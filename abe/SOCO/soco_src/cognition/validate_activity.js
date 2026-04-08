@@ -15,6 +15,7 @@ Cognition.validate_activity = function(stand_data_obj) {
     var ba = stand_data_obj.iLand_stand_data.basal_area;
     var age = stand_data_obj.iLand_stand_data.absolute_age_iLand;
     var act_name = activity.chosen_Activity;
+    var base_name = Cognition.normalize_activity_name(act_name);
 
     // Salvage clearcut: always first (set by plan_decade PostDisturbance step)
     if (act_name === 'salvage_clearcut') {
@@ -25,8 +26,8 @@ Cognition.validate_activity = function(stand_data_obj) {
         activity.utility_score = 100 + (age <= 0.1 ? 100 : 10 / Math.max(age, 0.1));
     }
     // Harvesting activities: prioritize by volume
-    else if (act_name === 'clearcut' || act_name === 'shelterwood' ||
-             act_name === 'targetDBH' || act_name === 'plenter_harvest' || act_name === 'femel') {
+    else if (base_name === 'clearcut' || base_name === 'shelterwood' ||
+             base_name === 'targetDBH' || base_name === 'plenter_harvest' || base_name === 'femel') {
         activity.utility_score = vol;
     }
     // Thinning/tending: prioritize by basal area
@@ -35,4 +36,9 @@ Cognition.validate_activity = function(stand_data_obj) {
     }
 
     return stand_data_obj;
+};
+
+Cognition.normalize_activity_name = function(activity_name) {
+    if (!activity_name) return '';
+    return activity_name.replace(/_no_planting$/, '').replace(/_planting$/, '');
 };

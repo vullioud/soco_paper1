@@ -6,8 +6,7 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
 
     // Resolve compound harvest+planting names to base activity for parameter lookup.
     // parameter_distributions.json is keyed by base name (shelterwood, femel, etc.).
-    var base_activity = activity_name
-        .replace('_planting', '').replace('_no_planting', '');
+    var base_activity = Cognition.normalize_activity_name(activity_name);
 
     var params_for_type = agent.parameter_table[base_activity]
         && agent.parameter_table[base_activity][agent.behavioral_type];

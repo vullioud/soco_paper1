@@ -60,8 +60,7 @@ Cognition.plan_decade = function(agent, current_year) {
         // Count steps landing in [current_year, current_year + 9]
         var ongoing_includes_planting = s.activity.chosen_Activity.indexOf('_planting') > -1
                                      && s.activity.chosen_Activity.indexOf('_no_planting') === -1;
-        var ongoing_base = s.activity.chosen_Activity
-            .replace('_planting', '').replace('_no_planting', '');
+        var ongoing_base = Cognition.normalize_activity_name(s.activity.chosen_Activity);
         var ongoing_cost_entry = cost_table[s.activity.chosen_Activity]
                               || cost_table[ongoing_base] || 2;
         var ongoing_total_steps = s.activity.timeline.length;
@@ -129,6 +128,19 @@ Cognition.plan_decade = function(agent, current_year) {
                              SoCoABE_CONFIG.HARVEST_INTENSITY[agent.behavioral_type]) || 0.5;
     var rotation_decades = SoCoABE_CONFIG.HARVEST_ROTATION_DECADES || 8;
     var harvest_target = Math.ceil(n_all_stands / rotation_decades * harvest_intensity);
+    var salvage_severity_equivalent = 0;
+
+    // Disturbance under Option B already places salvaged deadwood on the market.
+    // Reduce ordinary harvest capacity by the summed severity across disturbed stands.
+    for (var sid_hq in agent.managed_stands_data) {
+        var hq = agent.managed_stands_data[sid_hq];
+        if (!hq.needs_post_disturbance) continue;
+        if (hq.is_set_aside) continue;
+
+        salvage_severity_equivalent += Math.max(0, hq.iLand_stand_data.disturbance_severity || 0);
+    }
+
+    var effective_harvest_target = Math.max(0, harvest_target - salvage_severity_equivalent);
 
     // Sort harvest candidates (engine-specific: age=volume, structural=DBH)
     Cognition.Phases.sort_harvest(harvest_candidates);
@@ -136,7 +148,7 @@ Cognition.plan_decade = function(agent, current_year) {
     var harvest_selected = 0;
     for (var h = 0; h < harvest_candidates.length; h++) {
         // HARD CAP: sustained yield limit
-        if (harvest_selected >= harvest_target) break;
+        if ((harvest_selected + 1) > effective_harvest_target) break;
 
         var hs = harvest_candidates[h];
 
@@ -233,12 +245,17 @@ Cognition.plan_decade = function(agent, current_year) {
         pd.needs_post_disturbance = false;
 
         if (pd_draw === 'salvage_leave') {
-            // Free — clear disturbance state, stand re-enters normal planning
-            pd.activity.chosen_Activity = 'none';
+            // Free — clear disturbance state, stand re-enters normal planning.
+            // Keep the leave decision explicit in logs before resetting the stand to none.
+            fmengine.standId = pd.stand_id;
+            stand.setFlag('abe_param_salvage_type', 'salvage_leave');
+            pd.activity.chosen_Activity = 'salvage_leave';
             pd.activity.is_actionable = false;
             if (Monitoring.isDecadeLogEnabled()) {
                 Monitoring.log_decade_decision(agent, current_year, "PostDisturbance", pd, 0, true);
             }
+            Monitoring.log_ml_post_disturbance_decision(pd, agent, 'salvage_leave');
+            pd.activity.chosen_Activity = 'none';
             continue;
         }
 
@@ -437,7 +454,8 @@ Cognition.plan_decade = function(agent, current_year) {
     if (Monitoring.isDecadeLogEnabled()) {
         Monitoring.log_decade_budget(agent, current_year, n_all_stands,
             budget, ongoing_cost, agent.unit_state.budget_spent,
-            harvest_selected, harvest_target);
+            harvest_selected, harvest_target, effective_harvest_target,
+            salvage_severity_equivalent);
         Monitoring.log_decade_snapshot(agent, current_year);
     }
 };
@@ -489,7 +507,8 @@ Cognition._estimate_decade_cost = function(stand_data_obj, current_year, cost_ta
 
     // Resolve cost entry: try full name first, then base name, then default.
     var base_activity = act.chosen_Activity
-        .replace('_planting', '').replace('_no_planting', '');
+        ? Cognition.normalize_activity_name(act.chosen_Activity)
+        : '';
     var cost_entry = cost_table[act.chosen_Activity] || cost_table[base_activity] || 2;
 
     if (!act.is_Sequence || !act.timeline || act.timeline.length === 0) {
@@ -517,7 +536,8 @@ Cognition._estimate_total_cost = function(stand_data_obj, cost_table) {
     var includes_planting = act.chosen_Activity.indexOf('_planting') > -1
                          && act.chosen_Activity.indexOf('_no_planting') === -1;
     var base_activity = act.chosen_Activity
-        .replace('_planting', '').replace('_no_planting', '');
+        ? Cognition.normalize_activity_name(act.chosen_Activity)
+        : '';
     var cost_entry = cost_table[act.chosen_Activity] || cost_table[base_activity] || 2;
 
     if (!act.is_Sequence || !act.timeline || act.timeline.length === 0) {
@@ -604,7 +624,7 @@ Cognition._add_to_work_pile = function(agent, stand_data_obj, current_year, cost
 
     var wp_includes_planting = act.chosen_Activity.indexOf('_planting') > -1
                             && act.chosen_Activity.indexOf('_no_planting') === -1;
-    var wp_base = act.chosen_Activity.replace('_planting', '').replace('_no_planting', '');
+    var wp_base = Cognition.normalize_activity_name(act.chosen_Activity);
     var wp_cost_entry = cost_table[act.chosen_Activity] || cost_table[wp_base] || 2;
 
     if (act.is_Sequence && act.timeline && act.timeline.length > 0) {

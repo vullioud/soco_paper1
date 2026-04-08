@@ -18,8 +18,7 @@ Cognition.build_schedule = function(stand_data_obj, plan_year) {
     // base_activity is used only for switch dispatch.
     var includes_planting = activity.chosen_Activity.indexOf('_planting') > -1
                          && activity.chosen_Activity.indexOf('_no_planting') === -1;
-    var base_activity = activity.chosen_Activity
-        .replace('_planting', '').replace('_no_planting', '');
+    var base_activity = Cognition.normalize_activity_name(activity.chosen_Activity);
 
     // If target_year not set, auto-assign from plan_year
     if ((!activity.target_year || activity.target_year <= 0) && plan_year) {

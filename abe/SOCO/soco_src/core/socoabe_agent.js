@@ -78,15 +78,24 @@ class socoabe_agent {
         if (!guideline || !this.activity_table) return;
 
         for (var phase in this.activity_table) {
-            var own = this.activity_table[phase].alpha;
+            var own_dist = this.activity_table[phase];
+            var own = own_dist.alpha;
             var guide = guideline[phase];
-            if (!guide || !guide.alpha) continue;
+            if (!guide || !guide.alpha || !own_dist.options) continue;
+
+            var guide_by_name = {};
+            for (var g = 0; g < guide.options.length; g++) {
+                guide_by_name[Cognition.normalize_activity_name(guide.options[g])] = guide.alpha[g] || 0;
+            }
 
             var blended = [];
             for (var i = 0; i < own.length; i++) {
-                blended.push((1 - adherence) * own[i] + adherence * (guide.alpha[i] || 0));
+                var option_name = own_dist.options[i];
+                var normalized = Cognition.normalize_activity_name(option_name);
+                var guide_alpha = guide_by_name.hasOwnProperty(normalized) ? guide_by_name[normalized] : 0;
+                blended.push((1 - adherence) * own[i] + adherence * guide_alpha);
             }
-            this.activity_table[phase].alpha = blended;
+            own_dist.alpha = blended;
         }
     }
 

@@ -126,8 +126,10 @@ MEGA_STP_ACTIVITIES['targetDBH'] = {
             var species_count = stand.trees.sum('1', filter);
 
             if (species_count > 0) {
-                var min_dbh = stand.trees.mean('dbh', filter, 'min');
-                var max_dbh = stand.trees.mean('dbh', filter, 'max');
+                stand.trees.load(filter);
+                stand.trees.sort('dbh');
+                var min_dbh = stand.trees.tree(0).dbh;
+                var max_dbh = stand.trees.tree(stand.trees.count - 1).dbh;
                 SoCoLog.debug(`  - Species: ${species_id}, Count: ${species_count}, DBH Range: [${min_dbh.toFixed(1)} - ${max_dbh.toFixed(1)}] cm`);
             }
         }
@@ -1270,28 +1272,24 @@ MEGA_STP_ACTIVITIES['salvage'] = {
         // Store for plan_decade clearcut cost calculation (envelope remainder)
         stand.setFlag('abe_extraction_cost_paid', extraction_cost);
 
-        // Clear any ongoing sequences - disturbance interrupts them
-        // Check if we're in the middle of a sequence activity
-        var current_activity = stand.flag('abe_next_activity');
-        if (current_activity === 'shelterwood' || current_activity === 'femel' || current_activity === 'selectiveThinning') {
-            SoCoLog.debug(`  -> Interrupting ongoing ${current_activity} sequence due to disturbance.`);
-
-            // Clear sequence-specific flags
-            if (typeof Action !== 'undefined' && Action.prepare) {
-                if (typeof Action.prepare.clear_shelterwood_flags === 'function') {
-                    Action.prepare.clear_shelterwood_flags();
-                }
-                if (typeof Action.prepare.clear_femel_flags === 'function') {
-                    Action.prepare.clear_femel_flags();
-                }
-                if (typeof Action.prepare.clear_selectiveThinning_flags === 'function') {
-                    Action.prepare.clear_selectiveThinning_flags();
-                }
+        // Clear sequence-side STP state immediately if disturbance hits mid-sequence.
+        // SOCO clears the cognitive plan later in think_reactive().
+        if (typeof Action !== 'undefined' && Action.prepare) {
+            if (stand.flag('abe_shelterwood_initialized') === true &&
+                typeof Action.prepare.clear_shelterwood_flags === 'function') {
+                SoCoLog.debug('  -> Interrupting ongoing shelterwood state due to disturbance.');
+                Action.prepare.clear_shelterwood_flags();
             }
-
-            // Clear sequence state flags
-            stand.setFlag('abe_param_sequence_current_step', null);
-            stand.setFlag('abe_param_sequence_total_steps', null);
+            if (stand.flag('abe_femel_initialized') === true &&
+                typeof Action.prepare.clear_femel_flags === 'function') {
+                SoCoLog.debug('  -> Interrupting ongoing femel state due to disturbance.');
+                Action.prepare.clear_femel_flags();
+            }
+            if (stand.flag('abe_selective_thinning_initialized') === true &&
+                typeof Action.prepare.clear_selectiveThinning_flags === 'function') {
+                SoCoLog.debug('  -> Interrupting ongoing selective thinning state due to disturbance.');
+                Action.prepare.clear_selectiveThinning_flags();
+            }
         }
 
         // Mark stand for salvage decision by SOCO agent
