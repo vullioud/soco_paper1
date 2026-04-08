@@ -18,6 +18,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 def build_stand_btype_map(run_dir: Path, run_id: str,
+                          run_row: dict | None = None,
                           project_dir: Path = None) -> dict:
     """Read SOCO stand state CSV to get {stand_id: behavioral_type}.
 
@@ -40,24 +41,39 @@ def build_stand_btype_map(run_dir: Path, run_id: str,
 
     # Fallback: agent table
     if project_dir is not None:
-        # Parse aggregation from run_id
-        parts = run_id.split("_")
-        middle = parts[1:-2]
-        climate_labels = {"hist", "rcp26", "rcp45", "rcp85"}
-        condition_labels = {"bb", "nod", "contbb", "lowbb", "wind", "outbreak", "control", "nomanagement"}
-        if middle and middle[-1] in climate_labels:
-            middle = middle[:-1]
-        if middle and middle[-1] in condition_labels:
-            middle = middle[:-1]
-        agg_short = "_".join(middle)
+        agent_table_rel = None
+        if run_row is not None:
+            agent_table_rel = run_row.get("model.management.abe.agentDataFile")
+        management_repr = (run_row or {}).get("management_representation", "soco")
 
-        agent_table = project_dir / f"abe/SOCO/stand_files/agent_table_{agg_short}_shuffled-false.csv"
+        # Parse aggregation from run_id
+        if not agent_table_rel:
+            parts = run_id.split("_")
+            middle = parts[1:-2]
+            climate_labels = {"hist", "rcp26", "rcp45", "rcp85"}
+            condition_labels = {"bb", "nod", "contbb", "lowbb", "wind", "outbreak", "control", "nomanagement"}
+            if middle and middle[-1] in climate_labels:
+                middle = middle[:-1]
+            if middle and middle[-1] in condition_labels:
+                middle = middle[:-1]
+            agg_short = "_".join(middle)
+            agent_table_rel = f"abe/SOCO/stand_files/agent_table_{agg_short}_shuffled-false.csv"
+
+        agent_table = project_dir / agent_table_rel
         if agent_table.exists():
             owner_to_btype = {"state": "MF", "big": "OP", "small": "small"}
             with open(agent_table, encoding="utf-8") as f:
                 for row in csv.DictReader(f):
-                    stand_type[int(row["id"])] = owner_to_btype.get(
-                        row["owner_type"], row["owner_type"])
+                    sid = int(row["id"])
+                    if "behavioral_type" in row and row["behavioral_type"]:
+                        stand_type[sid] = row["behavioral_type"]
+                    elif "owner_type" in row and row["owner_type"]:
+                        stand_type[sid] = owner_to_btype.get(
+                            row["owner_type"], row["owner_type"])
+                    elif management_repr == "stp_direct":
+                        stand_type[sid] = "STP_DIRECT"
+                    elif "agentType" in row and row["agentType"]:
+                        stand_type[sid] = row["agentType"]
 
     return stand_type
 

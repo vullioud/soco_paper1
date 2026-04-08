@@ -70,8 +70,93 @@ SOCO_FILES = [
 _write_lock = Lock()
 
 
+def _safe_int(value, default=None):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def write_synthetic_stp_exports(run_row: dict, combined_dir: Path, meta_row: list, summaries: dict):
+    """Create minimal stand-state and activity exports for direct STP runs.
+
+    These files mirror the SOCO combined CSV interfaces closely enough for the
+    downstream extractor/diagnostics code to keep direct-STP runs in scope.
+    """
+    stand_rows = summaries.get("stand_volume", [])
+    removal_rows = summaries.get("removal", [])
+    if not stand_rows:
+        return
+
+    removal_by_key = {(row[0], row[2]): row for row in removal_rows}
+
+    stand_state_file = combined_dir / "soco_stand_state.csv"
+    activity_file = combined_dir / "soco_ml_activities.csv"
+
+    write_stand_header = not stand_state_file.exists()
+    write_activity_header = not activity_file.exists()
+
+    with open(stand_state_file, "a", newline="", encoding="utf-8") as f_state, \
+         open(activity_file, "a", newline="", encoding="utf-8") as f_act:
+        stand_writer = csv.writer(f_state)
+        act_writer = csv.writer(f_act)
+
+        if write_stand_header:
+            stand_writer.writerow([
+                "run_id", "cluster", "landscape", "aggregation", "condition", "disturbance", "climate", "replicate",
+                "year", "stand_id", "agent_id", "behavioral_type", "is_set_aside", "age", "volume", "basal_area",
+                "top_height", "mean_dbh", "stems", "dbh_sd", "dbh_gini", "n_large_trees", "n_height_layers",
+                "height_sd", "max_dbh", "age_phase", "structural_phase", "active_phase", "engine", "phase_match",
+                "blocked_until", "last_completed", "chosen_activity", "is_sequence", "wet_type", "disturbance_type",
+            ])
+        if write_activity_header:
+            act_writer.writerow([
+                "run_id", "cluster", "landscape", "aggregation", "condition", "disturbance", "climate", "replicate",
+                "year", "stand_id", "agent_id", "owner_type", "behavioral_type", "activity_name", "is_sequence",
+                "sequence_step", "previous_activity", "previous_activity_year", "age_t0", "volume_t0", "basal_area_t0",
+                "top_height_t0", "species_composition_t0", "parameters", "salvage_fraction",
+                "actual_salvage_volume_m3ha", "deadwood_retained_m3ha", "disturbance_severity_frac",
+                "extraction_cost_paid", "remnant_decision", "disturbance_type",
+            ])
+
+        for row in stand_rows:
+            year, sid, uid, btype, area, vol, ba, age, th, dbh, stems = row
+            removal = removal_by_key.get((year, sid))
+            activity_name = removal[6] if removal else "none"
+            disturbance_type = "barkbeetle" if removal and float(removal[11]) > 0 else ""
+
+            if year % 10 == 0:
+                stand_writer.writerow(meta_row + [
+                    year, sid, uid, btype, "", age, vol, ba, th, dbh, stems,
+                    "", "", "", "", "", "", "", "stp_direct", "", "", "", activity_name, 0, "", disturbance_type
+                ])
+
+            salvage_fraction = ""
+            actual_salvage = 0.0
+            disturbance_severity = 0.0
+            if removal:
+                try:
+                    disturbed = float(removal[11] or 0)
+                    salvaged = float(removal[10] or 0)
+                    actual_salvage = salvaged
+                    if disturbed > 0:
+                        salvage_fraction = round(min(salvaged / disturbed, 1.0), 4)
+                        disturbance_severity = round(disturbed / max(float(vol or 0) + disturbed, disturbed), 4)
+                except (TypeError, ValueError, ZeroDivisionError):
+                    salvage_fraction = ""
+                    actual_salvage = 0.0
+                    disturbance_severity = 0.0
+
+            act_writer.writerow(meta_row + [
+                year, sid, uid, "stp_direct", btype, activity_name, 0, -1, "none", -1,
+                age, vol, ba, th, "", "{}", salvage_fraction, actual_salvage, 0.0,
+                disturbance_severity, 0, "none", disturbance_type
+            ])
+
+
 def post_process_run(run_row: dict, run_dir: Path, combined_dir: Path,
-                     project_dir: Path, keep_raw: bool):
+                     project_dir: Path, keep_raw: bool,
+                     stand_species_keep_years: set[int] | None = None):
     """Compute summaries from SQLite, merge SOCO CSVs, clean up."""
     run_id = run_row["run_id"]
     landscape = run_row.get("landscape") or run_row.get("cluster", "").replace("CLUSTER", "CL")
@@ -89,10 +174,11 @@ def post_process_run(run_row: dict, run_dir: Path, combined_dir: Path,
     ]
 
     db_path = run_dir / "iLand_output.sqlite"
+    management_repr = run_row.get("management_representation", "soco")
 
     # --- 1. Compute summaries from SQLite ---
     if db_path.exists() and db_path.stat().st_size > 50_000:
-        stand_btype = build_stand_btype_map(run_dir, run_id, project_dir)
+        stand_btype = build_stand_btype_map(run_dir, run_id, run_row, project_dir)
         summaries = summarize_sqlite(db_path, stand_btype)
 
         with _write_lock:
@@ -149,8 +235,14 @@ def post_process_run(run_row: dict, run_dir: Path, combined_dir: Path,
                              "condition", "disturbance", "climate", "replicate",
                              "year", "standid", "behavioral_type",
                              "total_ba"] + sp_cols)
+                    keep_years = stand_species_keep_years or set()
                     for row in sp_rows:
+                        if keep_years and row[0] not in keep_years:
+                            continue
                         writer.writerow(meta_row + row)
+
+            if management_repr == "stp_direct":
+                write_synthetic_stp_exports(run_row, combined_dir, meta_row, summaries)
 
         if not keep_raw:
             db_path.unlink()
@@ -279,6 +371,12 @@ def main():
 
     combined_dir = Path(project_dir) / paths_cfg.get("combined_dir", "output/_combined")
     combined_dir.mkdir(parents=True, exist_ok=True)
+    analysis_cfg = cfg.get("analysis", {})
+    stand_species_keep_years = set()
+    for year in analysis_cfg.get("species_keep_years", []):
+        parsed_year = _safe_int(year)
+        if parsed_year is not None:
+            stand_species_keep_years.add(parsed_year)
 
     # Read run table
     with open(table_path, "r") as f:
@@ -329,11 +427,12 @@ def main():
         futures = {}
         for i, run in enumerate(pending):
             sim_years = int(run["sim_years"])
+            run_base_xml = run.get("base_xml", base_xml)
             overrides = {k: run[k] for k in OVERRIDE_KEYS if k in run}
             if i > 0:
                 time.sleep(STAGGER_DELAY)
             future = executor.submit(
-                run_single, ilandc_exe, project_dir, base_xml,
+                run_single, ilandc_exe, project_dir, run_base_xml,
                 sim_years, run["run_id"], overrides, str(log_dir)
             )
             futures[future] = run
@@ -347,7 +446,8 @@ def main():
                 if result["exit_code"] == 0:
                     run_dir = Path(result["output_dir"])
                     post_process_run(run, run_dir, combined_dir,
-                                     Path(project_dir), args.keep_raw)
+                                     Path(project_dir), args.keep_raw,
+                                     stand_species_keep_years)
                     with open(completed_file, "a") as f:
                         f.write(f"{run_id}  {datetime.now().isoformat()}\n")
                     print(f"[{n_done}/{len(pending)}] OK+PP  {run_id}  ({result['elapsed_s']}s)")

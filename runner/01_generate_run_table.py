@@ -25,6 +25,17 @@ CLIMATE_SHORT = {
 }
 
 
+def get_replicate_range(cfg, aggregation=None):
+    """Return the replicate range for an aggregation, honoring optional overrides."""
+    exp_cfg = cfg["experiment"]
+    rep_start = exp_cfg["replicate_start"]
+    rep_end = exp_cfg["replicate_end"]
+    overrides = exp_cfg.get("replicate_end_override", {})
+    if aggregation in overrides:
+        rep_end = overrides[aggregation]
+    return range(rep_start, rep_end + 1)
+
+
 def get_condition_cfg(cfg):
     """Return the condition block, falling back to legacy disturbance configs."""
     return cfg.get("condition") or cfg.get("disturbance", {})
@@ -44,8 +55,6 @@ def oat_combinations(cfg):
     ref_condition = ref.get("condition", ref.get("disturbance"))
     ref_rep = ref.get("replicate", 1)
     ref_clim = ref.get("climate", "historical")
-    rep_start = cfg["experiment"]["replicate_start"]
-    rep_end = cfg["experiment"]["replicate_end"]
     climate_scenarios = cfg.get("climate", {}).get("scenarios", ["historical"])
     condition_cfg = get_condition_cfg(cfg)
     combos = set()
@@ -62,15 +71,13 @@ def oat_combinations(cfg):
     for clim in climate_scenarios:
         combos.add((ref["cluster"], ref["aggregation"], ref_condition, clim, ref_rep))
     # Arm 5: all replicates × ref others
-    for rep in range(rep_start, rep_end + 1):
+    for rep in get_replicate_range(cfg, ref["aggregation"]):
         combos.add((ref["cluster"], ref["aggregation"], ref_condition, ref_clim, rep))
     return combos
 
 
 def factorial_combinations(cfg):
     """Return set of (cluster, aggregation, condition, climate, replicate) tuples for full factorial."""
-    rep_start = cfg["experiment"]["replicate_start"]
-    rep_end = cfg["experiment"]["replicate_end"]
     climate_scenarios = cfg.get("climate", {}).get("scenarios", ["historical"])
     condition_cfg = get_condition_cfg(cfg)
     combos = set()
@@ -78,7 +85,7 @@ def factorial_combinations(cfg):
         for agg in cfg["experiment"]["aggregations"]:
             for condition in condition_cfg["scenarios"]:
                 for clim in climate_scenarios:
-                    for rep in range(rep_start, rep_end + 1):
+                    for rep in get_replicate_range(cfg, agg):
                         combos.add((cl, agg, condition, clim, rep))
     return combos
 
@@ -98,6 +105,9 @@ def main():
     sim_years    = cfg["general"]["sim_years"]
     agent_map    = cfg["experiment"]["agent_mapping"]
     init_override = cfg["experiment"].get("init_override", {})
+    base_xml_override = cfg["experiment"].get("base_xml_override", {})
+    external_agent_data = cfg["experiment"].get("external_agent_data", {})
+    management_repr = cfg["experiment"].get("management_representation", {})
     rep_start    = cfg["experiment"]["replicate_start"]
     rep_end      = cfg["experiment"]["replicate_end"]
     threads      = cfg["threading"]["threads_per_worker"]
@@ -156,6 +166,8 @@ def main():
         agg_short = agent_map[agg]                    # High, Random, state_only, ...
         clim_short = CLIMATE_SHORT.get(clim_label, clim_label)
         init_agg = init_override.get(agg, agg)
+        run_base_xml = base_xml_override.get(agg, cfg["general"]["base_xml"])
+        run_management_repr = management_repr.get(agg, "soco")
         cp = condition_params.get(condition_label, {})
 
         rep_str = f"rep_{rep_num:03d}"
@@ -187,9 +199,14 @@ def main():
         if not (init_dir / rel_init / f"tree2_diverse_seed{seed}.csv").exists():
             warnings.append(f"MISSING tree file: init/{tree_file}")
 
-        agent_table  = f"abe/SOCO/stand_files/agent_table_{agg_short}_shuffled-false.csv"
+        agent_table = external_agent_data.get(
+            agg,
+            f"abe/SOCO/stand_files/agent_table_{agg_short}_shuffled-false.csv",
+        )
         if not (project_dir / agent_table).exists():
             warnings.append(f"MISSING agent table: {agent_table}")
+        if not (project_dir / run_base_xml).exists():
+            warnings.append(f"MISSING base xml: {run_base_xml}")
 
         output_path  = f"{output_root}/{run_id}"
         out_p = project_dir / output_path
@@ -224,12 +241,14 @@ def main():
             "cluster":      cluster,
             "landscape":    cl_short,
             "aggregation":  agg,
+            "management_representation": run_management_repr,
             "condition":    condition_label,
             "disturbance":  condition_label,
             "climate":      clim_label,
             "replicate":    rep_num,
             "sim_years":    sim_years,
             "completed":    completed,
+            "base_xml":     run_base_xml,
             # iLand CLI overrides
             "system.path.output":                       output_path,
             "system.database.out":                      f"../{output_root}/{run_id}/iLand_output.sqlite",
