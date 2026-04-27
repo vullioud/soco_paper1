@@ -377,7 +377,7 @@
             <file></file>
             <abeEnabled>true</abeEnabled>
             <abe>
-                <file>abe/ABE_tiny_ex.js</file>
+                <file>abe/ABE_small_landscape_high_productive.js</file>
                 <!-- FOR ILANDC RUNNER: this will be replaced by the ilandc-runner -->
                 <agentDataFile>abe/SOCO/stand_files/agent_table_High_shuffled-false.csv</agentDataFile>
             </abe>

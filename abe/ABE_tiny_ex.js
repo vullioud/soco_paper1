@@ -57,11 +57,32 @@ try {
             console.log("[CONFIG] Management DISABLED (no-management control)");
         }
     } catch(e) {}
+    try {
+        var mgmt_mode_val = Globals.setting('user.management_mode');
+        if (mgmt_mode_val) {
+            SoCoABE_CONFIG.MANAGEMENT_MODE = mgmt_mode_val;
+        }
+    } catch(e) {}
+    try {
+        var reserve_mode_val = Globals.setting('user.reserve_mode');
+        if (reserve_mode_val) {
+            SoCoABE_CONFIG.RESERVE_MODE = reserve_mode_val;
+        }
+    } catch(e) {}
+    try {
+        var budget_mode_val = Globals.setting('user.budget_mode');
+        if (budget_mode_val) {
+            SoCoABE_CONFIG.BUDGET_MODE = budget_mode_val;
+        }
+    } catch(e) {}
     console.log("[CONFIG] BB=" + SoCoABE_CONFIG.BARK_BEETLE.ENABLED +
         " start=" + SoCoABE_CONFIG.DISTURBANCE_START_YEAR +
         " outbreakProb=" + SoCoABE_CONFIG.BARK_BEETLE.OUTBREAK_PROBABILITY +
         " baselineProb=" + SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY +
-        " mgmt=" + SoCoABE_CONFIG.MANAGEMENT_ENABLED);
+        " mgmt=" + SoCoABE_CONFIG.MANAGEMENT_ENABLED +
+        " managementMode=" + SoCoABE_CONFIG.MANAGEMENT_MODE +
+        " reserveMode=" + SoCoABE_CONFIG.RESERVE_MODE +
+        " budgetMode=" + SoCoABE_CONFIG.BUDGET_MODE);
 
     // --- Register ABE Components ---
     if (typeof MegaSTP === 'undefined') throw new Error("MegaSTP object not defined.");
@@ -71,6 +92,14 @@ try {
 
     var mgmtResult = fmengine.addManagement(MegaSTP, 'SoCo_MegaSTP');
     console.error("[DIAG] addManagement returned: " + mgmtResult + " (type: " + typeof mgmtResult + ")");
+
+    if (typeof lib !== 'undefined' &&
+        lib.harvest &&
+        typeof lib.harvest.noManagement === 'function' &&
+        typeof lib.createSTP === 'function') {
+        lib.createSTP(SoCoABE_CONFIG.RESERVE_STP_NAME, lib.harvest.noManagement());
+        console.error("[DIAG] Registered reserve STP: " + SoCoABE_CONFIG.RESERVE_STP_NAME);
+    }
 
     var atResult = fmengine.addAgentType({ scheduler: { enabled: false }, stp: { default: 'SoCo_MegaSTP' } }, SoCoABE_CONFIG.core_abe_agent_type);
     console.error("[DIAG] addAgentType returned: " + atResult + " (type: " + typeof atResult + ")");
@@ -175,7 +204,9 @@ function run(year) {
         // Activate: enable module and restore real background probability
         try {
             BarkBeetle.enabled = true;
-            var activationProb = SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY || 0.000685;
+            // Keep a non-zero fallback for activation, but align it with the
+            // SoCo default baseline rather than the XML bark-beetle module baseline.
+            var activationProb = SoCoABE_CONFIG.BARK_BEETLE.BASELINE_PROBABILITY || 0.00001;
             BarkBeetle.setBackgroundInfestationProbability(activationProb);
             console.log('[DISTURBANCE] Year ' + year + ': Disturbances ACTIVATED. BB prob restored to ' + activationProb + '.');
         } catch (e) {

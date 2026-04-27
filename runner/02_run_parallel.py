@@ -35,7 +35,9 @@ OVERRIDE_KEYS = [
     "system.database.out",
     "system.database.climate",
     "model.climate.co2concentration",
+    "model.world.environmentGrid",
     "model.world.environmentFile",
+    "model.world.standGrid.fileName",
     "model.initialization.file",
     "model.initialization.saplingFile",
     "model.management.abe.agentDataFile",
@@ -49,6 +51,9 @@ OVERRIDE_KEYS = [
     "user.outbreak_start_year",
     "user.outbreak_end_year",
     "user.management_enabled",
+    "user.management_mode",
+    "user.reserve_mode",
+    "user.budget_mode",
     "model.world.timeEventsEnabled",
     "model.world.timeEventsFile",
     "system.settings.threadCount",
@@ -75,6 +80,10 @@ def _safe_int(value, default=None):
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _has_override_value(row: dict, key: str) -> bool:
+    return key in row and row[key] not in ("", None)
 
 
 def write_synthetic_stp_exports(run_row: dict, combined_dir: Path, meta_row: list, summaries: dict):
@@ -311,7 +320,7 @@ def run_single(ilandc_exe: str, project_dir: str, base_xml: str,
         result = subprocess.run(
             cmd, cwd=project_dir,
             stdout=log_file, stderr=subprocess.STDOUT,
-            timeout=14400,
+            timeout=28800,
         )
 
     elapsed = time.time() - t0
@@ -383,6 +392,16 @@ def main():
         reader = csv.DictReader(f)
         all_runs = list(reader)
 
+    completed_file = status_dir / "completed.txt"
+    failed_file    = status_dir / "failed.txt"
+    completed_ids = set()
+    if completed_file.exists():
+        with open(completed_file, "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.strip().split()
+                if parts:
+                    completed_ids.add(parts[0])
+
     # Filter to reference-only if requested
     if args.reference_only:
         ref = cfg["experiment"].get("oat_reference", {})
@@ -394,7 +413,10 @@ def main():
         all_runs = [r for r in all_runs if r["run_id"].startswith(ref_prefix)]
         print(f"Reference-only mode: filtered to {len(all_runs)} run(s) matching {ref_prefix}*")
 
-    pending = [r for r in all_runs if args.force or not is_completed(r, project_dir)]
+    pending = [
+        r for r in all_runs
+        if args.force or (r["run_id"] not in completed_ids and not is_completed(r, project_dir))
+    ]
     if args.limit:
         pending = pending[:args.limit]
     print(f"Total runs: {len(all_runs)} | Pending: {len(pending)} | Workers: {max_workers}")
@@ -408,9 +430,10 @@ def main():
     if args.dry_run:
         print(f"\n=== DRY RUN — {len(pending)} commands ===\n")
         for run in pending:
-            cmd_parts = [ilandc_exe, base_xml, run["sim_years"]]
+            run_base_xml = run.get("base_xml", base_xml)
+            cmd_parts = [ilandc_exe, run_base_xml, run["sim_years"]]
             for key in OVERRIDE_KEYS:
-                if key in run:
+                if _has_override_value(run, key):
                     cmd_parts.append(f"{key}={run[key]}")
             print(f"[{run['run_id']}]")
             print(f"  cd {project_dir}")
@@ -419,8 +442,6 @@ def main():
         return
 
     # --- Parallel execution with inline post-processing ---
-    completed_file = status_dir / "completed.txt"
-    failed_file    = status_dir / "failed.txt"
     n_done = 0
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
@@ -428,7 +449,7 @@ def main():
         for i, run in enumerate(pending):
             sim_years = int(run["sim_years"])
             run_base_xml = run.get("base_xml", base_xml)
-            overrides = {k: run[k] for k in OVERRIDE_KEYS if k in run}
+            overrides = {k: run[k] for k in OVERRIDE_KEYS if _has_override_value(run, k)}
             if i > 0:
                 time.sleep(STAGGER_DELAY)
             future = executor.submit(

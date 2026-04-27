@@ -17,7 +17,7 @@ sim_years   = 200
 [experiment]
 design       = "oat"   # "factorial" or "oat"
 clusters     = ["CLUSTER05", "CLUSTER10", "CLUSTER14"]
-aggregations = ["matched_High", "matched_Random", "matched_state_only", "matched_small_only", "matched_big_only"]
+aggregations = ["matched_High", "matched_Random", "matched_state_only", "matched_small_only", "matched_big_only", "matched_stp_direct"]
 replicate_start = 1
 replicate_end   = 3
 
@@ -33,6 +33,7 @@ matched_Random     = "Random"
 matched_state_only = "state_only"
 matched_small_only = "small_only"
 matched_big_only   = "big_only"
+matched_stp_direct = "stp_direct"
 
 # All aggregation scenarios reuse the same base forest init.
 [experiment.init_override]
@@ -41,6 +42,19 @@ matched_Random     = "base"
 matched_state_only = "base"
 matched_small_only = "base"
 matched_big_only   = "base"
+matched_stp_direct = "base"
+
+[experiment.base_xml_override]
+matched_stp_direct = "small_Ex_stp_direct.xml"
+
+[experiment.external_agent_data]
+matched_stp_direct = "abe/SOCO/stand_files/agent_table_stp_direct_shuffled-false.csv"
+
+[experiment.management_override]
+matched_stp_direct = "false"
+
+[experiment.management_representation]
+matched_stp_direct = "stp_direct"
 
 [disturbance]
 scenarios = ["contbb", "bb", "wind", "nod"]

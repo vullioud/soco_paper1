@@ -163,10 +163,11 @@ var Monitoring = {
         this.ml_activity_log.push(record);
     },
 
-    log_ml_activity: function(stand_data_obj, agent) {
+    log_ml_activity: function(stand_data_obj, agent, executed_activity_name) {
         if (!this.isMLEnabled()) return;
 
         fmengine.standId = stand_data_obj.stand_id;
+        var logged_activity = executed_activity_name || stand_data_obj.activity.chosen_Activity;
 
         var record = {
             year:                   Globals.year,
@@ -174,7 +175,7 @@ var Monitoring = {
             agent_id:               agent.id,
             owner_type:             agent.owner.type,
             behavioral_type:        agent.behavioral_type,
-            activity_name:          stand_data_obj.activity.chosen_Activity,
+            activity_name:          logged_activity,
             is_sequence:            stand_data_obj.activity.is_Sequence ? 1 : 0,
             sequence_step:          stand_data_obj.activity.is_Sequence
                                         ? stand_data_obj.activity.sequence_current_step : -1,
@@ -195,34 +196,22 @@ var Monitoring = {
             disturbance_type:           ''
         };
 
-        // Populate salvage-specific fields when applicable
-        // Option B: iLand extracts 100% of dead trees; salvage_fraction is always 1.0
-        if (stand_data_obj.activity.chosen_Activity === 'salvage_clearcut' ||
-            stand_data_obj.activity.chosen_Activity === 'salvage_leave') {
-            record.salvage_fraction = 1.0;
-            record.actual_salvage_volume_m3ha = stand.flag('abe_actual_salvage_volume_m3ha') || 0;
-            record.deadwood_retained_m3ha = 0;
-            record.disturbance_severity_frac = stand.flag('abe_disturbance_severity') || 0;
-            record.extraction_cost_paid = stand.flag('abe_extraction_cost_paid') || 0;
-            record.remnant_decision = stand.flag('abe_param_salvage_type') || 'none';
-            record.disturbance_type = stand.flag('abe_disturbance_type') || '';
-        }
-
         this.ml_activity_log.push(record);
     },
 
-    log_ml_post_disturbance_decision: function(stand_data_obj, agent, decision_name) {
+    log_ml_salvage_event: function(stand_data_obj, agent) {
         if (!this.isMLEnabled()) return;
 
         fmengine.standId = stand_data_obj.stand_id;
+        var salvage_year = stand.flag('abe_disturbance_year') || Globals.year;
 
         var record = {
-            year:                   Globals.year,
+            year:                   salvage_year,
             stand_id:               stand_data_obj.stand_id,
             agent_id:               agent.id,
             owner_type:             agent.owner.type,
             behavioral_type:        agent.behavioral_type,
-            activity_name:          decision_name || 'none',
+            activity_name:          'salvage',
             is_sequence:            0,
             sequence_step:          -1,
             previous_activity:      stand_data_obj.history.last_activity,
@@ -235,10 +224,10 @@ var Monitoring = {
             parameters:             JSON.stringify({}),
             salvage_fraction:           1.0,
             actual_salvage_volume_m3ha: stand.flag('abe_actual_salvage_volume_m3ha') || 0,
-            deadwood_retained_m3ha:     0,
+            deadwood_retained_m3ha:     stand.flag('abe_deadwood_retained_m3ha') || 0,
             disturbance_severity_frac:  stand.flag('abe_disturbance_severity') || 0,
             extraction_cost_paid:       stand.flag('abe_extraction_cost_paid') || 0,
-            remnant_decision:           stand.flag('abe_param_salvage_type') || decision_name || 'none',
+            remnant_decision:           'pending',
             disturbance_type:           stand.flag('abe_disturbance_type') || ''
         };
 

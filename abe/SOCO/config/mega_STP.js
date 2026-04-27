@@ -1317,7 +1317,7 @@ MEGA_STP_ACTIVITIES['salvage'] = {
 // These are called by SOCO after it decides the appropriate response
 
 // NOTE: salvage_harvest DELETED — B1 fix. iLand C++ auto-extracts 100% of dead
-// trees (Option B). Only salvage_clearcut (remnant management) and salvage_leave remain.
+// trees (Option B). Only salvage_clearcut is an executable remnant-management response.
 
 MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
     type: 'scheduled',
@@ -1358,37 +1358,6 @@ MEGA_STP_ACTIVITIES['salvage_clearcut'] = {
         stand.setFlag('abe_need_reassessment', true);
         // Planting is now handled as step 2 of the salvage_clearcut sequence
         // by the cognitive layer (next year). Do NOT fire do_planting here.
-    }
-};
-
-MEGA_STP_ACTIVITIES['salvage_leave'] = {
-    type: 'scheduled',
-    schedule: { opt: 0, signal: 'do_salvage_leave' },
-
-    onCreate: function(act) { act.scheduled = false; },
-    onEvaluate: function() { return true; },
-
-    onExecute: function() {
-        SoCoLog.debug(`[MEGA-STP] Salvage Leave: Leaving living remnant for natural recovery.`);
-
-        // No harvesting - just record the decision
-        var remaining_volume = stand.volume;
-        SoCoLog.debug(`  -> Leaving ${remaining_volume.toFixed(1)} m³/ha standing for habitat/deadwood.`);
-
-        // Record zero harvest for consistent tracking
-        stand.setFlag('abe_last_harvest_volume', 0);
-        stand.setFlag('abe_last_harvest_year', Globals.year);
-
-        // Could optionally set flags for monitoring recovery
-        stand.setFlag('abe_salvage_left_for_recovery', true);
-        stand.setFlag('abe_recovery_start_year', Globals.year);
-    },
-
-    onExecuted: function() {
-        stand.setFlag('abe_last_activity', 'MegaSTP_Salvage_Leave');
-        stand.setFlag('abe_last_activity_year', Globals.year);
-        stand.setFlag('abe_need_salvage', false);
-        stand.setFlag('abe_need_reassessment', true);
     }
 };
 

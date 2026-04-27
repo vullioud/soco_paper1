@@ -594,5 +594,8 @@
         <outbreak_start_year>200</outbreak_start_year>
         <outbreak_end_year>300</outbreak_end_year>
         <management_enabled>true</management_enabled>
+        <management_mode>soco</management_mode>
+        <reserve_mode>legacy</reserve_mode>
+        <budget_mode>legacy</budget_mode>
     </user>
 </project>

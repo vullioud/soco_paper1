@@ -18,19 +18,34 @@ Cognition.plan_decade = function(agent, current_year) {
     var priority_weights = (SoCoABE_CONFIG.PRIORITY_WEIGHTS &&
                             SoCoABE_CONFIG.PRIORITY_WEIGHTS[agent.behavioral_type]) || {};
     var budget_config = SoCoABE_CONFIG.BUDGET || { POINTS_PER_STAND_PER_DECADE: 10 };
+    var reserve_mode = SoCoABE_CONFIG.RESERVE_MODE || 'legacy';
+    var budget_mode = SoCoABE_CONFIG.BUDGET_MODE || 'legacy';
+    var modal_stp = SoCoABE_CONFIG.MANAGEMENT_MODE === 'soco_modal_stp';
+    var strict_reserve = (reserve_mode === 'strict_reserve');
+    var budget_free = (budget_mode === 'budget_free' || budget_mode === 'budget_free_no_cap');
+    var budget_free_no_cap = (budget_mode === 'budget_free_no_cap');
 
     // ===== STEP 0: COMPUTE BUDGET WITH CARRYOVER =====
     // Budget is on ALL stands (including set-aside)
     var n_all_stands = agent.managed_stand_ids.length;
+    var n_budget_stands = n_all_stands;
+    if (strict_reserve) {
+        n_budget_stands = 0;
+        for (var sid_count in agent.managed_stands_data) {
+            if (!agent.managed_stands_data[sid_count].is_set_aside) n_budget_stands++;
+        }
+    }
     var base_budget = Math.floor(
-        agent.resources * n_all_stands * budget_config.POINTS_PER_STAND_PER_DECADE
+        agent.resources * n_budget_stands * budget_config.POINTS_PER_STAND_PER_DECADE
     );
 
     // Carryover from previous decade (can be negative if debt allowed)
-    var carryover = agent.unit_state.budget_remaining || 0;
+    var carryover = budget_free ? 0 : (agent.unit_state.budget_remaining || 0);
     var budget;
 
-    if (carryover >= 0) {
+    if (budget_free) {
+        budget = base_budget;
+    } else if (carryover >= 0) {
         // Positive carryover: cap at MAX_CARRYOVER_FACTOR × base
         var max_carry = base_budget * (budget_config.MAX_CARRYOVER_FACTOR || 2.0);
         budget = base_budget + Math.min(carryover, max_carry);
@@ -51,6 +66,10 @@ Cognition.plan_decade = function(agent, current_year) {
     // ===== STEP 1: INVENTORY ONGOING COMMITMENTS =====
     // Ongoing sequences have steps landing in this decade. They are pre-committed.
     var ongoing_cost = 0;
+    function budget_cost(activity_name, raw_cost) {
+        if (budget_free && activity_name === 'salvage_clearcut') return 0;
+        return raw_cost;
+    }
 
     for (var sid in agent.managed_stands_data) {
         var s = agent.managed_stands_data[sid];
@@ -68,9 +87,10 @@ Cognition.plan_decade = function(agent, current_year) {
         for (var t = 0; t < s.activity.timeline.length; t++) {
             var ty = s.activity.timeline[t];
             if (ty >= current_year && ty < current_year + 10) {
-                var this_step_cost = Cognition._step_cost(
+                var this_step_cost_raw = Cognition._step_cost(
                     ongoing_cost_entry, t, ongoing_total_steps, ongoing_includes_planting
                 );
+                var this_step_cost = budget_cost(s.activity.chosen_Activity, this_step_cost_raw);
                 ongoing_cost += this_step_cost;
 
                 agent.unit_state.work_pile.push({
@@ -85,7 +105,7 @@ Cognition.plan_decade = function(agent, current_year) {
         }
     }
 
-    var remaining_budget = Math.max(0, budget - ongoing_cost);
+    var remaining_budget = budget_free ? Number.POSITIVE_INFINITY : Math.max(0, budget - ongoing_cost);
     agent.unit_state.budget_spent = ongoing_cost;
 
     // ===== STEP 2: CLASSIFY CANDIDATE STANDS =====
@@ -98,6 +118,7 @@ Cognition.plan_decade = function(agent, current_year) {
         var s2 = agent.managed_stands_data[sid2];
         if (s2.is_set_aside) continue;
         if (s2.activity.is_Sequence) continue;  // handled in step 1
+        if (s2.needs_post_disturbance) continue;  // handled by PostDisturbance before ordinary replanning
 
         // Blocked stands: check if structural transition or force-forward unlocks them
         if (s2.activity.blocked_until_phase) {
@@ -127,7 +148,7 @@ Cognition.plan_decade = function(agent, current_year) {
     var harvest_intensity = (SoCoABE_CONFIG.HARVEST_INTENSITY &&
                              SoCoABE_CONFIG.HARVEST_INTENSITY[agent.behavioral_type]) || 0.5;
     var rotation_decades = SoCoABE_CONFIG.HARVEST_ROTATION_DECADES || 8;
-    var harvest_target = Math.ceil(n_all_stands / rotation_decades * harvest_intensity);
+    var harvest_target = Math.ceil(n_budget_stands / rotation_decades * harvest_intensity);
     var salvage_severity_equivalent = 0;
 
     // Disturbance under Option B already places salvaged deadwood on the market.
@@ -140,7 +161,9 @@ Cognition.plan_decade = function(agent, current_year) {
         salvage_severity_equivalent += Math.max(0, hq.iLand_stand_data.disturbance_severity || 0);
     }
 
-    var effective_harvest_target = Math.max(0, harvest_target - salvage_severity_equivalent);
+    var effective_harvest_target = budget_free_no_cap
+        ? harvest_candidates.length
+        : Math.max(0, harvest_target - salvage_severity_equivalent);
 
     // Sort harvest candidates (engine-specific: age=volume, structural=DBH)
     Cognition.Phases.sort_harvest(harvest_candidates);
@@ -148,7 +171,7 @@ Cognition.plan_decade = function(agent, current_year) {
     var harvest_selected = 0;
     for (var h = 0; h < harvest_candidates.length; h++) {
         // HARD CAP: sustained yield limit
-        if ((harvest_selected + 1) > effective_harvest_target) break;
+        if (!budget_free_no_cap && (harvest_selected + 1) > effective_harvest_target) break;
 
         var hs = harvest_candidates[h];
 
@@ -164,7 +187,7 @@ Cognition.plan_decade = function(agent, current_year) {
         var h_decade_cost = Cognition._estimate_decade_cost(hs, current_year, cost_table);
 
         // Budget check: this decade
-        if (h_decade_cost > remaining_budget) {
+        if (!budget_free && h_decade_cost > remaining_budget) {
             // Can't afford — defer, DON'T consume harvest_target slot
             hs.activity.chosen_Activity = 'none';
             hs.activity.is_actionable = false;
@@ -173,7 +196,7 @@ Cognition.plan_decade = function(agent, current_year) {
         }
 
         // Full-sequence affordability: can the agent sustain future ongoing costs?
-        if (!Cognition._can_afford_sequence(hs, base_budget, cost_table)) {
+        if (!budget_free && !Cognition._can_afford_sequence(hs, base_budget, cost_table)) {
             hs.activity.chosen_Activity = 'none';
             hs.activity.is_actionable = false;
             hs.activity.carryover_count = (hs.activity.carryover_count || 0) + 1;
@@ -185,7 +208,7 @@ Cognition.plan_decade = function(agent, current_year) {
         }
 
         // Commit harvest
-        remaining_budget -= h_decade_cost;
+        if (!budget_free) remaining_budget -= h_decade_cost;
         agent.unit_state.budget_spent += h_decade_cost;
         harvest_selected++;
         agent.unit_state.harvest_commits_this_decade = harvest_selected;
@@ -232,10 +255,12 @@ Cognition.plan_decade = function(agent, current_year) {
         var w_lv = pd_base_weights.salvage_leave || 1.0;
         var w_total = w_cc + w_lv;
         if (w_total <= 0) w_total = 1;
-        var pd_draw = Distributions.weighted_random_choice({
-            salvage_clearcut: w_cc / w_total,
-            salvage_leave: w_lv / w_total
-        });
+        var pd_draw = modal_stp
+            ? (w_cc >= w_lv ? 'salvage_clearcut' : 'salvage_leave')
+            : Distributions.weighted_random_choice({
+                salvage_clearcut: w_cc / w_total,
+                salvage_leave: w_lv / w_total
+            });
 
         SoCoLog.debug('[PLAN-DECADE PostDisturbance] stand=' + sid_pd +
                       ' severity=' + pd_severity.toFixed(2) +
@@ -243,28 +268,43 @@ Cognition.plan_decade = function(agent, current_year) {
                       ' -> ' + pd_draw);
 
         pd.needs_post_disturbance = false;
+        pd.activity.parameters = {};
+        pd.activity.timeline = [];
+        pd.activity.sequence_current_step = 0;
+        pd.activity.sequence_total_steps = 0;
+        pd.activity.includes_planting = false;
 
         if (pd_draw === 'salvage_leave') {
-            // Free — clear disturbance state, stand re-enters normal planning.
-            // Keep the leave decision explicit in logs before resetting the stand to none.
+            // Free remnant decision. Keep it explicit in decade decisions only;
+            // no iLand activity is executed for leave.
             fmengine.standId = pd.stand_id;
-            stand.setFlag('abe_param_salvage_type', 'salvage_leave');
             pd.activity.chosen_Activity = 'salvage_leave';
             pd.activity.is_actionable = false;
             if (Monitoring.isDecadeLogEnabled()) {
                 Monitoring.log_decade_decision(agent, current_year, "PostDisturbance", pd, 0, true);
             }
-            Monitoring.log_ml_post_disturbance_decision(pd, agent, 'salvage_leave');
             pd.activity.chosen_Activity = 'none';
+            pd.activity.is_actionable = false;
+            pd.activity.is_Sequence = false;
+            pd.activity.timeline = [];
+            pd.activity.sequence_current_step = 0;
+            pd.activity.sequence_total_steps = 0;
+            pd.activity.includes_planting = false;
+            pd.activity.target_year = -1;
+            pd.activity.parameters = {};
+            stand.setFlag('abe_param_salvage_type', null);
+            stand.setFlag('abe_param_salvage_trigger_replant', null);
+            stand.setFlag('abe_need_reassessment', true);
             continue;
         }
 
         // salvage_clearcut: compute cost = (envelope - extraction_paid) + planting
         fmengine.standId = pd.stand_id;
         var extraction_paid = stand.flag('abe_extraction_cost_paid') || 0;
-        var clearcut_cost = Math.max(0, DISTURBANCE_ENVELOPE - extraction_paid) + 3;
+        var clearcut_cost_raw = Math.max(0, DISTURBANCE_ENVELOPE - extraction_paid) + 3;
+        var clearcut_cost = budget_cost('salvage_clearcut', clearcut_cost_raw);
 
-        if (clearcut_cost > remaining_budget) {
+        if (!budget_free && clearcut_cost > remaining_budget) {
             // Can't afford — defer to next decade. Re-set flag.
             pd.needs_post_disturbance = true;
             pd.activity.chosen_Activity = 'none';
@@ -279,7 +319,7 @@ Cognition.plan_decade = function(agent, current_year) {
         }
 
         // Commit clearcut + planting sequence
-        remaining_budget -= clearcut_cost;
+        if (!budget_free) remaining_budget -= clearcut_cost;
         agent.unit_state.budget_spent += clearcut_cost;
 
         pd.activity.chosen_Activity = 'salvage_clearcut';
@@ -299,6 +339,7 @@ Cognition.plan_decade = function(agent, current_year) {
         Cognition._add_to_work_pile(agent, pd, current_year, cost_table, priority_weights, "PostDisturbance");
 
         SoCoLog.debug('  -> Committed clearcut+plant, cost=' + clearcut_cost +
+                      (budget_free ? ' (budget_free; raw=' + clearcut_cost_raw + ')' : '') +
                       ' (envelope=' + DISTURBANCE_ENVELOPE +
                       ' - extraction=' + extraction_paid + ' + plant=3)');
 
@@ -402,7 +443,7 @@ Cognition.plan_decade = function(agent, current_year) {
         Cognition.build_schedule(s, current_year);
         var decade_cost = Cognition._estimate_decade_cost(s, current_year, cost_table);
 
-        if (decade_cost > remaining_budget) {
+        if (!budget_free && decade_cost > remaining_budget) {
             // Can't afford — defer
             s.activity.chosen_Activity = 'none';
             s.activity.is_actionable = false;
@@ -414,7 +455,7 @@ Cognition.plan_decade = function(agent, current_year) {
         }
 
         // Full-sequence affordability: can the agent sustain future ongoing costs?
-        if (!Cognition._can_afford_sequence(s, base_budget, cost_table)) {
+        if (!budget_free && !Cognition._can_afford_sequence(s, base_budget, cost_table)) {
             s.activity.chosen_Activity = 'none';
             s.activity.is_actionable = false;
             s.activity.carryover_count = (s.activity.carryover_count || 0) + 1;
@@ -429,7 +470,7 @@ Cognition.plan_decade = function(agent, current_year) {
         }
 
         // Commit
-        remaining_budget -= decade_cost;
+        if (!budget_free) remaining_budget -= decade_cost;
         agent.unit_state.budget_spent += decade_cost;
         s.activity.is_actionable = true;
         s.activity.carryover_count = 0;
@@ -585,6 +626,8 @@ Cognition._can_afford_sequence = function(stand_data_obj, base_budget, cost_tabl
 Cognition._add_to_work_pile = function(agent, stand_data_obj, current_year, cost_table, priority_weights, assigned_phase) {
     var act = stand_data_obj.activity;
     var phase = assigned_phase || Cognition.Phases.classify(stand_data_obj);
+    var budget_mode = SoCoABE_CONFIG.BUDGET_MODE || 'legacy';
+    var budget_free = (budget_mode === 'budget_free' || budget_mode === 'budget_free_no_cap');
     // Priority components
     var phase_weight = priority_weights[phase] || 1.0;
     var carryover_bonus = (act.carryover_count || 0) * 10;
@@ -635,6 +678,7 @@ Cognition._add_to_work_pile = function(agent, stand_data_obj, current_year, cost
                 var this_step_cost = Cognition._step_cost(
                     wp_cost_entry, t, wp_total_steps, wp_includes_planting
                 );
+                if (budget_free && act.chosen_Activity === 'salvage_clearcut') this_step_cost = 0;
                 agent.unit_state.work_pile.push({
                     stand_id:    stand_data_obj.stand_id,
                     activity:    act.chosen_Activity,
@@ -647,6 +691,7 @@ Cognition._add_to_work_pile = function(agent, stand_data_obj, current_year, cost
         }
     } else {
         var ss_cost = Cognition._step_cost(wp_cost_entry, 0, 1, wp_includes_planting);
+        if (budget_free && act.chosen_Activity === 'salvage_clearcut') ss_cost = 0;
         agent.unit_state.work_pile.push({
             stand_id:    stand_data_obj.stand_id,
             activity:    act.chosen_Activity,
@@ -663,6 +708,19 @@ Cognition._add_to_work_pile = function(agent, stand_data_obj, current_year, cost
 Cognition.draw_activity = function(agent, phase) {
     var dist = agent.activity_table[phase];
     if (!dist || !dist.options || !dist.alpha) return "noManagement";
+
+    if (SoCoABE_CONFIG.MANAGEMENT_MODE === 'soco_modal_stp') {
+        var best_idx = 0;
+        var best_alpha = -Infinity;
+        for (var i = 0; i < dist.options.length; i++) {
+            var alpha = Number(dist.alpha[i]) || 0;
+            if (alpha > best_alpha) {
+                best_alpha = alpha;
+                best_idx = i;
+            }
+        }
+        return dist.options[best_idx] || "noManagement";
+    }
 
     var weights = Distributions.sample({
         distribution_function: "dirichlet",

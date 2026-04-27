@@ -16,9 +16,6 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         return;
     }
 
-    // 1.5. LOG ML TRAINING DATA - Capture pre-activity state BEFORE execution
-    Monitoring.log_ml_activity(stand_data_obj, agent);
-
     // 2. Clear previous flags to ensure clean state
     Action.prepare.clear_flags();
 
@@ -54,9 +51,7 @@ Action.trigger_activity = function(stand_data_obj, agent) {
     else if (base_cognitive_name === 'clearcut') {
         execution_activity_name = 'clearcut';
     }
-    else if (base_cognitive_name === 'salvage' ||
-             base_cognitive_name === 'salvage_clearcut' ||
-             base_cognitive_name === 'salvage_leave') {
+    else if (base_cognitive_name === 'salvage_clearcut') {
         execution_activity_name = 'salvage';
     }
 
@@ -67,6 +62,21 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         prepare_function(stand_data_obj.activity.parameters, stand_data_obj, agent);
     } else {
         SoCoLog.warn(`[Action] No prepare function found for '${execution_activity_name}' (from '${cognitive_activity_name}')`);
+    }
+
+    function prepare_planting_step() {
+        if (typeof Action.prepare.planting === 'function') {
+            Action.prepare.planting(stand_data_obj.activity.parameters, stand_data_obj, agent);
+        } else {
+            SoCoLog.warn(`[Action] No planting prepare function found for '${cognitive_activity_name}' planting step`);
+        }
+    }
+
+    function ml_activity_name_from_signal(signal, fallback) {
+        if (signal && signal.indexOf('do_') === 0) {
+            return signal.substring(3);
+        }
+        return fallback;
     }
 
     // --- 5. SIGNAL DETERMINATION ---
@@ -83,12 +93,13 @@ Action.trigger_activity = function(stand_data_obj, agent) {
     else if (execution_activity_name === 'shelterwood') {
         var current_step = stand_data_obj.activity.sequence_current_step;
         var total_steps = stand_data_obj.activity.sequence_total_steps;
-        var is_initialized = stand.flag('abe_shelterwood_initialized');
+        var is_initialized = stand.flag('abe_shelterwood_initialized') === true;
 
         // Planting step: always the very last step of _planting variant
         if (includes_planting && current_step >= total_steps - 1) {
+            prepare_planting_step();
             signal_name = 'do_planting';
-            execution_activity_name = 'planting';  // so prepare_flags calls Action.prepare.planting()
+            execution_activity_name = 'planting';
         }
         // Final harvest: last step (no planting) or second-to-last (with planting)
         else if (current_step >= total_steps - 1 ||
@@ -107,10 +118,11 @@ Action.trigger_activity = function(stand_data_obj, agent) {
     else if (execution_activity_name === 'femel') {
         var current_step = stand_data_obj.activity.sequence_current_step;
         var total_steps = stand_data_obj.activity.sequence_total_steps;
-        var is_initialized = stand.flag('abe_femel_initialized');
+        var is_initialized = stand.flag('abe_femel_initialized') === true;
 
         // Planting step
         if (includes_planting && current_step >= total_steps - 1) {
+            prepare_planting_step();
             signal_name = 'do_planting';
             execution_activity_name = 'planting';
         }
@@ -131,6 +143,7 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         var current_step = stand_data_obj.activity.sequence_current_step;
 
         if (includes_planting && current_step >= 1) {
+            prepare_planting_step();
             signal_name = 'do_planting';
             execution_activity_name = 'planting';
         } else {
@@ -143,9 +156,11 @@ Action.trigger_activity = function(stand_data_obj, agent) {
         if (stand_data_obj.activity.is_Sequence &&
             stand_data_obj.activity.includes_planting &&
             stand_data_obj.activity.sequence_current_step >= 1) {
+            prepare_planting_step();
             signal_name = 'do_planting';
+            execution_activity_name = 'planting';
         } else {
-            var salvage_type = stand.flag('abe_param_salvage_type') || 'salvage_leave';
+            var salvage_type = stand.flag('abe_param_salvage_type') || 'salvage_clearcut';
             signal_name = 'do_' + salvage_type;
         }
     }
@@ -156,6 +171,11 @@ Action.trigger_activity = function(stand_data_obj, agent) {
 
     // --- 6. FIRE SIGNAL ---
     if (signal_name) {
+        Monitoring.log_ml_activity(
+            stand_data_obj,
+            agent,
+            ml_activity_name_from_signal(signal_name, execution_activity_name)
+        );
         stand.stp.signal(signal_name);
     } else {
         SoCoLog.error(`[Action] No signal name determined for activity '${execution_activity_name}' on stand ${stand.id}`);

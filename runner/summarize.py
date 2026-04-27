@@ -289,7 +289,7 @@ def summarize_sqlite(db_path: Path, stand_btype: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# CSV headers (same as analysis_batch/data/ format)
+# CSV headers for combined runner summaries.
 # ---------------------------------------------------------------------------
 
 HEADERS = {

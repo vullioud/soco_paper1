@@ -31,6 +31,7 @@ scripts/wind_Events/
 analysis_batch/
 analysis_batch/data/
 analysis_batch/co_author_report/figures/
+resilience_analysis/docs/
 resilience_analysis/**/data/
 resilience_analysis/**/figures/
 runner/*
@@ -62,3 +63,6 @@ __pycache__/
 .RData
 .claude/
 *.md
+*.csv
+*.rds
+*.png

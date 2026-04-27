@@ -30,13 +30,14 @@ Cognition.update_ongoing_sequence = function(stand_data_obj) {
         // --- SEQUENCE COMPLETE ---
 
         // Clean activity-specific iLand flags
-        if (activity.chosen_Activity === 'selectiveThinning') {
+        var base_activity = Cognition.normalize_activity_name(activity.chosen_Activity);
+        if (base_activity === 'selectiveThinning') {
             fmengine.standId = stand_data_obj.stand_id;
             Action.prepare.clear_selectiveThinning_flags();
-        } else if (activity.chosen_Activity === 'shelterwood') {
+        } else if (base_activity === 'shelterwood') {
             fmengine.standId = stand_data_obj.stand_id;
             Action.prepare.clear_shelterwood_flags();
-        } else if (activity.chosen_Activity === 'femel') {
+        } else if (base_activity === 'femel') {
             fmengine.standId = stand_data_obj.stand_id;
             Action.prepare.clear_femel_flags();
         }

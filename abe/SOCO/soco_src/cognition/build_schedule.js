@@ -23,7 +23,9 @@ Cognition.build_schedule = function(stand_data_obj, plan_year) {
     // If target_year not set, auto-assign from plan_year
     if ((!activity.target_year || activity.target_year <= 0) && plan_year) {
         var sched_phase = Cognition.Phases.classify(stand_data_obj);
-        if (sched_phase === "Harvesting") {
+        if (SoCoABE_CONFIG.MANAGEMENT_MODE === 'soco_modal_stp') {
+            activity.target_year = plan_year + (sched_phase === "Harvesting" ? 2 : 1);
+        } else if (sched_phase === "Harvesting") {
             activity.target_year = plan_year + 2 + Math.floor(Math.random() * 8);
         } else {
             activity.target_year = plan_year + 1 + Math.floor(Math.random() * 3);
@@ -111,7 +113,8 @@ Cognition.build_schedule = function(stand_data_obj, plan_year) {
         case 'plenter_harvest':
         case 'plenter_thinning':
             if (interval > 0) {
-                var repeats = 20;  // continuous management
+                var repeats = Math.max(1, Number(params.times) || 5);
+                times = repeats;
                 activity.is_Sequence = true;
                 activity.sequence_total_steps = repeats;
                 activity.timeline = [];

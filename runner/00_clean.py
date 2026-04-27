@@ -10,7 +10,6 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).parent.parent
 OUTPUT_DIR  = PROJECT_DIR / "output"
-DATA_DIR    = PROJECT_DIR / "analysis_batch" / "data"
 RUNNER_DIR  = Path(__file__).parent
 
 
@@ -47,24 +46,19 @@ def main():
             if d.is_dir() and not d.name.startswith("_"):
                 targets.append((f"output/{d.name}/", d, dir_size(d)))
 
-    # 3. analysis_batch/data/*.csv
-    if DATA_DIR.exists():
-        for f in sorted(DATA_DIR.glob("*.csv")):
-            targets.append((f"analysis_batch/data/{f.name}", f, f.stat().st_size))
-
-    # 4. Runner logs
+    # 3. Runner logs
     log_dir = RUNNER_DIR / "logs"
     if log_dir.exists():
         for f in sorted(log_dir.glob("*.log")):
             targets.append((f"runner/logs/{f.name}", f, f.stat().st_size))
 
-    # 5. Runner status
+    # 4. Runner status
     status_dir = RUNNER_DIR / "status"
     if status_dir.exists():
         for f in sorted(status_dir.glob("*.txt")):
             targets.append((f"runner/status/{f.name}", f, f.stat().st_size))
 
-    # 6. Stale run table
+    # 5. Stale run table
     rt = RUNNER_DIR / "run_table.csv"
     if rt.exists():
         targets.append(("runner/run_table.csv", rt, rt.stat().st_size))
@@ -97,7 +91,6 @@ def main():
 
     # Recreate empty directories so the pipeline doesn't fail
     (OUTPUT_DIR / "_combined").mkdir(parents=True, exist_ok=True)
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
     (RUNNER_DIR / "logs").mkdir(exist_ok=True)
     (RUNNER_DIR / "status").mkdir(exist_ok=True)
 

@@ -3,6 +3,8 @@
 // Handles: salvage priority, set-aside, ongoing sequences, actionability.
 
 Cognition.think_reactive = function(stand_data_obj, agent) {
+    var reserve_mode = SoCoABE_CONFIG.RESERVE_MODE || 'legacy';
+    var strict_reserve = (reserve_mode === 'strict_reserve');
 
     function clear_interrupted_sequence_state(s) {
         if (!s.activity || !s.activity.is_Sequence) return;
@@ -24,11 +26,28 @@ Cognition.think_reactive = function(stand_data_obj, agent) {
 
     // --- STEP 1: SET-ASIDE ---
     if (stand_data_obj.is_set_aside) {
-        // Even set-aside stands incur extraction cost when C++ auto-salvages dead trees
-        if (stand_data_obj.iLand_stand_data.needs_salvage) {
+        if (strict_reserve) {
             fmengine.standId = stand_data_obj.stand_id;
+            if (stand_data_obj.iLand_stand_data.needs_salvage) {
+                Monitoring.log_ml_salvage_event(stand_data_obj, agent);
+            }
+            stand_data_obj.extraction_cost_pending = 0;
+            stand_data_obj.needs_post_disturbance = false;
+            stand.setFlag('abe_disturbance_cost', 0);
+            stand.setFlag('abe_need_salvage', false);
+            stand.setFlag('abe_param_salvage_type', null);
+            stand.setFlag('abe_param_salvage_trigger_replant', null);
+            stand_data_obj.iLand_stand_data.needs_salvage = false;
+            stand_data_obj.iLand_stand_data.disturbance_cost = 0;
+        } else if (stand_data_obj.iLand_stand_data.needs_salvage) {
+            // Legacy mode: set-aside stands still incur extraction cost when C++ auto-salvages dead trees
+            fmengine.standId = stand_data_obj.stand_id;
+            Monitoring.log_ml_salvage_event(stand_data_obj, agent);
             stand_data_obj.extraction_cost_pending = stand.flag('abe_disturbance_cost') || 0;
             stand.setFlag('abe_disturbance_cost', 0);
+            stand.setFlag('abe_need_salvage', false);
+            stand_data_obj.iLand_stand_data.needs_salvage = false;
+            stand_data_obj.iLand_stand_data.disturbance_cost = 0;
         }
         stand_data_obj.activity.chosen_Activity = 'noManagement';
         stand_data_obj.activity.is_actionable = false;
@@ -41,9 +60,13 @@ Cognition.think_reactive = function(stand_data_obj, agent) {
 
         // Extraction cost already happened at C++ level. Mark for budget deduction.
         fmengine.standId = stand_data_obj.stand_id;
+        Monitoring.log_ml_salvage_event(stand_data_obj, agent);
         stand_data_obj.extraction_cost_pending = stand.flag('abe_disturbance_cost') || 0;
         // Clear the flag so it's not double-counted
         stand.setFlag('abe_disturbance_cost', 0);
+        stand.setFlag('abe_need_salvage', false);
+        stand_data_obj.iLand_stand_data.needs_salvage = false;
+        stand_data_obj.iLand_stand_data.disturbance_cost = 0;
 
         // Mark for plan_decade PostDisturbance processing
         stand_data_obj.needs_post_disturbance = true;

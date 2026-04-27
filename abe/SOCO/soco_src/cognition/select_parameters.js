@@ -7,6 +7,9 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
     // Resolve compound harvest+planting names to base activity for parameter lookup.
     // parameter_distributions.json is keyed by base name (shelterwood, femel, etc.).
     var base_activity = Cognition.normalize_activity_name(activity_name);
+    if (base_activity === 'plenter_thinning') {
+        base_activity = 'plenter_harvest';
+    }
 
     var params_for_type = agent.parameter_table[base_activity]
         && agent.parameter_table[base_activity][agent.behavioral_type];
@@ -26,7 +29,10 @@ Cognition.select_parameters = function(stand_data_obj, agent) {
     // Poor agents do the same silviculture, just less frequently.
     var budget_cfg = SoCoABE_CONFIG.BUDGET || {};
     var stretch_cfg = budget_cfg.BUDGET_STRETCH;
-    if (stretch_cfg && params.interval && agent.resources > 0) {
+    var budget_mode = SoCoABE_CONFIG.BUDGET_MODE || 'legacy';
+    if (budget_mode !== 'budget_free' &&
+        budget_mode !== 'budget_free_no_cap' &&
+        stretch_cfg && params.interval && agent.resources > 0) {
         var pps = budget_cfg.POINTS_PER_STAND_PER_DECADE || 3;
         var pressure = agent.resources * pps;
         var stretch = Math.min(

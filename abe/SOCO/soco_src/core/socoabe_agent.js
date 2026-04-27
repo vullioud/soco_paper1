@@ -26,7 +26,9 @@ class socoabe_agent {
         this.risk_tolerance = 0;
         this.adherence = 0;
 
-        this.planning_offset = Math.floor(Math.random() * 10) + 5;
+        this.planning_offset = this._is_modal_stp()
+            ? Math.floor(this._deterministic_unit_interval(this.id + ':planning_offset') * 10) + 5
+            : Math.floor(Math.random() * 10) + 5;
         this.is_initialized = false;
 
         this.unit_state = {
@@ -66,6 +68,69 @@ class socoabe_agent {
         return 'TR';  // fallback
     }
 
+    _is_modal_stp() {
+        return typeof SoCoABE_CONFIG !== 'undefined' &&
+               SoCoABE_CONFIG.MANAGEMENT_MODE === 'soco_modal_stp';
+    }
+
+    _deterministic_unit_interval(key) {
+        var hash = 2166136261;
+        var text = String(key);
+        for (var i = 0; i < text.length; i++) {
+            hash ^= text.charCodeAt(i);
+            hash = Math.imul(hash, 16777619) | 0;
+        }
+        hash ^= hash >>> 16;
+        hash = Math.imul(hash, 0x45d9f3b) | 0;
+        hash ^= hash >>> 16;
+        return (hash >>> 0) / 4294967296;
+    }
+
+    _argmax_choice(weights_object) {
+        var best_key = null;
+        var best_value = -Infinity;
+        for (var key in weights_object) {
+            if (!weights_object.hasOwnProperty(key)) continue;
+            var value = Number(weights_object[key]) || 0;
+            if (best_key === null || value > best_value) {
+                best_key = key;
+                best_value = value;
+            }
+        }
+        return best_key || 'undefined';
+    }
+
+    _distribution_mean(distObj) {
+        if (!distObj || !distObj.distribution_function || !distObj.distribution_params) return null;
+        var params = distObj.distribution_params;
+        if (distObj.distribution_function === 'dirichlet') {
+            var options = params.options || [];
+            var alpha = params.alpha || [];
+            var total = 0;
+            for (var i = 0; i < alpha.length; i++) total += Number(alpha[i]) || 0;
+            var out = {};
+            for (var j = 0; j < options.length; j++) {
+                out[options[j]] = total > 0 ? ((Number(alpha[j]) || 0) / total) : (1 / Math.max(1, options.length));
+            }
+            return out;
+        }
+        if (distObj.distribution_function === 'beta') {
+            var a = Number(params.alpha) || 0;
+            var b = Number(params.beta) || 0;
+            return (a + b) > 0 ? a / (a + b) : 0.5;
+        }
+        if (distObj.distribution_function === 'normal') {
+            return Number(params.mean) || 0;
+        }
+        if (distObj.distribution_function === 'poisson') {
+            return Number(params.lambda) || 0;
+        }
+        if (distObj.distribution_function === 'gamma') {
+            return (Number(params.shape) || 0) * (Number(params.scale) || 1);
+        }
+        return Distributions.sample(distObj);
+    }
+
     init() {
         this.sample_my_traits();
         this.apply_guideline_blend();
@@ -84,15 +149,46 @@ class socoabe_agent {
             if (!guide || !guide.alpha || !own_dist.options) continue;
 
             var guide_by_name = {};
+            var guide_by_base = {};
+            var guide_has_variants_by_base = {};
             for (var g = 0; g < guide.options.length; g++) {
-                guide_by_name[Cognition.normalize_activity_name(guide.options[g])] = guide.alpha[g] || 0;
+                var guide_name = guide.options[g];
+                var guide_base = Cognition.normalize_activity_name(guide_name);
+                var guide_alpha = guide.alpha[g] || 0;
+                guide_by_name[guide_name] = guide_alpha;
+                guide_by_base[guide_base] = (guide_by_base[guide_base] || 0) + guide_alpha;
+                if (guide_name !== guide_base) {
+                    guide_has_variants_by_base[guide_base] = true;
+                }
+            }
+
+            var own_alpha_by_base = {};
+            var own_count_by_base = {};
+            for (var oi = 0; oi < own_dist.options.length; oi++) {
+                var own_base = Cognition.normalize_activity_name(own_dist.options[oi]);
+                own_alpha_by_base[own_base] = (own_alpha_by_base[own_base] || 0) + (own[oi] || 0);
+                own_count_by_base[own_base] = (own_count_by_base[own_base] || 0) + 1;
             }
 
             var blended = [];
             for (var i = 0; i < own.length; i++) {
                 var option_name = own_dist.options[i];
                 var normalized = Cognition.normalize_activity_name(option_name);
-                var guide_alpha = guide_by_name.hasOwnProperty(normalized) ? guide_by_name[normalized] : 0;
+                var guide_alpha = 0;
+
+                if (guide_by_name.hasOwnProperty(option_name)) {
+                    guide_alpha = guide_by_name[option_name];
+                } else if (
+                    guide_by_base.hasOwnProperty(normalized) &&
+                    !guide_has_variants_by_base[normalized]
+                ) {
+                    var own_base_total = own_alpha_by_base[normalized] || 0;
+                    var split = own_base_total > 0
+                        ? (own[i] || 0) / own_base_total
+                        : 1 / Math.max(1, own_count_by_base[normalized] || 0);
+                    guide_alpha = guide_by_base[normalized] * split;
+                }
+
                 blended.push((1 - adherence) * own[i] + adherence * guide_alpha);
             }
             own_dist.alpha = blended;
@@ -103,6 +199,14 @@ class socoabe_agent {
         const trait_configs = this.trait_table;
         if (!trait_configs) throw new Error(`Agent '${this.id}' has no trait_table for behavioral_type '${this.behavioral_type}'.`);
 
+        if (this._is_modal_stp()) {
+            if (trait_configs.preferences) this.preferences = this._distribution_mean(trait_configs.preferences);
+            if (trait_configs.resources) this.resources = this._distribution_mean(trait_configs.resources);
+            if (trait_configs.riskTolerance) this.risk_tolerance = this._distribution_mean(trait_configs.riskTolerance);
+            if (trait_configs.adherence) this.adherence = this._distribution_mean(trait_configs.adherence);
+            return;
+        }
+
         if (trait_configs.preferences) this.preferences = Distributions.sample(trait_configs.preferences);
         if (trait_configs.resources) this.resources = Distributions.sample(trait_configs.resources);
         if (trait_configs.riskTolerance) this.risk_tolerance = Distributions.sample(trait_configs.riskTolerance);
@@ -112,18 +216,29 @@ class socoabe_agent {
     initialize_managed_stands() {
         var set_aside_rate = (SoCoABE_CONFIG.SET_ASIDE_RATES &&
                               SoCoABE_CONFIG.SET_ASIDE_RATES[this.behavioral_type]) || 0;
+        var reserve_mode = SoCoABE_CONFIG.RESERVE_MODE || 'legacy';
+        var strict_reserve = (reserve_mode === 'strict_reserve');
 
         this.managed_stand_ids.forEach(id => {
             const stand_data_obj = new stand_data(id, this);
 
             // Step 1: Bernoulli draw for set-aside
-            stand_data_obj.is_set_aside = (Math.random() < set_aside_rate);
+            stand_data_obj.is_set_aside = this._is_modal_stp()
+                ? (this._deterministic_unit_interval(this.id + ':' + id + ':set_aside') < set_aside_rate)
+                : (Math.random() < set_aside_rate);
 
             // Step 2: Preference focus (3-dim: Production/Biodiversity/CO2)
             if (!stand_data_obj.is_set_aside) {
-                stand_data_obj.preference_focus = Distributions.weighted_random_choice(this.preferences);
+                stand_data_obj.preference_focus = this._is_modal_stp()
+                    ? this._argmax_choice(this.preferences)
+                    : Distributions.weighted_random_choice(this.preferences);
             } else {
                 stand_data_obj.preference_focus = "SetAside";
+                if (strict_reserve) {
+                    fmengine.standId = id;
+                    stand.setSTP(SoCoABE_CONFIG.RESERVE_STP_NAME);
+                    stand.setFlag('abe_strict_reserve', true);
+                }
             }
 
             this.managed_stands_data[id] = stand_data_obj;
@@ -138,6 +253,8 @@ class socoabe_agent {
     }
 
     handle_salvage_and_ongoing(current_year) {
+        var budget_mode = SoCoABE_CONFIG.BUDGET_MODE || 'legacy';
+        var budget_free = (budget_mode === 'budget_free' || budget_mode === 'budget_free_no_cap');
         this.unit_state.salvage_count_this_year = 0;
         for (var stand_id in this.managed_stands_data) {
             var s = this.managed_stands_data[stand_id];
@@ -146,10 +263,15 @@ class socoabe_agent {
 
             // Deduct extraction cost (forced tax from 14-pt envelope, off-budget)
             if (s.extraction_cost_pending && s.extraction_cost_pending > 0) {
-                this.unit_state.budget_spent = (this.unit_state.budget_spent || 0) + s.extraction_cost_pending;
-                this.unit_state.budget_remaining = (this.unit_state.budget_remaining || 0) - s.extraction_cost_pending;
-                SoCoLog.debug('[SALVAGE] Stand ' + stand_id + ': extraction cost ' +
-                              s.extraction_cost_pending + ' pts deducted (forced tax).');
+                if (!budget_free) {
+                    this.unit_state.budget_spent = (this.unit_state.budget_spent || 0) + s.extraction_cost_pending;
+                    this.unit_state.budget_remaining = (this.unit_state.budget_remaining || 0) - s.extraction_cost_pending;
+                    SoCoLog.debug('[SALVAGE] Stand ' + stand_id + ': extraction cost ' +
+                                  s.extraction_cost_pending + ' pts deducted (forced tax).');
+                } else {
+                    SoCoLog.debug('[SALVAGE] Stand ' + stand_id + ': extraction cost ' +
+                                  s.extraction_cost_pending + ' pts ignored (' + budget_mode + ').');
+                }
                 this.unit_state.salvage_count_this_year++;
                 s.extraction_cost_pending = 0;
             }

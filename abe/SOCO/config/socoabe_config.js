@@ -87,6 +87,10 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         // Management control: set to false to disable SoCoABE cognitive system
         // (no-management control — forest grows with disturbances only)
         MANAGEMENT_ENABLED: true,
+        MANAGEMENT_MODE: "soco",
+        RESERVE_MODE: "legacy",
+        BUDGET_MODE: "legacy",
+        RESERVE_STP_NAME: "SoCo_ReserveSTP",
 
         // Disturbance control: suppress all disturbances before this year.
         // Both wind and bark beetle XML modules remain enabled but are
@@ -154,8 +158,8 @@ if (typeof SoCoABE_CONFIG === 'undefined') {
         GUIDELINE: {
             period: { start: 0, end: 999 },
             Harvesting: {
-                options: ["shelterwood", "targetDBH", "clearcut", "plenter_harvest", "femel"],
-                alpha: [4, 3, 0, 3, 5]
+                options: ["shelterwood_planting", "shelterwood_no_planting", "targetDBH", "clearcut_planting", "plenter_harvest", "femel_planting", "femel_no_planting"],
+                alpha: [3, 1, 3, 0.5, 3, 4, 1]
             },
             Thinning: {
                 options: ["selectiveThinning", "fromBelow", "plenter_thinning", "noManagement"],

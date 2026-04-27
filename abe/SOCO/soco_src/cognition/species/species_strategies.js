@@ -49,6 +49,23 @@ var SpeciesStrategies = {
             pool.push({ id: sp, weight: config.weights[sp] });
         }
 
+        if (SoCoABE_CONFIG.MANAGEMENT_MODE === 'soco_modal_stp') {
+            pool.sort(function(a, b) {
+                if (b.weight !== a.weight) return b.weight - a.weight;
+                return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+            });
+            var modal_species = [];
+            var modal_n = Math.min(config.n_species || 1, pool.length);
+            for (var m = 0; m < modal_n; m++) {
+                modal_species.push(pool[m].id);
+            }
+            if (modal_species.length === 0) modal_species = ['fasy'];
+            var modal_frac = 1.0 / modal_species.length;
+            var modal_fractions = [];
+            for (var mf = 0; mf < modal_species.length; mf++) modal_fractions.push(modal_frac);
+            return { species: modal_species, fractions: modal_fractions };
+        }
+
         // Draw n_species from weights (without replacement)
         var species = [];
         for (var i = 0; i < config.n_species && pool.length > 0; i++) {
